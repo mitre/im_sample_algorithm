@@ -22,49 +22,9 @@ This project contains content developed by The MITRE Corporation. If this code i
 
 [Apache 2.0](https://github.com/mitre/FMACM/blob/master/LICENSE)
 
+Any questions related to MITRE Open Source technologies may be emailed to opensource@mitre.org
+
 ## Documentation
 
 Algorithm descriptions are available via [RTCA's DO-361A](https://my.rtca.org/nc__store?search=do-361) documentation (expected publication date Fall 2020). Please contact RTCA for more information.
 
-## Licensing questions
-
-Any questions related to MITRE Open Source technologies may be emailed to opensource@mitre.org
-
-## Developer Notice
-
-### EUROCONTROL BADA Development Necessary
-
-This code uses [EUROCONTROL's BADA](https://eurocontrol.int/services/bada) for aircraft performance data that support the aircraft dynamics modeling. However, BADA functionality and code cannot be provided due to licensing restrictions imposed by EUROCONTROL. 
-
-### Log4Cplus Dependency
-
-Log4Cplus is a logging application used by this code base. It needs to be installed prior to building this code. You can download it from [their GitHub repo](https://github.com/log4cplus/log4cplus).
-
-### Continuous Integration & Testing
-
-Coming soon...
-
-### Compile & Run
-
-No attempt has been made to ensure that this code will compile on a range of operating systems. This code compiles successfully on Linux machines, specifically [CentOs](https://www.centos.org/) 7 using gcc 4.8.5. For all other computing environments, YMMV.
-
-The [CMake](https://cmake.org/) utility is used to compile this code. If not already installed on the target environment, it is easily installed via `apt`. Please use version 3.0+. From the root directory, execute:
-
-```
->> mkdir build
->> cd build
->> cmake ..
->> make
-```
-
-Disappointment time...this code does not produce a self-contained binary executable. Rather it is a library of implemented algorithms provided as a supplement to DO-361A. No attempt has been made to ensure that this compiles into a fully functional API. Examine the unit tests for an understanding of which sections of the code are fully operational.
-
-### Run Unit Tests
-
-Unit tests are implemented to show core algorithm functionality. Tests can be run via the CMake infrastructure.
-
-Assuming the software already compiles:
-```
->> cd build
->> make run
-```
