@@ -28,3 +28,4 @@ Any questions related to MITRE Open Source technologies may be emailed to openso
 
 Algorithm descriptions are available via [RTCA's DO-361A](https://my.rtca.org/nc__store?search=do-361) documentation (expected publication date Fall 2020). Please contact RTCA for more information.
 
+Code-level documentation is in /docs & posted to [the io page](https://mitre.github.io/im_sample_algorithm/).
