@@ -14,13 +14,13 @@ contact The MITRE Corporation, Contracts Office, 7515 Colshire Drive,
 McLean, VA  22102-7539, (703) 983-6000.
 
 Copyright 2019 The MITRE Corporation. All Rights Reserved.
-Approved for Public Release; Distribution Unlimited. 15-1482
+Approved for Public Release; Distribution Unlimited. Public Release Case Number 19-3053
 
 This project contains content developed by The MITRE Corporation. If this code is used in a deployment or embedded within another project, it is requested that you send an email to opensource@mitre.org in order to let us know where this software is being used.
 
 ## Licensing
 
-[Apache 2.0](https://github.com/mitre/FMACM/blob/master/LICENSE)
+[Apache 2.0](https://github.com/mitre/im_sample_algorithm/blob/master/LICENSE)
 
 Any questions related to MITRE Open Source technologies may be emailed to opensource@mitre.org
 
