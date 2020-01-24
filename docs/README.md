@@ -18,6 +18,20 @@ Approved for Public Release; Distribution Unlimited. 15-1482
 
 This project contains content developed by The MITRE Corporation. If this code is used in a deployment or embedded within another project, it is requested that you send an email to opensource@mitre.org in order to let us know where this software is being used.
 
+- [MITRE's Interval Management Sample Algorithm](#mitre-s-interval-management-sample-algorithm)
+  * [NOTICE](#notice)
+  * [Licensing](#licensing)
+  * [Documentation](#documentation)
+  * [Developer Talk](#developer-talk)
+    + [Dependency: EUROCONTROL BADA Development Necessary](#dependency--eurocontrol-bada-development-necessary)
+    + [Dependency: Log4Cplus](#dependency--log4cplus)
+  * [Continuous Integration & Testing](#continuous-integration---testing)
+    + [Compile & Run](#compile---run)
+    + [Run Unit Tests](#run-unit-tests)
+  * [Modeling Topics](#modeling-topics)
+
+<small><i><a href='http://ecotrust-canada.github.io/markdown-toc/'>Table of contents generated with markdown-toc</a></i></small>
+
 ## Licensing
 
 [Apache 2.0](https://github.com/mitre/FMACM/blob/master/LICENSE)
