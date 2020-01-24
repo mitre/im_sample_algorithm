@@ -28,7 +28,7 @@ This project contains content developed by The MITRE Corporation. If this code i
   * [Continuous Integration & Testing](#continuous-integration---testing)
     + [Compile & Run](#compile---run)
     + [Run Unit Tests](#run-unit-tests)
-  * [Modeling Topics](#modeling-topics)
+  * [Miscellaneous Topics](#miscellanous-topics)
 
 <small><i><a href='http://ecotrust-canada.github.io/markdown-toc/'>Table of contents generated with markdown-toc</a></i></small>
 
@@ -54,6 +54,10 @@ This code uses [EUROCONTROL's BADA](https://eurocontrol.int/services/bada) for a
 
 Log4Cplus is a logging application used by this code base. It needs to be installed prior to building this code. You can download it from [their GitHub repo](https://github.com/log4cplus/log4cplus).
 
+### Dependency: Units of Measure Library
+
+[Units of Measure Library](http://sourceforge.net/projects/tuoml/) is an open source (LGPLv2), NIST-compliant, C++ library for handling scientific units of measure. It provides abstract object types, mathematical operations, and compile-time checking of uses. It is used extensively in this code base in order to remove ambiguity and reduce the potential of UoM-related bugs. 
+
 ## Continuous Integration & Testing
 
 MITRE takes quality seriously. Testing and CI via travis-ci are coming soon...
@@ -68,8 +72,13 @@ Disappointment time...this code does not produce a self-contained binary executa
 
 ### Run Unit Tests
 
-Coming Soon...
+Coming Soon...we hope
 
-## Modeling Topics
+## Miscellaneous Topics
 
-* [a relative link](coordinate_systems.md)
+* [Coordinate systems](coordinate_systems.md) in the code
+* How does an algorithm receive an IM Clearance?
+* Where is the IFPI defined?
+* How does an algorithm receive a new aircraft state?
+* Which algorithm is running?
+
