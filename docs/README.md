@@ -13,7 +13,7 @@ permission of The MITRE Corporation. For further information, please
 contact The MITRE Corporation, Contracts Office, 7515 Colshire Drive,
 McLean, VA  22102-7539, (703) 983-6000.
 
-Copyright 2019 The MITRE Corporation. All Rights Reserved.
+Copyright 2020 The MITRE Corporation. All Rights Reserved.
 Approved for Public Release; Distribution Unlimited. 15-1482
 
 This project contains content developed by The MITRE Corporation. If this code is used in a deployment or embedded within another project, it is requested that you send an email to opensource@mitre.org in order to let us know where this software is being used.
@@ -54,10 +54,5 @@ Disappointment time...this code does not produce a self-contained binary executa
 
 ### Run Unit Tests
 
-Unit tests are implemented to show core algorithm functionality. Tests can be run via the CMake infrastructure.
+Coming Soon...
 
-Assuming the software already compiles:
-```
->> cd build
->> make run
-```
