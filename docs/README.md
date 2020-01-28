@@ -1,13 +1,25 @@
 - [MITRE's Interval Management Sample Algorithm](#mitre-s-interval-management-sample-algorithm)
-  * [Notice](#notice)
-  * [Licensing](#licensing)
+  * [TL;DR](#tl-dr)
+  * [The Legal Stuff (yay!)](#the-legal-stuff--yay--)
+    + [Notice](#notice)
+    + [Licensing](#licensing)
   * [Published Documentation](#published-documentation)
   * [Living Documentation](#living-documentation)
   * [Related Project](#related-project)
 
 # MITRE's Interval Management Sample Algorithm
 
-## Notice
+## TL;DR
+
+The code is in our git repo. It doesn't compile; that's intentional. You need [RTCA's DO-361A, Appendix C](https://my.rtca.org/nc__store?search=do-361) to understand any of this.
+
+MITRE is happy to answer questions; the email is opensource@mitre.org.
+
+Good luck. ![Here's a four leaf clover for your efforts.](images/four_leaf_clover_dlpng.com_small.png =50x50)
+
+## The Legal Stuff (yay!)
+
+### Notice
 
 This is the copyright work of The MITRE Corporation, and was produced
 for the U. S. Government under Contract Number DTFAWA-10-C-00080, and
@@ -25,7 +37,7 @@ Approved for Public Release; Distribution Unlimited. 15-1482
 
 This project contains content developed by The MITRE Corporation. If this code is used in a deployment or embedded within another project, it is requested that you send an email to opensource@mitre.org in order to let us know where this software is being used.
 
-## Licensing
+### Licensing
 
 [Apache 2.0](https://github.com/mitre/im_sample_algorithm/blob/master/LICENSE)
 
@@ -42,6 +54,8 @@ Living, developer-level documentation is provided on this GitHub site. Here the 
 * Developer Talk: [Does it compile & pass tests?](dev_talk.md)
 * Mapping DO-361A Appendix C to published code
 * Modeling Topics
+    * Interval Management clearance types
+    * Where is IM Turn?
     * [Coordinate systems](coordinate_systems.md) used in the code
     * How does an algorithm receive an IM Clearance?
     * Where is the IFPI defined?
