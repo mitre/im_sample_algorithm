@@ -15,7 +15,7 @@ The code is in our git repo. It doesn't compile; that's intentional. You need [R
 
 MITRE is happy to answer questions; the email is opensource@mitre.org.
 
-Good luck. ![Here's a four leaf clover for your efforts.](images/four_leaf_clover_dlpng.com_small.png =50x50)
+Good luck. ![Here's a four leaf clover for your efforts.](images/four_leaf_clover_dlpng.com_small.png)
 
 ## The Legal Stuff (yay!)
 
