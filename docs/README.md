@@ -11,7 +11,7 @@
 
 ## TL;DR
 
-The code is in our git repo. It doesn't compile; that's intentional. You need [RTCA's DO-361A, Appendix C](https://my.rtca.org/nc__store?search=do-361) to understand any of this.
+The code is in [this git repo](https://github.com/mitre/im_sample_algorithm). It doesn't compile; that's intentional. You need [RTCA's DO-361A, Appendix C](https://my.rtca.org/nc__store?search=do-361) to understand any of this.
 
 MITRE is happy to answer questions; the email is opensource@mitre.org.
 
