@@ -14,7 +14,7 @@ Like this:
 
 ## Initialize the Algorithm
 
-You'll need a concrete `IMAlgorithm` class for this step and that is based on what you are trying to do. (Unsure? [Consider this.](im_clearance_types.md)) But, in general, you'll probably want to instantiate an [`IMTimeBasedAchieve`](https://github.com/mitre/im_sample_algorithm/blob/master/IntervalManagement/IMTimeBasedAchieve.cpp) or [`IMDistBasedAchieve`](https://github.com/mitre/im_sample_algorithm/blob/master/IntervalManagement/IMDistBasedAchieve.cpp) algorithm. Once that is built, you need to initialize the internal states. You'll find this declared in the parent class, [`IMKinematicAchieve.h`](https://github.com/mitre/im_sample_algorithm/blob/master/include/imalgs/IMKinematicAchieve.h).
+You'll need a concrete `IMAlgorithm` class for this step and that choice is based on what you are trying to do. (Unsure? [Consider this.](im_clearance_types.md)) But, in general, you'll probably want to instantiate an [`IMTimeBasedAchieve`](https://github.com/mitre/im_sample_algorithm/blob/master/IntervalManagement/IMTimeBasedAchieve.cpp) or [`IMDistBasedAchieve`](https://github.com/mitre/im_sample_algorithm/blob/master/IntervalManagement/IMDistBasedAchieve.cpp) algorithm. Once that is built, you need to initialize the internal states. You'll find this declared in the parent class, [`IMKinematicAchieve.h`](https://github.com/mitre/im_sample_algorithm/blob/master/include/imalgs/IMKinematicAchieve.h).
 
 ```c++
 virtual void Initialize(const KineticTrajectoryPredictor &ownship_kinetic_trajectory_predictor,
