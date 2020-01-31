@@ -12,6 +12,7 @@ These appendices have been written by [MITRE](https://www.mitre.org) and are the
 (If any mistakes are noticed in this mapping, please [open an issue](https://github.com/mitre/im_sample_algorithm/issues) to notify us of the mistake.)
 
 Appendix Section | Appendix Title | Public Implementation
+------------ | ------------- | --------------
 C | SAMPLE ALGORITHM | [https://mitre.github.io/im_sample_algorithm](https://mitre.github.io/im_sample_algorithm)
 C.1 | Overview | No Applicable URL
 C.2 | Generation of the Reference Trajectories | Not Available
@@ -87,6 +88,7 @@ H.3 | Aircraft-Specific Modeling | [https://github.com/mitre/FMACM/blob/master/i
 In addition to the above model mappings, Appendix H documents the control law gain values we used in our simulations. The mapping between the gains and our code is below.
 
 Parameter/Control Gain | Value | Public Implementation
+------------ | ------------- | --------------
 thrust | 0.352 s-1 | [https://github.com/mitre/FMACM/blob/master/Public/AircraftControl.cpp#L56](https://github.com/mitre/FMACM/blob/master/Public/AircraftControl.cpp#L56)
 phi | 0.400 s-1 | [https://github.com/mitre/FMACM/blob/master/Public/SpeedOnPitchControl.cpp#L23](https://github.com/mitre/FMACM/blob/master/Public/SpeedOnPitchControl.cpp#L23)
 speed brake | 0.100 s-1 | [https://github.com/mitre/FMACM/blob/master/Public/SpeedOnThrustControl.cpp#L24](https://github.com/mitre/FMACM/blob/master/Public/SpeedOnThrustControl.cpp#L24)
