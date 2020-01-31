@@ -1,8 +1,3 @@
----
-# title: "Interval Management Sample Algorithm"
-sidebar:
-  nav: "docs"
----
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 
 - [MITRE's Interval Management Sample Algorithm](#mitre-s-interval-management-sample-algorithm)
