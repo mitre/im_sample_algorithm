@@ -18,9 +18,8 @@ The code is in [this git repo](https://github.com/mitre/im_sample_algorithm). It
 MITRE is happy to answer questions; the email is opensource@mitre.org.
 
 Good luck.
-:crossed_fingers:
-:four_leaf_clover:
-:grinning:
+
+:crossed_fingers: :four_leaf_clover: :grinning:
 
 ## The Legal Stuff (yay!)
 
