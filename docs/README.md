@@ -54,18 +54,18 @@ Official algorithm descriptions are available via [RTCA's DO-361A](https://my.rt
 Living, developer-level documentation is provided on this GitHub site. Here the goal is to provide deeper detail regarding how our code works and how others might use this code to inform their own implementations of DO-361A. All topics assume the reader has access to DO-361A, specifically Appendix C.
 
 * Developer Talk: [Does it compile & pass tests?](dev_talk.md)
-* [Mapping DO-361A Appendix C to published code](appendix_url_mapping.md)
+* Mapping DO-361A [Appendix C to published code](appendix_url_mapping.md)
 * Modeling Topics
     * [Interval Management clearance types](im_clearance_types.md)
-    * Where is IM Turn?
     * [Coordinate systems](coordinate_systems.md) used in the code
     * How does the kinematic trajectory prediction work?
 * Code Topics
-    * [Entry points.](entry_points.md) What do I call?
-    * How does an algorithm receive an IM Clearance?
+    * [Entry points.](entry_points.md) Who you gonna call? :ghost:
+    * How does an algorithm receive IM Clearance details? Read [entry points.](entry_points.md)
     * Where is the IFPI defined?
-    * How does an algorithm receive a new aircraft state?
+    * How does an algorithm receive a new aircraft state? Read [entry points.](entry_points.md)
     * Which algorithm is running and when?
+    * Where is IM Turn?
 
 ## Related Project
 
