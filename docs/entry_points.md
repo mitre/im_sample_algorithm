@@ -29,6 +29,7 @@ virtual void Initialize(const KineticTrajectoryPredictor &ownship_kinetic_trajec
 ## Returned Data
 
 The code provides a `virtual` declaration for the `Update` method in [IMAlgorithm.h](https://github.com/mitre/im_sample_algorithm/blob/master/include/imalgs/IMAlgorithm.h#L80).
+
 ```c++
 virtual Guidance Update(const Guidance &prevguidance,
                         const DynamicsState &dynamicsstate,
@@ -49,5 +50,3 @@ This output can also be accessed via a simple getter exposed by [`IMAlgorithm`](
 ```c++
    virtual const Units::Speed GetImSpeedCommandIas() const;
 ```
-
-## 
