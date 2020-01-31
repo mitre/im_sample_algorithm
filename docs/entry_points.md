@@ -10,7 +10,7 @@ From a state-machine perspective, the code follows a simple process path.
 
 Like this:
 
-![state_sequence](images/state_sequence_small.png)
+![state_sequence](images/state_sequence_medium.png)
 
 ## Initialize the Algorithm
 
