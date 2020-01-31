@@ -6,7 +6,7 @@ From a state-machine perspective, the code follows a simple process path.
 
 * Instantiate a concrete `IMAlgorithm` class
 * Call its `Initialize` method to establish its internal states
-* Repeatedly call its `Update` method, providing new inputs as your simulation clock progress.
+* Repeatedly call its `Update` method, providing new inputs as the simulation clock advances.
 
 Like this:
 
