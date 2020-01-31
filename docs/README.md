@@ -1,4 +1,5 @@
 ---
+title: Interval Management Sample Algorithm
 sidebar:
   nav: "docs"
 ---
