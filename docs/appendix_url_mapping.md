@@ -3,19 +3,21 @@
 [RTCA's DO-361A](https://my.rtca.org/nc__store?search=do-361) contains two appendices which document algorithms and models associated with the research for Interval Management.
 
 * Appendix C: SAMPLE ALGORITHM provides detailed technical documentation of a "sample" algorithm that meets the requirements in DO-361A. The software in this git repo is our own implementation of Appendix C.
-* Appendix H: MOPS Aircraft and Control Model is an overview of a 3-degree-of-freedom aircraft dynamics & control model.
+* Appendix H: MOPS Aircraft and Control Model is an overview of a 3-degree-of-freedom aircraft dynamics & control model which we've used for our research.
+    * Detailed documentation is found in [this published paper](https://www.mitre.org/publications/technical-papers/derivation-of-a-point-mass-aircraft-model-used-for-fast-time).
+    * An implementation of Appendix H is [also available](https://mitre.github.io/FMACM)
 
-These appendices have been written by (MITRE)(https://www.mitre.org) and are copyright of RTCA. In this git repo, and our [associated FIM MOPS Aircraft & Control Model](https://mitre.github.io/FMACM), are provided our software implementations of the algorithms and models. Below is a general mapping between each section of DO-361A Appendix C & H and our code.
+These appendices have been written by (MITRE)(https://www.mitre.org) and are copyright of RTCA. In this git repo, and our [associated FIM MOPS Aircraft & Control Model](https://mitre.github.io/FMACM), are provided our software implementations of the algorithms and models. Below is a general mapping between each section of DO-361A Appendix C & H and our open source code.
 
 (If any mistakes are noticed in this mapping, please [open an issue](https://github.com/mitre/im_sample_algorithm/issues) to notify us of the mistake.)
 
 Appendix Section | Appendix Title | Public Implementation
-C | SAMPLE ALGORITHM | https://mitre.github.io/im_sample_algorithm
+C | SAMPLE ALGORITHM | [https://mitre.github.io/im_sample_algorithm](https://mitre.github.io/im_sample_algorithm)
 C.1 | Overview | No Applicable URL
 C.2 | Generation of the Reference Trajectories | Not Available
-C.2.1 | Calculation of the Horizontal Path | https://github.com/mitre/FMACM/blob/master/Public/HorizontalPath.cpp
-C.2.1.1 | Determining the Waypoint Sequence | https://github.com/mitre/FMACM/blob/master/Public/AircraftIntent.cpp
-C.2.1.2 | Conversion of Waypoint Latitudes and Longitudes to x;y Coordinates | https://github.com/mitre/FMACM/blob/master/Public/TangentPlaneSequence.cpp
+C.2.1 | Calculation of the Horizontal Path | [https://github.com/mitre/FMACM/blob/master/Public/HorizontalPath.cpp](https://github.com/mitre/FMACM/blob/master/Public/HorizontalPath.cpp)
+C.2.1.1 | Determining the Waypoint Sequence | [https://github.com/mitre/FMACM/blob/master/Public/AircraftIntent.cpp](https://github.com/mitre/FMACM/blob/master/Public/AircraftIntent.cpp)
+C.2.1.2 | Conversion of Waypoint Latitudes and Longitudes to x;y Coordinates | [https://github.com/mitre/FMACM/blob/master/Public/TangentPlaneSequence.cpp](https://github.com/mitre/FMACM/blob/master/Public/TangentPlaneSequence.cpp)
 C.2.1.3 | Determine Course Change Between Waypoints | Not Available
 C.2.1.4 | Calculate Turn Radius | Not Available
 C.2.1.5 | Calculate the Start; End; and Center of the Turn | Not Available
