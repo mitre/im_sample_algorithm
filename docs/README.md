@@ -17,7 +17,7 @@ The code is in [this git repo](https://github.com/mitre/im_sample_algorithm). It
 
 MITRE is happy to answer questions; the email is opensource@mitre.org.
 
-Good luck. ![Here's a four leaf clover for your efforts.](images/four_leaf_clover_dlpng.com_small.png)
+Good luck. :crossed_fingers: :four_leaf_clover:
 
 ## The Legal Stuff (yay!)
 
