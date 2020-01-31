@@ -7,7 +7,7 @@
     * Detailed documentation is found in [this published paper](https://www.mitre.org/publications/technical-papers/derivation-of-a-point-mass-aircraft-model-used-for-fast-time).
     * An implementation of Appendix H is [also available](https://mitre.github.io/FMACM)
 
-These appendices have been written by (MITRE)(https://www.mitre.org) and are copyright of RTCA. In this git repo, and our [associated FIM MOPS Aircraft & Control Model](https://mitre.github.io/FMACM), are provided our software implementations of the algorithms and models. Below is a general mapping between each section of DO-361A Appendix C & H and our open source code.
+These appendices have been written by [MITRE](https://www.mitre.org) and are the copyright of RTCA. In this git repo, and our related [FIM MOPS Aircraft & Control Model](https://mitre.github.io/FMACM), are provided our software implementations of the algorithms and models. Below is a general mapping between each section of DO-361A Appendix C/H and our open source code.
 
 (If any mistakes are noticed in this mapping, please [open an issue](https://github.com/mitre/im_sample_algorithm/issues) to notify us of the mistake.)
 
@@ -51,7 +51,7 @@ C.4.1.1 | Time-based Predicted Spacing Interval | [https://github.com/mitre/im_s
 C.4.1.2 | Distance-based Predicted Spacing Interval | [https://github.com/mitre/im_sample_algorithm/blob/master/IntervalManagement/IMDistBasedAchieve.cpp](https://github.com/mitre/im_sample_algorithm/blob/master/IntervalManagement/IMDistBasedAchieve.cpp)
 C.4.2 | Default Traffic Reference Point | Not Available
 C.4.3 | Time-to-Go Control Law for Time-based Assigned Spacing Goals | [https://github.com/mitre/im_sample_algorithm/blob/master/IntervalManagement/IMTimeBasedAchieve.cpp](https://github.com/mitre/im_sample_algorithm/blob/master/IntervalManagement/IMTimeBasedAchieve.cpp)
-C.4.4 | Time-to-Go Control Law for Distance-based Assigned Spacing Goals | [https://github.com/mitre/im_sample_algorithm/blob/master/IntervalManagement/IMDistBasedAchieve](https://github.com/mitre/im_sample_algorithm/blob/master/IntervalManagement/IMDistBasedAchieve).cpp
+C.4.4 | Time-to-Go Control Law for Distance-based Assigned Spacing Goals | [https://github.com/mitre/im_sample_algorithm/blob/master/IntervalManagement/IMDistBasedAchieve.cpp](https://github.com/mitre/im_sample_algorithm/blob/master/IntervalManagement/IMDistBasedAchieve.cpp)
 C.4.5 | Error Thresholds | [https://github.com/mitre/im_sample_algorithm/blob/master/IntervalManagement/IMAchieve.cpp](https://github.com/mitre/im_sample_algorithm/blob/master/IntervalManagement/IMAchieve.cpp)
 C.4.6 | Hysteresis on New Speed Implementation | [https://github.com/mitre/im_sample_algorithm/blob/master/IntervalManagement/IMAlgorithm.cpp](https://github.com/mitre/im_sample_algorithm/blob/master/IntervalManagement/IMAlgorithm.cpp)
 C.4.7 | Discretization of the Control Law Speed | [https://github.com/mitre/im_sample_algorithm/blob/master/IntervalManagement/IMTimeBasedAchieve.cpp](https://github.com/mitre/im_sample_algorithm/blob/master/IntervalManagement/IMTimeBasedAchieve.cpp)
