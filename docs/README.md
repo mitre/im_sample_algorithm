@@ -67,7 +67,7 @@ Living, developer-level documentation is provided on this GitHub site. Here the 
     * Where is the IFPI defined?
     * How does an algorithm receive a new aircraft state? Read [entry points.](entry_points.md)
     * Which algorithm is running and when?
-    * Where is IM Turn?
+    * Uh...Where is the code for [IM Turn?](where_is_im_turn.md)
 
 ## Related Project
 
