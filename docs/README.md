@@ -56,14 +56,16 @@ Living, developer-level documentation is provided on this GitHub site. Here the 
 * Developer Talk: [Does it compile & pass tests?](dev_talk.md)
 * [Mapping DO-361A Appendix C to published code](appendix_url_mapping.md)
 * Modeling Topics
-    * Interval Management clearance types
+    * [Interval Management clearance types](im_clearance_types.md)
     * Where is IM Turn?
     * [Coordinate systems](coordinate_systems.md) used in the code
+    * How does the kinematic trajectory prediction work?
+* Code Topics
+    * [Entry points.](entry_points.md) What do I call?
     * How does an algorithm receive an IM Clearance?
     * Where is the IFPI defined?
     * How does an algorithm receive a new aircraft state?
     * Which algorithm is running and when?
-    * How does the kinematic trajectory prediction work?
 
 ## Related Project
 
