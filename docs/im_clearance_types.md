@@ -9,6 +9,6 @@ Achieve-by Then Maintain (dist) | The given distance-based spacing goal is to be
 Capture Then Maintain (time) | The given time-base spacing goal is to be immediately captured and maintained | [IMKinematicTimeBasedMaintain](https://github.com/mitre/im_sample_algorithm/blob/master/include/imalgs/IMKinematicTimeBasedMaintain.h)
 Capture Then Maintain (dist) | The given distance-base spacing goal is to be immediately captured and maintained | [IMKinematicDistBasedMaintain](https://github.com/mitre/im_sample_algorithm/blob/master/include/imalgs/IMKinematicDistBasedMaintain.h)
 Final Approach Spacing | Achieve-by Then Maintain for final approach situations | see above
-IM Turn | A variant of Achieve-by Then Maintain that shortens the path to the Achieve-by Point | see above
+IM Turn | A variant of Achieve-by Then Maintain that shortens the path to the Achieve-by Point | Not currently available [read Where is IM Turn?](where_is_im_turn.md)
 Maintain Current Spacing (time) | Like Capture Then Maintain (time), but the current spacing is the spacing goal | see above
 Maintain Current Spacing (dist) | Like Capture Then Maintain (dist), but the current spacing is the spacing goal | see above
