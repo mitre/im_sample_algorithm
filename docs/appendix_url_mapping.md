@@ -83,3 +83,17 @@ H.2.2 | Speed Control Using Thrust | [https://github.com/mitre/FMACM/blob/master
 H.2.3 | Speed Control Using Pitch | [https://github.com/mitre/FMACM/blob/master/Public/SpeedOnPitchControl.cpp](https://github.com/mitre/FMACM/blob/master/Public/SpeedOnPitchControl.cpp)
 H.2.4 | Control Gains and Parameter Values | [https://github.com/mitre/FMACM/blob/master/Public/AircraftControl.cpp](https://github.com/mitre/FMACM/blob/master/Public/AircraftControl.cpp)
 H.3 | Aircraft-Specific Modeling | [https://github.com/mitre/FMACM/blob/master/include/aaesim/BadaWithCalc.h](https://github.com/mitre/FMACM/blob/master/include/aaesim/BadaWithCalc.h)
+
+In addition to the above model mappings, Appendix H documents the control law gain values we used in our simulations. The mapping between the gains and our code is below.
+
+Parameter/Control Gain | Value | Public Implementation
+thrust | 0.352 s-1 | [https://github.com/mitre/FMACM/blob/master/Public/AircraftControl.cpp#L56](https://github.com/mitre/FMACM/blob/master/Public/AircraftControl.cpp#L56)
+phi | 0.400 s-1 | [https://github.com/mitre/FMACM/blob/master/Public/SpeedOnPitchControl.cpp#L23](https://github.com/mitre/FMACM/blob/master/Public/SpeedOnPitchControl.cpp#L23)
+speed brake | 0.100 s-1 | [https://github.com/mitre/FMACM/blob/master/Public/SpeedOnThrustControl.cpp#L24](https://github.com/mitre/FMACM/blob/master/Public/SpeedOnThrustControl.cpp#L24)
+psi | 3 | [https://github.com/mitre/FMACM/blob/master/Public/AircraftControl.cpp#L120](https://github.com/mitre/FMACM/blob/master/Public/AircraftControl.cpp#L120)
+gamma | 0.400 s-1 | [https://github.com/mitre/FMACM/blob/master/Public/SpeedOnPitchControl.cpp#L22](https://github.com/mitre/FMACM/blob/master/Public/SpeedOnPitchControl.cpp#L22)
+cross-track | 5 × 10-4 m-1 | [https://github.com/mitre/FMACM/blob/master/Public/AircraftControl.cpp#L119](https://github.com/mitre/FMACM/blob/master/Public/AircraftControl.cpp#L119)
+IAS | 0.1136 s-1 | [https://github.com/mitre/FMACM/blob/master/Public/SpeedOnPitchControl.cpp#L36](https://github.com/mitre/FMACM/blob/master/Public/SpeedOnPitchControl.cpp#L36)
+altitude | 0.20 s-1 | [https://github.com/mitre/FMACM/blob/master/Public/SpeedOnPitchControl.cpp#L21](https://github.com/mitre/FMACM/blob/master/Public/SpeedOnPitchControl.cpp#L21)
+altitude threshold | 500 feet | [https://github.com/mitre/FMACM/blob/master/AircraftDynamicsTestFramework/TestFrameworkAircraft.cpp#L69](https://github.com/mitre/FMACM/blob/master/AircraftDynamicsTestFramework/TestFrameworkAircraft.cpp#L69)
+IAS threshold | 20 knot | [https://github.com/mitre/FMACM/blob/master/AircraftDynamicsTestFramework/TestFrameworkAircraft.cpp#L69](https://github.com/mitre/FMACM/blob/master/AircraftDynamicsTestFramework/TestFrameworkAircraft.cpp#L69)
