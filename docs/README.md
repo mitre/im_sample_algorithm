@@ -11,7 +11,9 @@
 
 ## TL;DR
 
-The code is in [this git repo](https://github.com/mitre/im_sample_algorithm). It doesn't compile; that's intentional. You need [RTCA's DO-361A, Appendix C](https://my.rtca.org/nc__store?search=do-361) to understand any of this.
+You need [RTCA's DO-361A, Appendix C](https://my.rtca.org/nc__store?search=do-361) to understand any of this.
+
+The code is in [this git repo](https://github.com/mitre/im_sample_algorithm). It doesn't compile; that's intentional. We are considering providing some unit tests.
 
 MITRE is happy to answer questions; the email is opensource@mitre.org.
 
@@ -52,7 +54,7 @@ Official algorithm descriptions are available via [RTCA's DO-361A](https://my.rt
 Living, developer-level documentation is provided on this GitHub site. Here the goal is to provide deeper detail regarding how our code works and how others might use this code to inform their own implementations of DO-361A. All topics assume the reader has access to DO-361A, specifically Appendix C.
 
 * Developer Talk: [Does it compile & pass tests?](dev_talk.md)
-* Mapping DO-361A Appendix C to published code
+* [Mapping DO-361A Appendix C to published code](appendix_url_mapping.md)
 * Modeling Topics
     * Interval Management clearance types
     * Where is IM Turn?
