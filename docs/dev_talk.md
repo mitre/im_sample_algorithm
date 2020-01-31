@@ -18,7 +18,7 @@ MITRE takes quality seriously. But, this repository houses code that is not expe
 
 ### Compile & Run
 
-Disappointment time...this code does not produce a self-contained binary executable nor does it necessarily compile. :( Rather this repository represents a collection of implemented algorithms provided as a supplement to DO-361A. No attempt has been made to ensure that this compiles. Where possible, examine the unit tests for an understanding of which sections of the code are fully operational. Otherwise, please rely upon the documentation and post issues with questions or conerns.
+Disappointment time...this code does not produce a self-contained binary executable nor does it necessarily compile. :disappointed: Rather this repository represents a collection of implemented algorithms provided as a supplement to DO-361A. No attempt has been made to ensure that this compiles. Where possible, examine the unit tests for an understanding of which sections of the code are fully operational. Otherwise, please rely upon the documentation and post issues with questions or conerns.
 
 No attempt has been made to ensure that this code will compile on a range of operating systems. For MITRE, this code compiles successfully on Linux machines, specifically [CentOs](https://www.centos.org/) 7 using gcc 4.8.5. For all other computing environments, YMMV.
 
