@@ -8,3 +8,5 @@ defaults:
     values:
       sidebar:
         nav: "docs"
+plugins:
+  - jemoji
