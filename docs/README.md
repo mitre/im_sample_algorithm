@@ -72,3 +72,5 @@ Living, developer-level documentation is provided on this GitHub site. Here the 
 Directly related to this sample algorithm implementation is the [FIM MOPS Aircraft Dynamics & Control Model](https://mitre.github.io/FMACM). That code is a fully operational aircraft simulation the comes with compile instructions and passing unit tests. It is the core simulation that MITRE used to implement and test the Sample Algorithm control law discussed here.
 
 <small><i><a href='http://ecotrust-canada.github.io/markdown-toc/'>(Table of Contents generated with markdown-toc)</a></i></small>
+
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
