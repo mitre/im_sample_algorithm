@@ -1,7 +1,8 @@
 title: im_sample_algorithm
 description: MITRE's Interval Management Sample Algorithm. An implementation of RTCA DO-361A Appendix C.
-theme: minimal-mistakes-jekyll #jekyll-theme-slate
-include: ["_data"]
+# theme: minimal-mistakes-jekyll #jekyll-theme-slate
+remote_theme: "mmistakes/minimal-mistakes@4.18.1"
+include: ["_data", "_includes"]
 defaults:
   # _docs
   - scope:
