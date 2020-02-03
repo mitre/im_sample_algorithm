@@ -1,4 +1,6 @@
-theme: jekyll-theme-slate
+title: im_sample_algorithm
+description: MITRE's Interval Management Sample Algorithm. An implementation of RTCA DO-361A Appendix C.
+theme: minimal-mistakes-jekyll #jekyll-theme-slate
 include: ["_data"]
 defaults:
   # _docs
