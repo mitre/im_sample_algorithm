@@ -12,3 +12,4 @@ defaults:
         nav: "docs"
 plugins:
   - jemoji
+  - jekyll-include-cache
