@@ -1,3 +1,7 @@
+toc_footers:
+ - <a href='#'>Sign Up for a Developer Key</a>
+ - <a href='http://github.com/tripit/slate'>Documentation Powered by Slate</a>
+ 
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 
 - [MITRE's Interval Management Sample Algorithm](#mitre-s-interval-management-sample-algorithm)
