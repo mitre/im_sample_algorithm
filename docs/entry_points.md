@@ -1,5 +1,7 @@
 # Entry Points
 
+[Back to Landing Page](/README.md)
+
 _Note: this code will not compile as-provided. If you're trying to call it, we'll assume you've modified it to make it compile._
 
 From a state-machine perspective, the code follows a simple process path.
