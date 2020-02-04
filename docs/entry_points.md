@@ -20,12 +20,12 @@ You'll need a concrete `IMAlgorithm` class for this step and that choice is base
 
 ```c++
 virtual void Initialize(const KineticTrajectoryPredictor &ownship_kinetic_trajectory_predictor,
-                           const KineticTrajectoryPredictor &target_kinetic_trajectory_predictor,
-                           std::shared_ptr<TangentPlaneSequence> tangent_plane_sequence,
-                           AircraftIntent &target_aircraft_intent,
-                           const IMClearance &im_clearance,
-                           const std::string &achieve_by_point,
-                           WeatherPrediction &weather_prediction);
+                        const KineticTrajectoryPredictor &target_kinetic_trajectory_predictor,
+                        std::shared_ptr<TangentPlaneSequence> tangent_plane_sequence,
+                        AircraftIntent &target_aircraft_intent,
+                        const IMClearance &im_clearance,
+                        const std::string &achieve_by_point,
+                        WeatherPrediction &weather_prediction);
 ```
 
 ## Returned Data
