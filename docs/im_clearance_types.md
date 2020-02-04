@@ -1,5 +1,7 @@
 # Interval Management Clearance Types
 
+[Back to Landing Page](/README.md)
+
 [RTCA's DO-328B](https://my.rtca.org/nc__store?search=do-328) defines multiple clearance types that may (in the future) be used by Air Traffic Controllers to space aircraft. Here's a quick summary. Further details can be obtained from RTCA.
 
 Clearance Type | Relevant Class
