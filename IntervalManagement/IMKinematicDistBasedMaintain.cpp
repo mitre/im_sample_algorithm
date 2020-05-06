@@ -111,8 +111,7 @@ Guidance IMKinematicDistBasedMaintain::Update(const DynamicsState &dynamics_stat
             CoreUtils::FindNearestIndex(Units::MetersLength(ownship_true_dtg).value(),
                                         ownship_kinematic_trajectory_predictor.GetVerticalPathDistances());
 
-      if (IsOwnshipBelowTransitionAltitude(Units::FeetLength(ownship_aircraft_state.m_z),
-                                           ownship_kinematic_trajectory_predictor)) {
+      if (guidanceout.GetSelectedSpeed().GetSpeedType() == INDICATED_AIR_SPEED) {
          CalculateIas(Units::FeetLength(ownship_aircraft_state.m_z), target_dtg_along_ownships_path,
                       dynamics_state, ownship_kinematic_trajectory_predictor, pilot_delay);
       } else {
@@ -242,7 +241,7 @@ RecordInternalObserverData(const AircraftState &ownship_aircraft_state,
       InternalObserver::getInstance()->IM_command_output(ownship_aircraft_state.m_id,
                                                          ownship_aircraft_state.m_time,
                                                          ownship_aircraft_state.m_z,
-                                                         Units::MetersPerSecondSpeed(dynamics_state.V).value(),
+                                                         Units::MetersPerSecondSpeed(dynamics_state.v_true_airspeed).value(),
                                                          Units::MetersPerSecondSpeed(
                                                                ownship_aircraft_state.GetGroundSpeed()).value(),
                                                          Units::MetersPerSecondSpeed(m_im_speed_command_ias).value(),

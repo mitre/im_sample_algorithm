@@ -80,6 +80,8 @@ Guidance IMKinematicTimeBasedMaintain::Update(const DynamicsState &dynamics_stat
    Units::Time target_crossing_time = Units::zero();
 
    m_measured_spacing_interval = Units::NegInfinity();
+   Units::Length projected_x;
+   Units::Length projected_y;
 
    if (!target_aircraft_state_history.empty()) {
       vector<AircraftState> history = target_aircraft_state_history;
@@ -91,8 +93,11 @@ Guidance IMKinematicTimeBasedMaintain::Update(const DynamicsState &dynamics_stat
       }
       storespacingerror = IMUtils::GetCrossingTime(ownship_true_dtg,
                                                    history,
-                                                   ownship_kinematic_trajectory_predictor.GetHorizontalPath(),
-                                                   target_crossing_time);
+                                                   m_im_distance_calculator,
+                                                   //ownship_kinematic_trajectory_predictor.GetHorizontalPath(),
+                                                   target_crossing_time,
+                                                   projected_x,
+                                                   projected_y);
 
       if (!storespacingerror) {
          LOG4CPLUS_WARN(IMKinematicTimeBasedMaintain::logger, "update ac " << ownship_aircraft_state.m_id
@@ -183,8 +188,7 @@ Guidance IMKinematicTimeBasedMaintain::Update(const DynamicsState &dynamics_stat
                                                                                    ownship_aircraft_state.m_z));
       m_unmodified_im_speed_command_ias = m_im_speed_command_ias;
 
-      if (IsOwnshipBelowTransitionAltitude(Units::FeetLength(ownship_aircraft_state.m_z),
-                                           ownship_kinematic_trajectory_predictor)) {
+      if (guidanceout.GetSelectedSpeed().GetSpeedType() == INDICATED_AIR_SPEED) {
          CalculateIas(Units::FeetLength(ownship_aircraft_state.m_z), dynamics_state,
                       ownship_kinematic_trajectory_predictor,
                       pilot_delay_model);
@@ -200,7 +204,7 @@ Guidance IMKinematicTimeBasedMaintain::Update(const DynamicsState &dynamics_stat
          InternalObserver::getInstance()->IM_command_output(ownship_aircraft_state.m_id,
                                                             ownship_aircraft_state.m_time,
                                                             ownship_aircraft_state.m_z,
-                                                            Units::MetersPerSecondSpeed(dynamics_state.V).value(),
+                                                            Units::MetersPerSecondSpeed(dynamics_state.v_true_airspeed).value(),
                                                             Units::MetersPerSecondSpeed(
                                                                   ownship_aircraft_state.GetGroundSpeed()).value(),
                                                             Units::MetersPerSecondSpeed(m_im_speed_command_ias).value(),

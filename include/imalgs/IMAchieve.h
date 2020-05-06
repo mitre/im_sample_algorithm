@@ -108,6 +108,7 @@ protected:
 
 private:
    void IterClearIMAch();
+   bool m_is_target_aligned;
 
    static log4cplus::Logger m_logger;
 };
@@ -135,6 +136,7 @@ inline const bool IMAchieve::IsWithinErrorThreshold() const {
 inline const bool IMAchieve::IsOwnshipBelowTransitionAltitude(Units::Length current_ownship_altitude) {
    return false;
 }
+
 
 inline void IMAchieve::CalculateIas(const Units::Length current_ownship_altitude,
                                     const DynamicsState &three_dof_dynamics_state) {

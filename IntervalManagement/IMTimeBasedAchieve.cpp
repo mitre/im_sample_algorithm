@@ -311,7 +311,7 @@ Guidance IMTimeBasedAchieve::Update(const Guidance &previous_im_guidance,
 
          m_unmodified_im_speed_command_ias = m_im_speed_command_ias;
 
-         if (IsOwnshipBelowTransitionAltitude(Units::FeetLength(current_ownship_state.m_z))) {
+         if (guidanceout.GetSelectedSpeed().GetSpeedType() == INDICATED_AIR_SPEED) {
             CalculateIas(Units::FeetLength(current_ownship_state.m_z), three_dof_dynamics_state);
          } else {
             CalculateMach(reference_ttg, Units::FeetLength(current_ownship_state.m_z));
@@ -331,7 +331,39 @@ Guidance IMTimeBasedAchieve::Update(const Guidance &previous_im_guidance,
          } else {
             guidanceout.m_ias_command = m_im_speed_command_ias;
          }
-      } else {
+         return guidanceout;
+      }
+      // Test for alignment
+      if (m_im_clearance.GetClearanceType() == IMClearance::CAPTURE && !IsTargetAligned()) {
+         m_stage_of_im_operation = MAINTAIN;
+         if (!target_adsb_history.empty()) {
+            Units::SignedRadiansAngle target_track_angle = CalculateTargetTrackAngle(target_adsb_history);
+            Units::UnsignedRadiansAngle pt_to_pt_course;
+            Units::Length tgt_distance;
+            Units::UnsignedAngle own_planned_course;
+            m_im_ownship_distance_calculator.CalculateAlongPathDistanceFromPosition(
+                    Units::FeetLength(target_adsb_history.back().m_x),
+                    Units::FeetLength(target_adsb_history.back().m_y),
+                    tgt_distance,
+                    own_planned_course,
+                    pt_to_pt_course);
+            Units::UnsignedRadiansAngle track_difference = abs(own_planned_course - target_track_angle);
+            if (track_difference < Units::DegreesAngle(15.0)) {
+               m_is_target_aligned = true;
+               //LOG4CPLUS_DEBUG(m_logger,"Alignment captured at adsb history time: " << target_adsb_history.back().m_time
+               //<< " target track: " << Units::UnsignedDegreesAngle(target_track_angle) << " own planned course: " << Units::UnsignedDegreesAngle(own_planned_course));
+            } else {
+               track_difference = abs(pt_to_pt_course - target_track_angle);
+               if (track_difference < Units::DegreesAngle(15.0)) {
+                  m_is_target_aligned = true;
+                  //LOG4CPLUS_DEBUG(m_logger,"Alignment captured at adsb history time: " << target_adsb_history.back().m_time
+                  //<< " target track: " << Units::UnsignedDegreesAngle(target_track_angle) << " pt-pt-course: " << Units::UnsignedDegreesAngle(pt_to_pt_course));
+               }
+            }
+        }
+      }
+
+      if (m_im_clearance.GetClearanceType() != IMClearance::CAPTURE || IsTargetAligned()) {
          m_stage_of_im_operation = MAINTAIN;
 
          m_ownship_ttg_to_abp = Units::zero();
@@ -341,24 +373,29 @@ Guidance IMTimeBasedAchieve::Update(const Guidance &previous_im_guidance,
          Units::Time target_time = Units::SecondsTime(current_ownship_state.m_time) - m_assigned_spacing_goal;
 
          bool built;
+         //m_im_ownship_distance_calculator.UpdateCurrentIndex(0);
          AircraftState target_state_projected_asg_adjusted =
-               IMUtils::GetProjectedTargetState(target_adsb_history,
-                                                m_ownship_kinematic_trajectory_predictor.GetHorizontalPath(),
-                                                target_time,
-                                                Units::RadiansAngle(current_ownship_state.GetHeadingCcwFromEastRadians() + Units::PI_RADIANS_ANGLE),
-                                                built);
+                 IMUtils::GetProjectedTargetState(m_im_ownship_distance_calculator,
+                                                  target_adsb_history,
+                                                  m_ownship_kinematic_trajectory_predictor.GetHorizontalPath(),
+                                                  target_time,
+                                                  Units::RadiansAngle(
+                                                          current_ownship_state.GetHeadingCcwFromEastRadians() +
+                                                          Units::PI_RADIANS_ANGLE),
+                                                  built);
 
          if (built) {
             if (!m_transitioned_to_maintain) {
                m_im_kinematic_time_based_maintain->Prepare(m_previous_reference_im_speed_command_tas,
-                                                           m_previous_im_speed_command_ias,
-                                                           m_previous_reference_im_speed_command_mach,
-                                                           m_tangent_plane_sequence,
-                                                           m_ownship_kinematic_trajectory_predictor,
-                                                           target_adsb_history,
-                                                           m_im_clearance,
-                                                           m_has_rf_leg,
-                                                           m_rfleg_limits);
+                                                              m_previous_im_speed_command_ias,
+                                                              m_previous_reference_im_speed_command_mach,
+                                                              m_tangent_plane_sequence,
+                                                              m_ownship_kinematic_trajectory_predictor,
+                                                              m_im_ownship_distance_calculator,
+                                                              target_adsb_history,
+                                                              m_im_clearance,
+                                                              m_has_rf_leg,
+                                                              m_rfleg_limits);
 
                m_transitioned_to_maintain = true;
             }
@@ -380,32 +417,45 @@ Guidance IMTimeBasedAchieve::Update(const Guidance &previous_im_guidance,
             m_im_speed_command_with_pilot_delay = m_im_kinematic_time_based_maintain->GetDelayedImSpeedCommandIas();
 
             m_previous_im_speed_command_ias = m_im_kinematic_time_based_maintain->GetPreviousSpeedCommandIas();
-         } else {
-            m_ownship_reference_lookup_index =
-                  CoreUtils::FindNearestIndex(Units::MetersLength(m_ownship_kinematic_dtg_to_ptp).value(),
-                                              m_ownship_kinematic_trajectory_predictor.GetVerticalPathDistances());
-
-            if (m_ownship_reference_lookup_index > 0) {
-               const Units::Speed nominal_ias =
-                     Units::MetersPerSecondSpeed(m_ownship_kinematic_trajectory_predictor
-                                                       .GetVerticalPathVelocityByIndex
-                                                             (m_ownship_reference_lookup_index));
-               m_previous_im_speed_command_ias = m_im_kinematic_time_based_maintain->GetPreviousSpeedCommandIas();
-               if (m_previous_im_speed_command_ias != Units::zero() &&
-                   m_previous_im_speed_command_ias < nominal_ias) {
-                  guidanceout.m_ias_command = m_previous_im_speed_command_ias;
-               } else {
-                  guidanceout.m_ias_command = nominal_ias;
-                  m_previous_im_speed_command_ias = nominal_ias;
-               }
-               m_im_speed_command_ias = guidanceout.m_ias_command;
-               m_im_speed_command_with_pilot_delay = guidanceout.m_ias_command;
-            } else {
-               guidanceout.SetValid(false);
-               m_is_guidance_valid = false;
-            }
+            return guidanceout;
          }
+
+         m_ownship_reference_lookup_index =
+                 CoreUtils::FindNearestIndex(Units::MetersLength(m_ownship_kinematic_dtg_to_ptp).value(),
+                                             m_ownship_kinematic_trajectory_predictor.GetVerticalPathDistances());
+
+         if (m_ownship_reference_lookup_index > 0) {
+            const Units::Speed nominal_ias =
+                    Units::MetersPerSecondSpeed(
+                            m_ownship_kinematic_trajectory_predictor.GetVerticalPathVelocityByIndex
+                                    (m_ownship_reference_lookup_index));
+            m_previous_im_speed_command_ias = m_im_kinematic_time_based_maintain->GetPreviousSpeedCommandIas();
+            if (m_previous_im_speed_command_ias != Units::zero() &&
+                m_previous_im_speed_command_ias < nominal_ias) {
+               guidanceout.m_ias_command = m_previous_im_speed_command_ias;
+            } else {
+               guidanceout.m_ias_command = nominal_ias;
+               m_previous_im_speed_command_ias = nominal_ias;
+            }
+            m_im_speed_command_ias = guidanceout.m_ias_command;
+            m_im_speed_command_with_pilot_delay = guidanceout.m_ias_command;
+         } else {  // m_ownship_reference_lookup_index <= 0
+            guidanceout.SetValid(false);
+            m_is_guidance_valid = false;
+          }
+      } else // Clearance == CAPTURE && not aligned
+      {
+         AircraftSpeed aircraft_speed = guidanceout.GetSelectedSpeed();
+         if (aircraft_speed.GetSpeedType() != INDICATED_AIR_SPEED) {  // throw
+            LOG4CPLUS_FATAL(m_logger, "AircraftSpeed speed_type not INDICATED_AIR_SPEED.  Unable to update guidance for CAPTURE clearance");
+         }
+         m_im_speed_command_ias = Units::KnotsSpeed(aircraft_speed.GetValue());
+         guidanceout.m_ias_command = m_im_speed_command_ias;
+         m_previous_im_speed_command_ias = m_im_speed_command_ias;
+         guidanceout.SetValid(true);
+         m_is_guidance_valid = true;
       }
+
    } else {
       guidanceout.SetValid(false);
       m_is_guidance_valid = false;
@@ -495,7 +545,7 @@ void IMTimeBasedAchieve::RecordInternalObserverMetrics(const AircraftState &curr
       InternalObserver::getInstance()->IM_command_output(current_ownship_state.m_id,
                                                          current_ownship_state.m_time,
                                                          current_ownship_state.m_z,
-                                                         Units::MetersPerSecondSpeed(dynamics_state.V).value(),
+                                                         Units::MetersPerSecondSpeed(dynamics_state.v_true_airspeed).value(),
                                                          Units::MetersPerSecondSpeed(
                                                                current_ownship_state.GetGroundSpeed()).value(),
                                                          Units::MetersPerSecondSpeed(
@@ -556,6 +606,7 @@ void IMTimeBasedAchieve::RecordInternalObserverMetrics(const AircraftState &curr
                                                   Units::MetersLength(-m_ownship_kinematic_dtg_to_ptp).value(),
                                                   Units::MetersLength(reference_distance).value());
 }
+
 
 void IMTimeBasedAchieve::DumpParameters(const string &parameters_to_print) {
    LOG4CPLUS_DEBUG(IMTimeBasedAchieve::m_logger,

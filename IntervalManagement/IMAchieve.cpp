@@ -151,7 +151,6 @@ void IMAchieve::DumpParameters(const string &parameters_to_print) {
    LOG4CPLUS_DEBUG(IMAchieve::m_logger, "mBlendWind " << IsBlendWind() << endl);
    LOG4CPLUS_DEBUG(IMAchieve::m_logger, "threshold flag " << m_threshold_flag << endl);
    LOG4CPLUS_DEBUG(IMAchieve::m_logger, "time threshold " << Units::SecondsTime(m_time_threshold).value() << endl);
-
    LOG4CPLUS_DEBUG(IMAchieve::m_logger, "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" << endl);
 }
 
