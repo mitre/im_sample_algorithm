@@ -54,6 +54,7 @@ void IMMaintain::Copy(const IMMaintain &obj) {
 
    m_maintain_control_gain = obj.m_maintain_control_gain;
    m_ownship_decrementing_distance_calculator = obj.m_ownship_decrementing_distance_calculator;
+   m_im_distance_calculator = obj.m_im_distance_calculator;
 }
 
 void IMMaintain::IterationReset() {
@@ -77,6 +78,7 @@ void IMMaintain::Prepare(Units::Speed previous_im_speed_command,
                          double previous_mach_command,
                          std::shared_ptr<TangentPlaneSequence> tangent_plane_sequence,
                          const TrajectoryPredictor &ownship_trajectory_predictor,
+                         const AlongPathDistanceCalculator &im_distance_calculator,
                          const vector<AircraftState> &target_adsb_track_history,
                          const IMClearance &im_clearance,
                          const bool has_rf_leg,
@@ -86,7 +88,10 @@ void IMMaintain::Prepare(Units::Speed previous_im_speed_command,
    m_previous_im_speed_command_ias = previous_ias_command;
    m_previous_reference_im_speed_command_mach = previous_mach_command;
    m_tangent_plane_sequence = tangent_plane_sequence;
-   m_ownship_decrementing_distance_calculator = AlongPathDistanceCalculator(ownship_trajectory_predictor.GetHorizontalPath(), TrajectoryIndexProgressionDirection::DECREMENTING);
+   m_ownship_decrementing_distance_calculator = AlongPathDistanceCalculator(
+           ownship_trajectory_predictor.GetHorizontalPath(),
+           TrajectoryIndexProgressionDirection::DECREMENTING);
+   m_im_distance_calculator = im_distance_calculator;
    m_has_rf_leg = has_rf_leg;
    m_rfleg_limits.clear();
    for (int i = 0; i < rf_limits.size(); i++)

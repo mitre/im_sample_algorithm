@@ -123,7 +123,12 @@ bool IMClearance::Validate(const AircraftIntent &ownship_aircraft_intent,
             target_aircraft_intent); // returns -1 if no common waypoints
       m_is_coincident_route_pairing = firstCommonIndex.first >= 0;
 
-      m_valid = ValidateTrafficReferencePoint(ownship_aircraft_intent, target_aircraft_intent, im_algorithm_type);
+      if (m_clearance_type == ClearanceType::ACHIEVE ||
+          m_clearance_type == ClearanceType::CUSTOM ||
+          m_clearance_type == ClearanceType::FAS)
+      {
+         m_valid = ValidateTrafficReferencePoint(ownship_aircraft_intent, target_aircraft_intent, im_algorithm_type);
+      }
 
       if (m_valid) {
          if (m_planned_termination_point.empty()) {
@@ -144,7 +149,7 @@ bool IMClearance::Validate(const AircraftIntent &ownship_aircraft_intent,
       }
    }
 
-   return m_valid;
+  return m_valid;
 }
 
 bool IMClearance::IsValid() const {
@@ -407,9 +412,10 @@ bool IMClearance::ValidateTrafficReferencePoint(const AircraftIntent &ownship_ai
       }
    } else {
       if (m_traffic_reference_point.empty()) {
-         std::string msg = "This is a non-coincident scenario and no Traffic-Reference-Point has been provided. The scenario must provide a TRP.";
-         LOG4CPLUS_FATAL(m_logger, msg);
-         throw LoadError(msg);
+         std::string msg = "This is a non-coincident scenario and no Traffic-Reference-Point has been provided.  TRP will be calculated.";
+         LOG4CPLUS_INFO(m_logger, msg);
+         //throw LoadError(msg);
+         m_traffic_reference_point = "CALCULATED_TRP";
       } else {
          const int idx = target_aircraft_intent.GetWaypointIndexByName(m_traffic_reference_point);
          if (idx < 0) {

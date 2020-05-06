@@ -299,7 +299,7 @@ Guidance IMDistBasedAchieve::Update(const Guidance &previous_im_guidance,
 
          m_unmodified_im_speed_command_ias = m_im_speed_command_ias;
 
-         if (IsOwnshipBelowTransitionAltitude(current_ownship_state.GetPositionZ())) {
+         if (im_guidance.GetSelectedSpeed().GetSpeedType() == INDICATED_AIR_SPEED) {
             CalculateIas(current_ownship_state.GetPositionZ(), three_dof_dynamics_state);
          } else {
             CalculateMach(reference_ttg, current_ownship_state.GetPositionZ());
@@ -350,7 +350,7 @@ Guidance IMDistBasedAchieve::Update(const Guidance &previous_im_guidance,
          if (m_distance_calculator_target_on_ownship_hpath.IsPassedEndOfRoute() || !m_target_aircraft_exists) {
             // Operation is completing. IM Speed must be defaulted; the control law cannot be used.
             m_measured_spacing_interval = Units::NegInfinity();
-            if (IsOwnshipBelowTransitionAltitude(current_ownship_state.GetPositionZ())) {
+            if (im_guidance.GetSelectedSpeed().GetSpeedType() == INDICATED_AIR_SPEED) {
                CalculateIas(current_ownship_state.GetPositionZ(), three_dof_dynamics_state);
             } else {
                CalculateMach(Units::negInfinity(), current_ownship_state.GetPositionZ());
@@ -388,6 +388,7 @@ Guidance IMDistBasedAchieve::Update(const Guidance &previous_im_guidance,
                                                            m_previous_reference_im_speed_command_mach,
                                                            m_tangent_plane_sequence,
                                                            m_ownship_kinematic_trajectory_predictor,
+                                                           m_im_ownship_distance_calculator,
                                                            target_adsb_history,
                                                            m_im_clearance,
                                                            m_has_rf_leg,
@@ -560,7 +561,7 @@ void IMDistBasedAchieve::RecordData(Guidance &im_guidance,
       InternalObserver::getInstance()->IM_command_output(current_ownship_state.m_id, current_ownship_state.m_time,
                                                          current_ownship_state.m_z,
                                                          Units::MetersPerSecondSpeed(
-                                                               three_dof_dynamics_state.V).value(),
+                                                               three_dof_dynamics_state.v_true_airspeed).value(),
                                                          Units::MetersPerSecondSpeed(
                                                                current_ownship_state.GetGroundSpeed()).value(),
                                                          Units::MetersPerSecondSpeed(
@@ -652,10 +653,11 @@ IMDistBasedAchieve::CalculatePredictedSpacingInterval(const Units::Time target_r
    if ((ownship_target_delta_ttg < Units::zero()) && (index_ttg == 0)) {
       // This calculation handles negative PSI situations in which there is no maintain stage afterward. In this
       // situation, the PSI must be guessed using ownship's predicted groundspeed.
-      const Units::Speed ownship_groundspeed_at_abp = Units::MetersPerSecondSpeed(
-            m_ownship_kinematic_trajectory_predictor.GetVerticalPathGroundspeeds().back());
-      const Units::Length ownship_distance_passed_abp = ownship_groundspeed_at_abp * ownship_target_delta_ttg;
-      const Units::Length predicted_spacing_interval = ownship_distance_passed_abp;
+      const Units::Speed ownship_groundspeed_at_ptp = Units::MetersPerSecondSpeed(
+            m_ownship_kinematic_trajectory_predictor.GetVerticalPathGroundspeeds().front());
+      const Units::Time ownship_time_past_ptp = target_reference_ttg_to_trp - own_ttg_to_ptp;
+      const Units::Length ownship_distance_passed_abp = ownship_groundspeed_at_ptp * ownship_time_past_ptp + ownship_dtg_from_abp_to_ptp;
+      const Units::Length predicted_spacing_interval = -ownship_distance_passed_abp;
 
       // expect this to be negative
       return predicted_spacing_interval;
@@ -663,14 +665,14 @@ IMDistBasedAchieve::CalculatePredictedSpacingInterval(const Units::Time target_r
       // This calculation handles:
       // ** positive PSI situations
       // ** negative PSI situations in which there is a valid 4D prediction that goes beyond the ABP
-      const Units::Length ownship_reference_dtg_at_predicted_spacing_interval_lookup_time =
+      const Units::Length ownship_reference_dtg_at_predicted_spacing_interval_lookup_distance =
             Units::MetersLength(CoreUtils::LinearlyInterpolate(index_ttg,
                                                                predicted_spacing_interval_lookup_ttg.value(),
                                                                m_ownship_kinematic_trajectory_predictor.GetVerticalPathTimes(),
                                                                m_ownship_kinematic_trajectory_predictor.GetVerticalPathDistances()));
 
       const Units::Length predicted_spacing_interval =
-            ownship_reference_dtg_at_predicted_spacing_interval_lookup_time - ownship_dtg_from_abp_to_ptp;
+            ownship_reference_dtg_at_predicted_spacing_interval_lookup_distance - ownship_dtg_from_abp_to_ptp;
 
       return predicted_spacing_interval;
    }

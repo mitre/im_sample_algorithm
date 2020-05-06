@@ -122,7 +122,7 @@ Guidance TestVectorSpeedControl::Update(const Guidance &prevguidance,
          InternalObserver::getInstance()->IM_command_output(owntruthstate.m_id,
                                                             owntruthstate.m_time,
                                                             owntruthstate.m_z,
-                                                            Units::MetersPerSecondSpeed(dynamicsstate.V).value(),
+                                                            Units::MetersPerSecondSpeed(dynamicsstate.v_true_airspeed).value(),
                                                             Units::MetersPerSecondSpeed(
                                                                   owntruthstate.GetGroundSpeed()).value(),
                                                             Units::MetersPerSecondSpeed(new_ias_command).value(),

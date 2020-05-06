@@ -25,6 +25,7 @@
 #include "public/HorizontalPath.h"
 #include <map>
 #include <public/AircraftIntent.h>
+#include "public/AlongPathDistanceCalculator.h"
 
 // Class containing utility functions primarily used with the IM classes.
 
@@ -62,6 +63,13 @@ public:
                                Units::Length &projected_x,
                                Units::Length &projected_y);
 
+   static bool GetCrossingTime(const Units::Length current_dtg,
+                               const std::vector<AircraftState> &aircraft_state_history,
+                               AlongPathDistanceCalculator &distance_calculator,
+                               Units::Time &crossing_time,
+                               Units::Length &projected_x,
+                               Units::Length &projected_y);
+
    static void CalculateMergePoint(const Units::Length x1,
                                    const Units::Length y1,
                                    const Units::Length x2,
@@ -75,6 +83,14 @@ public:
    static void CalculateTimeBasedExtrapolate(const Units::Length &ownship_dtg,
                                              const AircraftState &oldest_target_state,
                                              const std::vector<HorizontalPath> &ownship_horizontal_traj,
+                                             Units::Time &extrapolated_target_time,
+                                             Units::Length &projected_x,
+                                             Units::Length &projected_y,
+                                             Units::Length &projected_distance_to_go);
+
+   static void CalculateTimeBasedExtrapolate(const Units::Length &ownship_dtg,
+                                             const AircraftState &oldest_target_state,
+                                             AlongPathDistanceCalculator &distance_calculator,
                                              Units::Time &extrapolated_target_time,
                                              Units::Length &projected_x,
                                              Units::Length &projected_y,
@@ -114,6 +130,12 @@ public:
                                      Units::Length &x_projected,
                                      Units::Length &y_projected,
                                      Units::Length &dtg);
+
+   // method to get target aircraft position on ownship horizontal trajectory based upon distance to go
+   static bool ProjectTargetPositionFromDistance(const Units::Length dtg,
+                                     const std::vector<HorizontalPath> &ownship_horizontal_path,
+                                     Units::Length &x_projected,
+                                     Units::Length &y_projected);
 
    /**
     * @deprecated AAES-994 make this method unused. It will be removed.
@@ -166,6 +188,13 @@ public:
                                                 const Units::Time target_time,
                                                 const Units::Angle ownship_true_heading,
                                                 bool &target_state_is_valid);
+
+   static AircraftState GetProjectedTargetState(AlongPathDistanceCalculator &distance_calculator,
+                                                const std::vector<AircraftState> &target_state_history,
+                                                const std::vector<HorizontalPath> &ownship_horizontal_traj,
+                                                const Units::Time target_time,
+                                                const Units::Angle ownship_true_heading,
+   bool &target_state_is_valid);
 
    static Units::SignedAngle CalculateTrackAngle(
          const std::list<Units::Angle> angle_history);

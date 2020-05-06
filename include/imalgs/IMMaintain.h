@@ -45,6 +45,7 @@ public:
                         double previous_mach_command,
                         std::shared_ptr<TangentPlaneSequence> tangent_plane_sequence,
                         const TrajectoryPredictor &ownship_trajectory_predictor,
+                        const AlongPathDistanceCalculator &im_distance_calculator,
                         const vector<AircraftState> &target_adsb_track_history,
                         const IMClearance &im_clearance,
                         const bool has_rf_leg,
@@ -64,6 +65,7 @@ protected:
    Units::Frequency m_maintain_control_gain;
 
    AlongPathDistanceCalculator m_ownship_decrementing_distance_calculator;
+   AlongPathDistanceCalculator m_im_distance_calculator;
 
 private:
    void IterClearIMMain();
