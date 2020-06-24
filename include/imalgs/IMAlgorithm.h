@@ -166,8 +166,6 @@ public:
 
    const IMClearance &GetClearance() const;
 
-   const bool IsGuidanceValid() const;
-
    const unsigned long int GetActiveFilter() const;
 
    virtual bool IsBlendWind() const;
@@ -181,6 +179,20 @@ public:
    const Units::Length GetOwnshipDtgToPtp() const;
 
    const Units::Speed GetPreviousSpeedCommandIas() const;
+
+   const Units::Speed GetOwnshipReferenceIas() const;
+
+   const Units::Speed GetTargetReferenceIas() const;
+
+   const Units::Speed GetOwnshipReferenceGroundspeed() const;
+
+   const Units::Speed GetTargetReferenceGroundspeed() const;
+
+   const Units::Length GetOwnshipReferenceAltitude() const;
+
+   const Units::Length GetTargetReferenceAltitude() const;
+
+   const Units::Length GetTargetKinematicDtgToTrp() const;
 
    const KineticTrajectoryPredictor *m_target_kinetic_trajectory_predictor;
    const KineticTrajectoryPredictor *m_ownship_kinetic_trajectory_predictor;
@@ -272,6 +284,7 @@ protected:
    Units::Length m_error_distance;
    Units::InvertedSpeed m_slope;
 
+   Units::Time m_initiate_signal_receipt_time;
    Units::Time m_ownship_ttg_to_abp;
    Units::Time m_ownship_reference_ttg_to_ptp;
 
@@ -295,8 +308,12 @@ protected:
 
    // To trigger recalculation with blended wind AAES-933
    Units::KnotsSpeed m_ownship_reference_cas;
+   Units::Speed m_ownship_reference_gs;
    Units::Length m_ownship_reference_altitude;
+
    Units::Length m_target_reference_altitude;
+   Units::Speed m_target_reference_ias;
+   Units::Speed m_target_reference_gs;
 
    int m_total_number_of_im_speed_changes;
    int m_target_reference_lookup_index;
@@ -312,7 +329,6 @@ protected:
    bool m_limit_flag;
    bool m_quantize_flag;
    bool m_im_operation_is_complete;
-   bool m_is_guidance_valid;
    bool m_has_rf_leg;
    bool m_has_maintain_stage;
 
@@ -345,10 +361,6 @@ inline const Units::Length IMAlgorithm::GetOwnshipDtgToPtp() const {
 
 inline const Units::Length IMAlgorithm::GetTargetDtgToLastWaypoint() const {
    return Units::Infinity();
-}
-
-inline const bool IMAlgorithm::IsGuidanceValid() const {
-   return m_is_guidance_valid;
 }
 
 inline void IMAlgorithm::DisablePilotDelayModel() {
@@ -532,4 +544,32 @@ inline void IMAlgorithm::SetActiveFilter(unsigned long flag) {
 
 inline const double IMAlgorithm::GetSpacingInterval() const {
    return UNDEFINED_INTERVAL;
+}
+
+inline const Units::Speed IMAlgorithm::GetOwnshipReferenceIas() const {
+   return m_ownship_reference_cas;
+}
+
+inline const Units::Speed IMAlgorithm::GetTargetReferenceIas() const {
+   return m_target_reference_ias;
+}
+
+inline const Units::Speed IMAlgorithm::GetTargetReferenceGroundspeed() const {
+   return m_target_reference_gs;
+}
+
+inline const Units::Speed IMAlgorithm::GetOwnshipReferenceGroundspeed() const {
+   return m_ownship_reference_gs;
+}
+
+inline const Units::Length IMAlgorithm::GetOwnshipReferenceAltitude() const {
+   return m_ownship_reference_altitude;
+}
+
+inline const Units::Length IMAlgorithm::GetTargetReferenceAltitude() const {
+   return m_target_reference_altitude;
+}
+
+inline const Units::Length IMAlgorithm::GetTargetKinematicDtgToTrp() const {
+   return m_target_kinematic_dtg_to_trp;
 }

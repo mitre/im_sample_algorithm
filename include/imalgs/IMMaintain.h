@@ -65,7 +65,7 @@ protected:
    Units::Frequency m_maintain_control_gain;
 
    AlongPathDistanceCalculator m_ownship_decrementing_distance_calculator;
-   AlongPathDistanceCalculator m_im_distance_calculator;
+   AlongPathDistanceCalculator m_ownship_distance_calculator;
 
 private:
    void IterClearIMMain();

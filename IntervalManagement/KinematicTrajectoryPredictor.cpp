@@ -36,7 +36,8 @@ KinematicTrajectoryPredictor::~KinematicTrajectoryPredictor() {
 }
 
 void KinematicTrajectoryPredictor::CalculateWaypoints(const AircraftIntent &aircraft_intent) {
-   Units::Length altitude_at_faf = Units::MetersLength(aircraft_intent.GetFms().m_altitude[aircraft_intent.GetNumberOfWaypoints() - 1]);
+   Units::Length altitude_at_faf = Units::MetersLength(
+         aircraft_intent.GetFms().m_altitude[aircraft_intent.GetNumberOfWaypoints() - 1]);
    Units::Speed ias_at_faf = Units::FeetPerSecondSpeed(
          aircraft_intent.GetFms().m_nominal_ias[aircraft_intent.GetNumberOfWaypoints() - 1]);
    GetKinematicDescent4dPredictor()->SetConditionsAtEndOfRoute(altitude_at_faf, ias_at_faf);

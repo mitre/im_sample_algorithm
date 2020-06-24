@@ -75,6 +75,8 @@ public:
 
    IMDistBasedAchieve &operator=(const IMDistBasedAchieve &obj);
 
+   const AircraftState GetTargetStateProjectedAsgAdjusted() const override;
+
    bool load(DecodedStream *input);
 
 protected:
@@ -108,6 +110,7 @@ private:
 
    std::shared_ptr<TrueDistances> m_true_distances;
 
+   AircraftState m_target_state_projected_on_ownships_path_at_adjusted_distance;
    Units::Length m_predicted_spacing_interval;
    Units::Length m_measured_spacing_interval;
    Units::Length m_assigned_spacing_goal;
@@ -187,4 +190,8 @@ inline const bool IMDistBasedAchieve::InAchieveStage() const {
       return true;
    }
    return !m_has_maintain_stage; // only return false if a maintain stage exists
+}
+
+inline const AircraftState IMDistBasedAchieve::GetTargetStateProjectedAsgAdjusted() const {
+   return m_target_state_projected_on_ownships_path_at_adjusted_distance;
 }

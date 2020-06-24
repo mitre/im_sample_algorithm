@@ -77,6 +77,7 @@ void IMDistBasedAchieve::IterationReset() {
 
    m_predicted_spacing_interval = Units::NegInfinity();
    m_measured_spacing_interval = Units::NegInfinity();
+   m_target_state_projected_on_ownships_path_at_adjusted_distance = AircraftState();
 
    m_im_kinematic_dist_based_maintain->IterationReset();
    m_true_distances->Clear();
@@ -145,11 +146,17 @@ Guidance IMDistBasedAchieve::Update(const Guidance &previous_im_guidance,
                   static_cast<int>(m_target_kinematic_trajectory_predictor.GetVerticalPathTimes().size() - 1);
             m_target_reference_altitude = Units::MetersLength(
                   m_target_kinematic_trajectory_predictor.GetVerticalPathAltitudes().back());
+            m_target_reference_gs = Units::MetersPerSecondSpeed(
+                  m_target_kinematic_trajectory_predictor.GetVerticalPathGroundspeeds().back());
+            m_target_reference_ias = Units::MetersPerSecondSpeed(
+                  m_target_kinematic_trajectory_predictor.GetVerticalPathVelocities().back());
          } else if (m_target_reference_lookup_index == 0) {
             target_reference_ttg_to_ptp = Units::SecondsTime(
                   m_target_kinematic_trajectory_predictor.GetVerticalPathTimeByIndex(0));
             m_target_reference_altitude = Units::MetersLength(
                   m_target_kinematic_trajectory_predictor.GetVerticalPathAltitudeByIndex(0));
+            m_target_reference_gs = Units::ZERO_SPEED;
+            m_target_reference_ias = Units::ZERO_SPEED;
          } else {
             target_reference_ttg_to_ptp = Units::SecondsTime(
                   CoreUtils::LinearlyInterpolate(m_target_reference_lookup_index,
@@ -158,16 +165,25 @@ Guidance IMDistBasedAchieve::Update(const Guidance &previous_im_guidance,
                                                  m_target_kinematic_trajectory_predictor.GetVerticalPathTimes()));
             m_target_reference_altitude = Units::MetersLength(
                   CoreUtils::LinearlyInterpolate(m_target_reference_lookup_index,
-                        Units::MetersLength(m_target_kinematic_dtg_to_last_waypoint).value(),
-                        m_target_kinematic_trajectory_predictor.GetVerticalPathDistances(),
-                        m_target_kinematic_trajectory_predictor.GetVerticalPathAltitudes()));
+                                                 Units::MetersLength(m_target_kinematic_dtg_to_last_waypoint).value(),
+                                                 m_target_kinematic_trajectory_predictor.GetVerticalPathDistances(),
+                                                 m_target_kinematic_trajectory_predictor.GetVerticalPathAltitudes()));
+            m_target_reference_gs = Units::MetersPerSecondSpeed(
+                  CoreUtils::LinearlyInterpolate(m_target_reference_lookup_index,
+                                                 Units::MetersLength(m_target_kinematic_dtg_to_last_waypoint).value(),
+                                                 m_target_kinematic_trajectory_predictor.GetVerticalPathDistances(),
+                                                 m_target_kinematic_trajectory_predictor.GetVerticalPathGroundspeeds()));
+            m_target_reference_ias = Units::MetersPerSecondSpeed(
+                  CoreUtils::LinearlyInterpolate(m_target_reference_lookup_index,
+                                                 Units::MetersLength(m_target_kinematic_dtg_to_last_waypoint).value(),
+                                                 m_target_kinematic_trajectory_predictor.GetVerticalPathDistances(),
+                                                 m_target_kinematic_trajectory_predictor.GetVerticalPathVelocities()));
          }
 
          target_reference_ttg_to_trp =
                target_reference_ttg_to_ptp - m_target_kinematic_traffic_reference_point_calcs.GetTimeToGoToWaypoint();
 
          reference_ttg = target_reference_ttg_to_trp;
-
 
          if (m_previous_im_speed_command_ias == Units::zero()) {
             m_previous_reference_im_speed_command_tas = m_weather_prediction.getAtmosphere()->CAS2TAS(
@@ -186,17 +202,17 @@ Guidance IMDistBasedAchieve::Update(const Guidance &previous_im_guidance,
          }
 
          // Get Own TTG and pre-planned airspeed index from ABP* (ABP-Spacing) to end of trajectory
+         Units::MetersLength ownship_reference_distance =
+               m_ownship_kinematic_achieve_by_calcs.GetDistanceFromWaypoint() + m_assigned_spacing_goal;
+
          m_ownship_reference_lookup_index =
-               CoreUtils::FindNearestIndex(std::fabs(Units::MetersLength(
-                     m_ownship_kinematic_achieve_by_calcs.GetDistanceFromWaypoint() + m_assigned_spacing_goal).value()),
+               CoreUtils::FindNearestIndex(ownship_reference_distance.value(),
                                            m_ownship_kinematic_trajectory_predictor.GetVerticalPathDistances());
 
          // Note that this calculation includes the ASG. Be careful how used.
          ownship_ttg_from_abp_to_ptp = Units::SecondsTime(
                CoreUtils::LinearlyInterpolate(m_ownship_reference_lookup_index,
-                                              std::fabs(Units::MetersLength(
-                                                    m_ownship_kinematic_achieve_by_calcs.GetDistanceFromWaypoint() +
-                                                    m_assigned_spacing_goal).value()),
+                                              ownship_reference_distance.value(),
                                               m_ownship_kinematic_trajectory_predictor.GetVerticalPathDistances(),
                                               m_ownship_kinematic_trajectory_predictor.GetVerticalPathTimes()));
 
@@ -263,6 +279,8 @@ Guidance IMDistBasedAchieve::Update(const Guidance &previous_im_guidance,
                   -m_ownship_kinematic_trajectory_predictor.GetVerticalPathDistances().back());
             m_ownship_reference_cas = Units::MetersPerSecondSpeed(
                   m_ownship_kinematic_trajectory_predictor.GetVerticalPathVelocities().back());
+            m_ownship_reference_gs = Units::MetersPerSecondSpeed(
+                  m_ownship_kinematic_trajectory_predictor.GetVerticalPathGroundspeeds().back());
             m_ownship_reference_altitude = Units::MetersLength(
                   m_ownship_kinematic_trajectory_predictor.GetVerticalPathAltitudes().back());
          } else if (m_reference_precalc_index == 0) {
@@ -270,6 +288,7 @@ Guidance IMDistBasedAchieve::Update(const Guidance &previous_im_guidance,
                   Units::MetersLength(-m_ownship_kinematic_trajectory_predictor.GetVerticalPathDistanceByIndex(0));
             m_ownship_reference_cas = Units::MetersPerSecondSpeed(
                   m_ownship_kinematic_trajectory_predictor.GetVerticalPathVelocityByIndex(0));
+            m_ownship_reference_gs = Units::ZERO_SPEED;
             m_ownship_reference_altitude = Units::MetersLength(
                   m_ownship_kinematic_trajectory_predictor.GetVerticalPathAltitudeByIndex(0));
          } else {
@@ -285,6 +304,11 @@ Guidance IMDistBasedAchieve::Update(const Guidance &previous_im_guidance,
                                                  Units::SecondsTime(ownrefttgtoend).value(),
                                                  m_ownship_kinematic_trajectory_predictor.GetVerticalPathTimes(),
                                                  m_ownship_kinematic_trajectory_predictor.GetVerticalPathVelocities()));
+            m_ownship_reference_gs = Units::MetersPerSecondSpeed(
+                  CoreUtils::LinearlyInterpolate(m_reference_precalc_index,
+                                                 Units::SecondsTime(ownrefttgtoend).value(),
+                                                 m_ownship_kinematic_trajectory_predictor.GetVerticalPathTimes(),
+                                                 m_ownship_kinematic_trajectory_predictor.GetVerticalPathGroundspeeds()));
             m_ownship_reference_altitude = Units::MetersLength(
                   CoreUtils::LinearlyInterpolate(m_reference_precalc_index,
                                                  Units::SecondsTime(ownrefttgtoend).value(),
@@ -328,11 +352,13 @@ Guidance IMDistBasedAchieve::Update(const Guidance &previous_im_guidance,
          m_predicted_spacing_interval = Units::NegInfinity();
 
          if (!m_transitioned_to_maintain) {
-            m_distance_calculator_target_on_ownship_hpath = AlongPathDistanceCalculator(m_ownship_kinematic_trajectory_predictor.GetHorizontalPath(),
-                                                                                      TrajectoryIndexProgressionDirection::UNDEFINED,
-                                                                                      true); // use a wide cross-track corridor
-            m_position_calculator_target_on_ownship_hpath = PositionCalculator(m_ownship_kinematic_trajectory_predictor.GetHorizontalPath(),
-                                                     TrajectoryIndexProgressionDirection::UNDEFINED);
+            m_distance_calculator_target_on_ownship_hpath = AlongPathDistanceCalculator(
+                  m_ownship_kinematic_trajectory_predictor.GetHorizontalPath(),
+                  TrajectoryIndexProgressionDirection::UNDEFINED,
+                  true); // use a wide cross-track corridor
+            m_position_calculator_target_on_ownship_hpath = PositionCalculator(
+                  m_ownship_kinematic_trajectory_predictor.GetHorizontalPath(),
+                  TrajectoryIndexProgressionDirection::UNDEFINED);
          }
 
          // Project target state onto ownship's path
@@ -355,7 +381,8 @@ Guidance IMDistBasedAchieve::Update(const Guidance &previous_im_guidance,
             } else {
                CalculateMach(Units::negInfinity(), current_ownship_state.GetPositionZ());
             }
-            m_im_kinematic_dist_based_maintain->SetImSpeedCommandIas(m_im_speed_command_ias);  // keep the maintain object in sync
+            m_im_kinematic_dist_based_maintain->SetImSpeedCommandIas(
+                  m_im_speed_command_ias);  // keep the maintain object in sync
             m_previous_im_speed_command_ias = m_im_speed_command_ias;
 
             if (m_pilot_delay.IsPilotDelayOn()) {
@@ -370,16 +397,16 @@ Guidance IMDistBasedAchieve::Update(const Guidance &previous_im_guidance,
                   target_distance_along_ownships_path + m_assigned_spacing_goal;
             Units::FeetLength target_projected_position_with_asg_x, target_projected_position_with_asg_y;
             Units::UnsignedAngle course;
-            m_position_calculator_target_on_ownship_hpath.CalculatePositionFromAlongPathDistance(target_distance_with_asg,
-                                                                       target_projected_position_with_asg_x,
-                                                                       target_projected_position_with_asg_y, course);
-            AircraftState target_state_projected_on_ownships_path_at_adjusted_distance;
-            target_state_projected_on_ownships_path_at_adjusted_distance.m_x = target_projected_position_with_asg_x.value();
-            target_state_projected_on_ownships_path_at_adjusted_distance.m_y = target_projected_position_with_asg_y.value();
-            target_state_projected_on_ownships_path_at_adjusted_distance.m_z = current_target_state.m_z;
-            target_state_projected_on_ownships_path_at_adjusted_distance.m_xd = current_target_state.m_xd;
-            target_state_projected_on_ownships_path_at_adjusted_distance.m_yd = current_target_state.m_yd;
-            target_state_projected_on_ownships_path_at_adjusted_distance.m_zd = current_target_state.m_zd;
+            m_position_calculator_target_on_ownship_hpath.CalculatePositionFromAlongPathDistance(
+                  target_distance_with_asg,
+                  target_projected_position_with_asg_x,
+                  target_projected_position_with_asg_y, course);
+            m_target_state_projected_on_ownships_path_at_adjusted_distance.m_x = target_projected_position_with_asg_x.value();
+            m_target_state_projected_on_ownships_path_at_adjusted_distance.m_y = target_projected_position_with_asg_y.value();
+            m_target_state_projected_on_ownships_path_at_adjusted_distance.m_z = current_target_state.m_z;
+            m_target_state_projected_on_ownships_path_at_adjusted_distance.m_xd = current_target_state.m_xd;
+            m_target_state_projected_on_ownships_path_at_adjusted_distance.m_yd = current_target_state.m_yd;
+            m_target_state_projected_on_ownships_path_at_adjusted_distance.m_zd = current_target_state.m_zd;
 
 
             if (!m_transitioned_to_maintain) {
@@ -398,7 +425,7 @@ Guidance IMDistBasedAchieve::Update(const Guidance &previous_im_guidance,
 
             im_guidance = m_im_kinematic_dist_based_maintain->Update(three_dof_dynamics_state,
                                                                      current_ownship_state,
-                                                                     target_state_projected_on_ownships_path_at_adjusted_distance,
+                                                                     m_target_state_projected_on_ownships_path_at_adjusted_distance,
                                                                      target_distance_with_asg,
                                                                      target_distance_along_ownships_path,
                                                                      m_ownship_kinematic_trajectory_predictor,
@@ -410,7 +437,20 @@ Guidance IMDistBasedAchieve::Update(const Guidance &previous_im_guidance,
 
             SetActiveFilter(m_im_kinematic_dist_based_maintain->GetActiveFilter());
 
-            m_measured_spacing_interval = Units::NauticalMilesLength(m_im_kinematic_dist_based_maintain->GetMsi());
+            Units::Length target_dtg_to_trp = m_target_kinematic_traffic_reference_point_calcs
+                  .ComputeDistanceToWaypoint(current_target_state);
+            if (target_dtg_to_trp < Units::zero() ||
+                  !m_target_kinematic_traffic_reference_point_calcs.IsWaypointSet()) {
+               // normal case:  target has passed TRP
+               m_measured_spacing_interval = Units::NauticalMilesLength(m_im_kinematic_dist_based_maintain->GetMsi());
+            }
+            else {
+               // special case:  target has not passed TRP, MSI will be negative
+               Units::Length ownship_dtg_to_abp = m_ownship_kinematic_achieve_by_calcs
+                     .ComputeDistanceToWaypoint(current_ownship_state);
+               m_measured_spacing_interval = ownship_dtg_to_abp - target_dtg_to_trp;   // AAES-1036
+               LOG4CPLUS_TRACE(m_logger, "Special MSI = " << Units::MetersLength(m_measured_spacing_interval));
+            }
             m_im_speed_command_ias = m_im_kinematic_dist_based_maintain->GetImSpeedCommandIas();
             m_im_speed_command_with_pilot_delay = m_im_kinematic_dist_based_maintain->GetDelayedImSpeedCommandIas();
             m_previous_im_speed_command_ias = m_im_kinematic_dist_based_maintain->GetPreviousSpeedCommandIas();
@@ -418,7 +458,6 @@ Guidance IMDistBasedAchieve::Update(const Guidance &previous_im_guidance,
       }
    } else {
       im_guidance.SetValid(false);
-      m_is_guidance_valid = false;
    }
 
    return im_guidance;
@@ -656,7 +695,8 @@ IMDistBasedAchieve::CalculatePredictedSpacingInterval(const Units::Time target_r
       const Units::Speed ownship_groundspeed_at_ptp = Units::MetersPerSecondSpeed(
             m_ownship_kinematic_trajectory_predictor.GetVerticalPathGroundspeeds().front());
       const Units::Time ownship_time_past_ptp = target_reference_ttg_to_trp - own_ttg_to_ptp;
-      const Units::Length ownship_distance_passed_abp = ownship_groundspeed_at_ptp * ownship_time_past_ptp + ownship_dtg_from_abp_to_ptp;
+      const Units::Length ownship_distance_passed_abp =
+            ownship_groundspeed_at_ptp * ownship_time_past_ptp + ownship_dtg_from_abp_to_ptp;
       const Units::Length predicted_spacing_interval = -ownship_distance_passed_abp;
 
       // expect this to be negative

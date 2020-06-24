@@ -75,6 +75,8 @@ public:
     */
    void ComputeCrossingTime(const AircraftState &acstate);
 
+   const Units::Length ComputeDistanceToWaypoint(const AircraftState &acstate);
+
    const bool HasWaypoint() const;
 
    const bool IsWaypointPassed(const AircraftState &acstate);
@@ -148,7 +150,6 @@ inline const Units::Length AchievePointCalcs::GetDistanceFromWaypoint() const {
 inline const Units::Time AchievePointCalcs::GetTimeToGoToWaypoint() const {
    return m_time_to_go_to_waypoint;
 }
-
 
 inline const bool AchievePointCalcs::IsWaypointSet() const {
    return m_waypoint_is_set;

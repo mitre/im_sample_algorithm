@@ -63,6 +63,8 @@ public:
 
    virtual const Units::Length GetTargetDtgToLastWaypoint() const;
 
+   virtual const AircraftState GetTargetStateProjectedAsgAdjusted() const = 0;
+
    //FIXME aaes-820 shadows name in IMAlgorithm, but is not virtual
    virtual bool IsBlendWind() const;
 
@@ -134,8 +136,9 @@ protected:
    std::list<Units::Angle> m_ownship_track_angle_history;
    std::list<Units::Angle> m_target_track_angle_history;
 
-   double m_assigned_spacing_goal_from_input_file{};
+   double m_assigned_spacing_goal_from_input_file;
 
+   int m_target_altitude_failure_count;
 
    bool m_fas_intent_valid;
    bool m_compute_ownship_kinematic_trajectory;
@@ -144,8 +147,8 @@ protected:
    bool m_target_kinematic_trajectory_dumped;
    bool m_target_aircraft_exists;
    bool m_target_history_exists;
-   int m_target_altitude_failure_count;
    bool m_is_target_aligned;
+
 
    static const Units::FeetLength TARGET_ALTITUDE_TOLERANCE;
 

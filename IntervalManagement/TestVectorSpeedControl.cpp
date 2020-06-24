@@ -58,7 +58,7 @@ void TestVectorSpeedControl::Initialize(const KineticTrajectoryPredictor &ownshi
    m_pilot_delayed_speeds.clear();
    if (m_pilot_delay.IsPilotDelayOn()) {
       const auto delay_params = m_pilot_delay.GetPilotDelayParameters();
-      const auto delay_mean = Units::SecondsTime(delay_params.first).value()-1.0;
+      const auto delay_mean = Units::SecondsTime(delay_params.first).value() - 1.0;
       for (int i = 0; i < delay_mean; ++i) {
          m_pilot_delayed_speeds.push_back(Units::zero());
       }
@@ -122,7 +122,8 @@ Guidance TestVectorSpeedControl::Update(const Guidance &prevguidance,
          InternalObserver::getInstance()->IM_command_output(owntruthstate.m_id,
                                                             owntruthstate.m_time,
                                                             owntruthstate.m_z,
-                                                            Units::MetersPerSecondSpeed(dynamicsstate.v_true_airspeed).value(),
+                                                            Units::MetersPerSecondSpeed(
+                                                                  dynamicsstate.v_true_airspeed).value(),
                                                             Units::MetersPerSecondSpeed(
                                                                   owntruthstate.GetGroundSpeed()).value(),
                                                             Units::MetersPerSecondSpeed(new_ias_command).value(),
