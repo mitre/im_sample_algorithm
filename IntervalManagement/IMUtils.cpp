@@ -85,20 +85,24 @@ void IMUtils::CalculateMergePoint(const Units::Length x1,
                                   const Units::Angle theta_merge) {
 
    LOG4CPLUS_TRACE(m_logger, "Pos of AC on final:  (" <<
-         Units::MetersLength(x1) << "," << Units::MetersLength(y1) << ")");
-   LOG4CPLUS_TRACE(m_logger, "Pos of intercepting AC:  (" <<
-         Units::MetersLength(x3) << "," << Units::MetersLength(y3) << ")");
+                                                      Units::MetersLength(x1) << "," << Units::MetersLength(y1) << ")");
+   LOG4CPLUS_TRACE(m_logger, "Pos of intercepting AC:  ("
+         <<
+         Units::MetersLength(x3)
+         << ","
+         << Units::MetersLength(y3)
+         << ")");
    LOG4CPLUS_TRACE(m_logger, "Achieve-by point:  (" <<
-         Units::MetersLength(x2) << "," << Units::MetersLength(y2) << ")");
+                                                    Units::MetersLength(x2) << "," << Units::MetersLength(y2) << ")");
 
-   Units::RadiansAngle theta_final(atan2(Units::MetersLength(y2-y1).value(),
-         Units::MetersLength(x2-x1).value()));
+   Units::RadiansAngle theta_final(atan2(Units::MetersLength(y2 - y1).value(),
+                                         Units::MetersLength(x2 - x1).value()));
    LOG4CPLUS_TRACE(m_logger, "thetaMerge = " <<
-         Units::DegreesAngle(theta_merge) <<
-         ", thetaFinal = " <<
-         Units::DegreesAngle(theta_final) <<
-         ", turn = " <<
-         Units::DegreesAngle(theta_final - theta_merge));
+                                             Units::DegreesAngle(theta_merge) <<
+                                             ", thetaFinal = " <<
+                                             Units::DegreesAngle(theta_final) <<
+                                             ", turn = " <<
+                                             Units::DegreesAngle(theta_final - theta_merge));
 
    Units::Length x4(x3 + Units::NauticalMilesLength(50) * cos(theta_merge)),
          y4(y3 + Units::NauticalMilesLength(50) * sin(theta_merge));
@@ -106,17 +110,21 @@ void IMUtils::CalculateMergePoint(const Units::Length x1,
          factor2((x3 * y4) - (y3 * x4));
 
    LOG4CPLUS_TRACE(m_logger, "denominator = " <<
-         Units::MetersArea(denominator) <<
-         ", factor1 = " <<
-         Units::MetersArea(factor1) <<
-         ", factor2 = " <<
-         Units::MetersArea(factor2));
+                                              Units::MetersArea(denominator) <<
+                                              ", factor1 = " <<
+                                              Units::MetersArea(factor1) <<
+                                              ", factor2 = " <<
+                                              Units::MetersArea(factor2));
 
    x_merge = (((x3 - x4) * factor1) - ((x1 - x2) * factor2)) / denominator;
    y_merge = (((y3 - y4) * factor1) - ((y1 - y2) * factor2)) / denominator;
 
-   LOG4CPLUS_TRACE(m_logger, "Calculated merge point:  (" <<
-         Units::MetersLength(x_merge) << "," << Units::MetersLength(y_merge) << ")");
+   LOG4CPLUS_TRACE(m_logger, "Calculated merge point:  ("
+         <<
+         Units::MetersLength(x_merge)
+         << ","
+         << Units::MetersLength(y_merge)
+         << ")");
 }
 
 /**
@@ -186,15 +194,16 @@ void IMUtils::CalculateTimeBasedExtrapolate(const Units::Length &ownship_dtg,
                                             Units::Length &projected_distance_to_go) {
    Units::Length target_dtg = Units::ZERO_LENGTH, targetx, targety;
 
-   bool found_target_distance = distance_calculator.CalculateAlongPathDistanceFromPosition(Units::FeetLength(oldest_target_state.m_x),
-                                                                                           Units::FeetLength(oldest_target_state.m_y),
-                                                                                           target_dtg);
+   bool found_target_distance = distance_calculator.CalculateAlongPathDistanceFromPosition(
+         Units::FeetLength(oldest_target_state.m_x),
+         Units::FeetLength(oldest_target_state.m_y),
+         target_dtg);
 
    if (found_target_distance) {
       found_target_distance = ProjectTargetPositionFromDistance(target_dtg,
-              distance_calculator.GetHorizontalPath(),
-              targetx, targety
-              );
+                                                                distance_calculator.GetHorizontalPath(),
+                                                                targetx, targety
+      );
    }
 
    if (!found_target_distance) {
@@ -209,7 +218,7 @@ void IMUtils::CalculateTimeBasedExtrapolate(const Units::Length &ownship_dtg,
    Units::Time delta_time = delta_distance / target_ground_speed;
 
    extrapolated_target_time =
-           Units::SecondsTime(oldest_target_state.m_time) - delta_time; // time when target was at dtg_ownship
+         Units::SecondsTime(oldest_target_state.m_time) - delta_time; // time when target was at dtg_ownship
    AircraftState extrapstate, projstate(oldest_target_state);
    projstate.m_x = Units::FeetLength(targetx).value();
    projstate.m_y = Units::FeetLength(targety).value();
@@ -310,7 +319,8 @@ void IMUtils::GetPositionFromPathLength(const Units::Length distance_to_go_in,
       Units::UnsignedRadiansAngle crs(course_out);
       crs.normalize(); // make sure it's on the correct interval
 
-      const Units::Length diff(distance_to_go_in - Units::MetersLength(horizontal_path_in.back().m_path_length_cumulative_meters));
+      const Units::Length diff(
+            distance_to_go_in - Units::MetersLength(horizontal_path_in.back().m_path_length_cumulative_meters));
 
       x_out = Units::MetersLength(horizontal_path_in.back().GetXPositionMeters()) + diff * cos(crs);
       y_out = Units::MetersLength(horizontal_path_in.back().GetYPositionMeters()) + diff * sin(crs);
@@ -351,8 +361,11 @@ bool IMUtils::ProjectTargetPosition(const Units::Length x_target,
          return true;
       } else {
          // Find projected position
-         if (dtg - Units::MetersLength(ownship_horizontal_path.back().m_path_length_cumulative_meters) > startOfRouteTol) {
-            LOG4CPLUS_ERROR(m_logger, "dtg - m_path_length_cumulative_meters: " << (Units::MetersLength(dtg).value() - ownship_horizontal_path.back().m_path_length_cumulative_meters));
+         if (dtg - Units::MetersLength(ownship_horizontal_path.back().m_path_length_cumulative_meters) >
+             startOfRouteTol) {
+            LOG4CPLUS_ERROR(m_logger, "dtg - m_path_length_cumulative_meters: "
+                  << (Units::MetersLength(dtg).value() -
+                      ownship_horizontal_path.back().m_path_length_cumulative_meters));
             return false;
          } else {
             // Valid position. Now calculate
@@ -371,9 +384,9 @@ bool IMUtils::ProjectTargetPosition(const Units::Length x_target,
 }
 
 bool IMUtils::ProjectTargetPositionFromDistance(const Units::Length dtg,
-                                    const std::vector<HorizontalPath> &ownship_horizontal_path,
-                                    Units::Length &x_projected,
-                                    Units::Length &y_projected) {
+                                                const std::vector<HorizontalPath> &ownship_horizontal_path,
+                                                Units::Length &x_projected,
+                                                Units::Length &y_projected) {
    const Units::NauticalMilesLength startOfRouteTol(2.0);
    x_projected = Units::NegInfinity();
    y_projected = Units::NegInfinity();
@@ -388,7 +401,8 @@ bool IMUtils::ProjectTargetPositionFromDistance(const Units::Length dtg,
    } else {
       // Find projected position
       if (dtg - Units::MetersLength(ownship_horizontal_path.back().m_path_length_cumulative_meters) > startOfRouteTol) {
-         LOG4CPLUS_ERROR(m_logger, "dtg - m_path_length_cumulative_meters: " << (Units::MetersLength(dtg).value() - ownship_horizontal_path.back().m_path_length_cumulative_meters));
+         LOG4CPLUS_ERROR(m_logger, "dtg - m_path_length_cumulative_meters: "
+               << (Units::MetersLength(dtg).value() - ownship_horizontal_path.back().m_path_length_cumulative_meters));
          return false;
       } else {
          // Valid position. Now calculate
@@ -398,7 +412,7 @@ bool IMUtils::ProjectTargetPositionFromDistance(const Units::Length dtg,
          } else {
             int indexTraj;
             GetPositionFromPathLength(dtg, ownship_horizontal_path, Units::Angle(), x_projected, y_projected,
-                                       dummyTrack, indexTraj);
+                                      dummyTrack, indexTraj);
          }
          return true;
       }
@@ -474,7 +488,8 @@ bool IMUtils::GetCrossingTime(const Units::Length current_dtg,
    startDist = dtgProjected;
    if (current_dtg > startDist && b0) {
       // case A:  currentdist is before aircraftstates[0], index will be -1
-      IMUtils::CalculateTimeBasedExtrapolate(current_dtg, aircraft_state_history[0], horizontal_path, crossing_time, projected_x, projected_y,
+      IMUtils::CalculateTimeBasedExtrapolate(current_dtg, aircraft_state_history[0], horizontal_path, crossing_time,
+                                             projected_x, projected_y,
                                              projDTG);
       return true;
    }
@@ -497,8 +512,7 @@ bool IMUtils::GetCrossingTime(const Units::Length current_dtg,
          xProjectedBefore = xProjectedAfter;
          yProjectedBefore = yProjectedAfter;
          prevdistance = nextdistance;
-      }
-      else {
+      } else {
          // possibly first time through loop -- do a fresh calculation
          b1 = IMUtils::ProjectTargetPosition(Units::FeetLength(aircraft_state_history[loop - 1].m_x),
                                              Units::FeetLength(aircraft_state_history[loop - 1].m_y),
@@ -533,7 +547,8 @@ bool IMUtils::GetCrossingTime(const Units::Length current_dtg,
             + aircraft_state_history[index - 1].m_time);
 
       // Calculate a projected state associated with the crossingtime
-      AircraftState crossingstate, beforestate(aircraft_state_history[index - 1]), afterstate(aircraft_state_history[index]);
+      AircraftState crossingstate, beforestate(aircraft_state_history[index - 1]), afterstate(
+            aircraft_state_history[index]);
       beforestate.m_x = Units::FeetLength(xProjectedBefore).value();
       beforestate.m_y = Units::FeetLength(yProjectedBefore).value();
       afterstate.m_x = Units::FeetLength(xProjectedAfter).value();
@@ -557,7 +572,8 @@ bool IMUtils::GetCrossingTime(const Units::Length current_dtg,
          LOG4CPLUS_FATAL(m_logger, msg);
          throw logic_error(msg);
       }
-      IMUtils::CalculateTimeBasedExtrapolate(current_dtg, extrapstate, horizontal_path, crossing_time, projected_x, projected_y, projDTG);
+      IMUtils::CalculateTimeBasedExtrapolate(current_dtg, extrapstate, horizontal_path, crossing_time, projected_x,
+                                             projected_y, projDTG);
       valid = true;
    }
    return valid;
@@ -613,37 +629,35 @@ bool IMUtils::GetCrossingTime(const Units::Length current_dtg,
       return valid;
    }
 
-   // check if the aircraft distance is greater than the starting distance of the history
+   // Case A check if the aircraft distance is greater than the starting distance of the target history
    Units::MetersLength startDist;
    Units::Angle tempcourse;
    bool found = false;
    Units::MetersLength nextdistance;
    Units::MetersLength prevdistance;
 
-   // find correct position on ownship's route
+   // project onto ownship's route (projection can fail depending on geometry)
    int index = -1;
    Units::Length xProjected, yProjected, dtgProjected;
    bool b0;
-   try {
-      b0 = distance_calculator.CalculateAlongPathDistanceFromPosition(
-              Units::FeetLength(aircraft_state_history[0].m_x),
-              Units::FeetLength(aircraft_state_history[0].m_y),
-              dtgProjected);
-   } catch (logic_error e) {
-      return false;
-   }
-
-   if (b0) {
-      b0 = ProjectTargetPositionFromDistance(dtgProjected,
-                                             distance_calculator.GetHorizontalPath(),
-                                             xProjected, yProjected
-      );
-   }
+    try {
+        b0 = distance_calculator.CalculateAlongPathDistanceFromPosition(
+                Units::FeetLength(aircraft_state_history[0].m_x),
+                Units::FeetLength(aircraft_state_history[0].m_y),
+                dtgProjected);
+        b0 = ProjectTargetPositionFromDistance(dtgProjected,
+                                               distance_calculator.GetHorizontalPath(),
+                                               xProjected,
+                                               yProjected);
+    } catch (logic_error e) {
+        b0 = false;
+    }
 
    startDist = dtgProjected;
    if (current_dtg > startDist && b0) {
       // case A:  currentdist is before aircraftstates[0], index will be -1
-      IMUtils::CalculateTimeBasedExtrapolate(current_dtg, aircraft_state_history[0], distance_calculator, crossing_time, projected_x, projected_y,
+      IMUtils::CalculateTimeBasedExtrapolate(current_dtg, aircraft_state_history[0], distance_calculator, crossing_time,
+                                             projected_x, projected_y,
                                              projDTG);
       return true;
    }
@@ -666,34 +680,35 @@ bool IMUtils::GetCrossingTime(const Units::Length current_dtg,
          xProjectedBefore = xProjectedAfter;
          yProjectedBefore = yProjectedAfter;
          prevdistance = nextdistance;
-      }
-      else {
+      } else {
          // possibly first time through loop -- do a fresh calculation
          try {
             b1 = distance_calculator.CalculateAlongPathDistanceFromPosition(
-                    Units::FeetLength(aircraft_state_history[loop - 1].m_x),
-                    Units::FeetLength(aircraft_state_history[loop - 1].m_y),
-                    prevdistance);
+                  Units::FeetLength(aircraft_state_history[loop - 1].m_x),
+                  Units::FeetLength(aircraft_state_history[loop - 1].m_y),
+                  prevdistance);
          } catch (logic_error e) {
             b1 = false;
          }
-         if (b1)
+         if (b1) {
             b1 = ProjectTargetPositionFromDistance(prevdistance,
-                    distance_calculator.GetHorizontalPath(),
-                    xProjectedBefore, yProjectedBefore);
+                                                   distance_calculator.GetHorizontalPath(),
+                                                   xProjectedBefore, yProjectedBefore);
+         }
       }
       try {
          b2 = distance_calculator.CalculateAlongPathDistanceFromPosition(
-                 Units::FeetLength(aircraft_state_history[loop].m_x),
-                 Units::FeetLength(aircraft_state_history[loop].m_y),
-                 nextdistance);
+               Units::FeetLength(aircraft_state_history[loop].m_x),
+               Units::FeetLength(aircraft_state_history[loop].m_y),
+               nextdistance);
       } catch (logic_error e) {
          b2 = false;
       }
-      if (b2)
+      if (b2) {
          b2 = ProjectTargetPositionFromDistance(nextdistance,
-                 distance_calculator.GetHorizontalPath(),
-                 xProjectedAfter, yProjectedAfter);
+                                                distance_calculator.GetHorizontalPath(),
+                                                xProjectedAfter, yProjectedAfter);
+      }
 
       const bool next_distance_is_valid = b2 || nextdistance < Units::zero();
       if (current_dtg >= nextdistance &&
@@ -715,12 +730,13 @@ bool IMUtils::GetCrossingTime(const Units::Length current_dtg,
    if (index > 0 && found) {
       // handle case {C} using interpolation
       crossing_time = Units::SecondsTime(
-              (aircraft_state_history[index].m_time - aircraft_state_history[index - 1].m_time)
-              / (nextdistance - prevdistance) * (current_dtg - prevdistance)
-              + aircraft_state_history[index - 1].m_time);
+            (aircraft_state_history[index].m_time - aircraft_state_history[index - 1].m_time)
+            / (nextdistance - prevdistance) * (current_dtg - prevdistance)
+            + aircraft_state_history[index - 1].m_time);
 
       // Calculate a projected state associated with the crossingtime
-      AircraftState crossingstate, beforestate(aircraft_state_history[index - 1]), afterstate(aircraft_state_history[index]);
+      AircraftState crossingstate, beforestate(aircraft_state_history[index - 1]), afterstate(
+            aircraft_state_history[index]);
       beforestate.m_x = Units::FeetLength(xProjectedBefore).value();
       beforestate.m_y = Units::FeetLength(yProjectedBefore).value();
       afterstate.m_x = Units::FeetLength(xProjectedAfter).value();
@@ -736,16 +752,17 @@ bool IMUtils::GetCrossingTime(const Units::Length current_dtg,
       bool b1;
       try {
          b1 = distance_calculator.CalculateAlongPathDistanceFromPosition(
-                 Units::FeetLength(aircraft_state_history.back().m_x),
-                 Units::FeetLength(aircraft_state_history.back().m_y),
-                 nextdistance);
+               Units::FeetLength(aircraft_state_history.back().m_x),
+               Units::FeetLength(aircraft_state_history.back().m_y),
+               nextdistance);
       } catch (logic_error e) {
          b1 = false;
       }
-      if (b1)
+      if (b1) {
          b1 = ProjectTargetPositionFromDistance(nextdistance,
                                                 distance_calculator.GetHorizontalPath(),
                                                 xProjectedAfter, yProjectedAfter);
+      }
 
       AircraftState extrapstate;
       if (b1) {
@@ -755,7 +772,8 @@ bool IMUtils::GetCrossingTime(const Units::Length current_dtg,
          LOG4CPLUS_FATAL(m_logger, msg);
          throw logic_error(msg);
       }
-      IMUtils::CalculateTimeBasedExtrapolate(current_dtg, extrapstate, distance_calculator, crossing_time, projected_x, projected_y, projDTG);
+      IMUtils::CalculateTimeBasedExtrapolate(current_dtg, extrapstate, distance_calculator, crossing_time, projected_x,
+                                             projected_y, projDTG);
       valid = true;
    }
    return valid;
@@ -784,7 +802,8 @@ bool IMUtils::CalculateTargetStateAtTime(const AircraftState &target_state,
       return false;
    }
 
-   Units::Time dt = Units::SecondsTime(target_state.m_time) - extrapolation_time; // sign is important, pos means going backwards
+   Units::Time dt =
+         Units::SecondsTime(target_state.m_time) - extrapolation_time; // sign is important, pos means going backwards
    Units::Length delta_dist = target_state.GetGroundSpeed() * dt;
    Units::Length dtg = projdtg + delta_dist;
 
@@ -1019,12 +1038,10 @@ AircraftState IMUtils::GetProjectedTargetState(const std::vector<AircraftState> 
    while (ix < target_state_history.size() && !found) {
       if (target_time < Units::SecondsTime(target_state_history[ix].m_time)) {
          ix--;
-      }
-      else if (ix < (target_state_history.size() - 1) &&
-               target_time > Units::SecondsTime(target_state_history[ix + 1].m_time)) {
+      } else if (ix < (target_state_history.size() - 1) &&
+                 target_time > Units::SecondsTime(target_state_history[ix + 1].m_time)) {
          ix++;
-      }
-      else if (target_time > Units::SecondsTime(target_state_history[ix].m_time)) {
+      } else if (target_time > Units::SecondsTime(target_state_history[ix].m_time)) {
          found = true;
          extrapolateFromThis = target_state_history[ix];
          ix++;
@@ -1108,12 +1125,10 @@ AircraftState IMUtils::GetProjectedTargetState(AlongPathDistanceCalculator &dist
    while (ix < target_state_history.size() && !found) {
       if (target_time < Units::SecondsTime(target_state_history[ix].m_time)) {
          ix--;
-      }
-      else if (ix < (target_state_history.size() - 1) &&
-               target_time > Units::SecondsTime(target_state_history[ix + 1].m_time)) {
+      } else if (ix < (target_state_history.size() - 1) &&
+                 target_time > Units::SecondsTime(target_state_history[ix + 1].m_time)) {
          ix++;
-      }
-      else if (target_time > Units::SecondsTime(target_state_history[ix].m_time)) {
+      } else if (target_time > Units::SecondsTime(target_state_history[ix].m_time)) {
          found = true;
          extrapolateFromThis = target_state_history[ix];
          ix++;
@@ -1129,29 +1144,29 @@ AircraftState IMUtils::GetProjectedTargetState(AlongPathDistanceCalculator &dist
       int dummy_index;
 
       bool b0 = distance_calculator.CalculateAlongPathDistanceFromPosition(
-              Units::FeetLength(before.m_x),
-              Units::FeetLength(before.m_y),
-              before_dtg);
+            Units::FeetLength(before.m_x),
+            Units::FeetLength(before.m_y),
+            before_dtg);
       if (b0) {
          b0 = AircraftCalculations::LegacyGetPositionFromPathLength(before_dtg,
-         ownship_horizontal_traj,
-         beforex,
-         beforey,
-         before_out_crs,
-         dummy_index);
+                                                                    ownship_horizontal_traj,
+                                                                    beforex,
+                                                                    beforey,
+                                                                    before_out_crs,
+                                                                    dummy_index);
       }
 
       bool b1 = distance_calculator.CalculateAlongPathDistanceFromPosition(
-              Units::FeetLength(after.m_x),
-              Units::FeetLength(after.m_y),
-              after_dtg);
+            Units::FeetLength(after.m_x),
+            Units::FeetLength(after.m_y),
+            after_dtg);
       if (b1) {
          b1 = AircraftCalculations::LegacyGetPositionFromPathLength(after_dtg,
-               ownship_horizontal_traj,
-               afterx,
-               aftery,
-               after_out_crs,
-               dummy_index);
+                                                                    ownship_horizontal_traj,
+                                                                    afterx,
+                                                                    aftery,
+                                                                    after_out_crs,
+                                                                    dummy_index);
       }
 
       before.m_x = Units::FeetLength(beforex).value();
@@ -1179,27 +1194,31 @@ AircraftState IMUtils::GetProjectedTargetState(AlongPathDistanceCalculator &dist
       Units::FeetLength tgt_x, tgt_y;
       Units::UnsignedRadiansAngle dummyangle;
       bool is_extrapolation_valid = distance_calculator.CalculateAlongPathDistanceFromPosition(
-              Units::FeetLength(extrapolateFromThis.m_x), Units::FeetLength(extrapolateFromThis.m_y),
-              ownpathdtg);
+            Units::FeetLength(extrapolateFromThis.m_x), Units::FeetLength(extrapolateFromThis.m_y),
+            ownpathdtg);
       if (is_extrapolation_valid) {
          is_extrapolation_valid = AircraftCalculations::LegacyGetPositionFromPathLength(ownpathdtg,
-                 ownship_horizontal_traj, tgt_x, tgt_y,
-                 dummyangle, dummyindex);
+                                                                                        ownship_horizontal_traj, tgt_x,
+                                                                                        tgt_y,
+                                                                                        dummyangle, dummyindex);
       }
       if (is_extrapolation_valid) {
          Units::Time dt = Units::SecondsTime(extrapolateFromThis.m_time) - target_time;
          // sign is important, pos means going backwards
          Units::Length delta_dist = extrapolateFromThis.GetGroundSpeed() * dt;
          Units::Length dtg = ownpathdtg + delta_dist;
-         GetPositionFromPathLength(dtg, ownship_horizontal_traj, ownship_true_heading, tgt_x, tgt_y, dummyangle, dummyindex);
+         GetPositionFromPathLength(dtg, ownship_horizontal_traj, ownship_true_heading, tgt_x, tgt_y, dummyangle,
+                                   dummyindex);
          target_state.m_id = extrapolateFromThis.m_id;
          target_state.m_time = Units::SecondsTime(target_time).value();
          target_state.m_x = Units::FeetLength(tgt_x).value();
          target_state.m_y = Units::FeetLength(tgt_y).value();
          target_state.m_z = extrapolateFromThis.m_z;
-         target_state.m_xd = Units::FeetPerSecondSpeed(extrapolateFromThis.GetGroundSpeed() * Units::cos(dummyangle)).value();
-         target_state.m_yd = Units::FeetPerSecondSpeed(extrapolateFromThis.GetGroundSpeed() * Units::sin(dummyangle)).value();
-       }
+         target_state.m_xd = Units::FeetPerSecondSpeed(
+               extrapolateFromThis.GetGroundSpeed() * Units::cos(dummyangle)).value();
+         target_state.m_yd = Units::FeetPerSecondSpeed(
+               extrapolateFromThis.GetGroundSpeed() * Units::sin(dummyangle)).value();
+      }
 
       target_state_is_valid = target_state_is_valid && is_extrapolation_valid;
    }
@@ -1220,17 +1239,15 @@ Units::SignedAngle IMUtils::CalculateTrackAngle(
       Units::SignedDegreesAngle x_signed = *itr;
       Units::UnsignedDegreesAngle x_unsigned = *itr;
       if (x_signed < Units::DegreesAngle(45) &&
-            x_signed > Units::DegreesAngle(-45)) {
+          x_signed > Units::DegreesAngle(-45)) {
          unsigned_warning_count++;
-      }
-      else {
+      } else {
          total_unsigned += x_unsigned;
       }
       if (x_unsigned < Units::DegreesAngle(225) &&
-            x_unsigned > Units::DegreesAngle(135)) {
+          x_unsigned > Units::DegreesAngle(135)) {
          signed_warning_count++;
-      }
-      else {
+      } else {
          total_signed += x_signed;
       }
    }
@@ -1238,16 +1255,15 @@ Units::SignedAngle IMUtils::CalculateTrackAngle(
    Units::SignedAngle result;
    if (signed_warning_count < unsigned_warning_count) {
       result = total_signed / (angle_history.size() - signed_warning_count);
-   }
-   else {
+   } else {
       result = total_unsigned / (angle_history.size() - unsigned_warning_count);
    }
 
    // if both totals have discards, log an error
    if (signed_warning_count > 0 && unsigned_warning_count > 0) {
       LOG4CPLUS_ERROR(m_logger, "Track angle history has " <<
-            signed_warning_count << " angles near 180 and " <<
-            unsigned_warning_count << " near 0.  This is not normal.");
+                                                           signed_warning_count << " angles near 180 and " <<
+                                                           unsigned_warning_count << " near 0.  This is not normal.");
    }
    return result;
 }

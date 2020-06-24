@@ -20,7 +20,7 @@
 log4cplus::Logger IMMaintain::logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("IMMaintain"));
 
 // Do not change this default value without discussing with IM research team
-const Units::HertzFrequency IMMaintain::MAINTAIN_CONTROL_GAIN_DEFAULT(.008);  
+const Units::HertzFrequency IMMaintain::MAINTAIN_CONTROL_GAIN_DEFAULT(.008);
 
 IMMaintain::IMMaintain() {
    m_maintain_control_gain = MAINTAIN_CONTROL_GAIN_DEFAULT;
@@ -54,7 +54,7 @@ void IMMaintain::Copy(const IMMaintain &obj) {
 
    m_maintain_control_gain = obj.m_maintain_control_gain;
    m_ownship_decrementing_distance_calculator = obj.m_ownship_decrementing_distance_calculator;
-   m_im_distance_calculator = obj.m_im_distance_calculator;
+   m_ownship_distance_calculator = obj.m_ownship_distance_calculator;
 }
 
 void IMMaintain::IterationReset() {
@@ -82,20 +82,21 @@ void IMMaintain::Prepare(Units::Speed previous_im_speed_command,
                          const vector<AircraftState> &target_adsb_track_history,
                          const IMClearance &im_clearance,
                          const bool has_rf_leg,
-                         const std::vector<std::pair<Units::Length,Units::Speed>> &rf_limits) {
+                         const std::vector<std::pair<Units::Length, Units::Speed>> &rf_limits) {
    m_im_clearance = im_clearance;
    m_previous_reference_im_speed_command_tas = previous_im_speed_command;
    m_previous_im_speed_command_ias = previous_ias_command;
    m_previous_reference_im_speed_command_mach = previous_mach_command;
    m_tangent_plane_sequence = tangent_plane_sequence;
    m_ownship_decrementing_distance_calculator = AlongPathDistanceCalculator(
-           ownship_trajectory_predictor.GetHorizontalPath(),
-           TrajectoryIndexProgressionDirection::DECREMENTING);
-   m_im_distance_calculator = im_distance_calculator;
+         ownship_trajectory_predictor.GetHorizontalPath(),
+         TrajectoryIndexProgressionDirection::DECREMENTING);
+   m_ownship_distance_calculator = im_distance_calculator;
    m_has_rf_leg = has_rf_leg;
    m_rfleg_limits.clear();
-   for (int i = 0; i < rf_limits.size(); i++)
+   for (int i = 0; i < rf_limits.size(); i++) {
       m_rfleg_limits.push_back(rf_limits[i]);
+   }
    m_rfleg_limits = rf_limits;
 }
 
@@ -104,7 +105,7 @@ void IMMaintain::DumpParameters(const std::string &parameters_to_print) {
 }
 
 Units::Frequency IMMaintain::GetMaintainControlGain() const {
-     return m_maintain_control_gain;
+   return m_maintain_control_gain;
 }
 
 void IMMaintain::SetAssignedSpacingGoal(const IMClearance &clearance) {

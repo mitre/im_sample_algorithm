@@ -64,7 +64,7 @@ public:
 
    void SetTimeThreshold(Units::Time time_threshold);
 
-   const Units::Length GetTargetDtgToTrp() const;
+   const Units::Length GetTargetKinematicDtgToTrp() const;
 
    const bool IsWithinErrorThreshold() const;
 
@@ -125,7 +125,7 @@ inline const bool IMAchieve::IsTargetPassedLastWaypoint() const {
    return m_target_kinematic_dtg_to_last_waypoint <= Units::zero();
 }
 
-inline const Units::Length IMAchieve::GetTargetDtgToTrp() const {
+inline const Units::Length IMAchieve::GetTargetKinematicDtgToTrp() const {
    return m_target_kinematic_dtg_to_trp;
 }
 

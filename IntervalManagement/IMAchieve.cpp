@@ -27,7 +27,7 @@ using namespace std;
 log4cplus::Logger IMAchieve::m_logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("IMAchieve"));
 
 const shared_ptr<PredictedWindEvaluator>
-     IMAchieve::m_predicted_wind_evaluator(MOPSPredictedWindEvaluatorVersion2::getInstance());
+      IMAchieve::m_predicted_wind_evaluator(MOPSPredictedWindEvaluatorVersion2::getInstance());
 
 // Do not change these values without discussing with Lesley Weitz.
 const Units::Angle IMAchieve::TOLERANCE_ANGLE(Units::DegreesAngle(15.0));

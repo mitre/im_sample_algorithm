@@ -52,12 +52,12 @@ Guidance IMKinematicTimeBasedMaintain::Update(const DynamicsState &dynamics_stat
    Guidance guidanceout = guidance_in;
 
    guidanceout.SetValid(true);
-   m_is_guidance_valid = true;
 
    Units::MetersLength tmpdist;
-   m_ownship_decrementing_distance_calculator.CalculateAlongPathDistanceFromPosition(Units::FeetLength(ownship_aircraft_state.m_x),
-                                                                                     Units::FeetLength(ownship_aircraft_state.m_y),
-                                                                                     tmpdist);
+   m_ownship_decrementing_distance_calculator.CalculateAlongPathDistanceFromPosition(
+         Units::FeetLength(ownship_aircraft_state.m_x),
+         Units::FeetLength(ownship_aircraft_state.m_y),
+         tmpdist);
    const Units::Length ownship_true_dtg = tmpdist;
 
 
@@ -67,12 +67,13 @@ Guidance IMKinematicTimeBasedMaintain::Update(const DynamicsState &dynamics_stat
    // against being off the back of the horizontal path.
    Units::Length targetProjectedX = Units::zero();
    Units::Length targetProjectedY = Units::zero();
-   const bool foundProjectedPos = IMUtils::ProjectTargetPosition(Units::FeetLength(target_aircraft_state_projected_asg_adjusted.m_x),
-                                                                 Units::FeetLength(target_aircraft_state_projected_asg_adjusted.m_y),
-                                                                 ownship_kinematic_trajectory_predictor.GetHorizontalPath(),
-                                                                 targetProjectedX,
-                                                                 targetProjectedY,
-                                                                 tmpdist);
+   const bool foundProjectedPos = IMUtils::ProjectTargetPosition(
+         Units::FeetLength(target_aircraft_state_projected_asg_adjusted.m_x),
+         Units::FeetLength(target_aircraft_state_projected_asg_adjusted.m_y),
+         ownship_kinematic_trajectory_predictor.GetHorizontalPath(),
+         targetProjectedX,
+         targetProjectedY,
+         tmpdist);
    const Units::Length target_projected_dtg = tmpdist;
    bool storespacingerror = true;
    const Units::Speed targetvelocity = target_aircraft_state_projected_asg_adjusted.GetGroundSpeed();
@@ -93,8 +94,7 @@ Guidance IMKinematicTimeBasedMaintain::Update(const DynamicsState &dynamics_stat
       }
       storespacingerror = IMUtils::GetCrossingTime(ownship_true_dtg,
                                                    history,
-                                                   m_im_distance_calculator,
-                                                   //ownship_kinematic_trajectory_predictor.GetHorizontalPath(),
+                                                   m_ownship_distance_calculator,
                                                    target_crossing_time,
                                                    projected_x,
                                                    projected_y);
@@ -113,7 +113,8 @@ Guidance IMKinematicTimeBasedMaintain::Update(const DynamicsState &dynamics_stat
    }
 
    if (m_ownship_reference_lookup_index == -1) {
-      m_ownship_reference_lookup_index = static_cast<int>(ownship_kinematic_trajectory_predictor.GetVerticalPathDistances().size() - 1);
+      m_ownship_reference_lookup_index = static_cast<int>(
+            ownship_kinematic_trajectory_predictor.GetVerticalPathDistances().size() - 1);
    }
 
    // if target distance is inside the range of the precalculated trajectory, use that to find the precalc index for the +- 10% calculation
@@ -124,40 +125,45 @@ Guidance IMKinematicTimeBasedMaintain::Update(const DynamicsState &dynamics_stat
          m_ownship_reference_lookup_index = CoreUtils::FindNearestIndex(Units::MetersLength(ownship_true_dtg).value(),
                                                                         ownship_kinematic_trajectory_predictor.GetVerticalPathDistances());
 
-         if (m_ownship_reference_lookup_index > ownship_kinematic_trajectory_predictor.GetVerticalPathDistances().size() - 1) {
-            m_ownship_reference_lookup_index = static_cast<int>(ownship_kinematic_trajectory_predictor.GetVerticalPathDistances().size() - 1);
+         if (m_ownship_reference_lookup_index >
+             ownship_kinematic_trajectory_predictor.GetVerticalPathDistances().size() - 1) {
+            m_ownship_reference_lookup_index = static_cast<int>(
+                  ownship_kinematic_trajectory_predictor.GetVerticalPathDistances().size() - 1);
          }
       } else {
          guidanceout.SetValid(false);
-         m_is_guidance_valid = false;
       }
    } else {
       guidanceout.SetValid(false);
-      m_is_guidance_valid = false;
    }
 
    if (guidanceout.IsValid()) {
       if (!target_aircraft_state_history.empty()) {
-         InternalObserver::getInstance()->updateFinalGS(target_aircraft_state_projected_asg_adjusted.m_id, Units::MetersPerSecondSpeed(
-               AircraftCalculations::GsAtACS(target_aircraft_state_history.back())).value());
+         InternalObserver::getInstance()->updateFinalGS(target_aircraft_state_projected_asg_adjusted.m_id,
+                                                        Units::MetersPerSecondSpeed(
+                                                              AircraftCalculations::GsAtACS(
+                                                                    target_aircraft_state_history.back())).value());
          InternalObserver::getInstance()->updateFinalGS(ownship_aircraft_state.m_id, Units::MetersPerSecondSpeed(
                AircraftCalculations::GsAtACS(ownship_aircraft_state)).value());
 
          if (m_previous_reference_im_speed_command_tas == Units::zero()) {
             m_previous_reference_im_speed_command_tas = m_weather_prediction.getAtmosphere()->CAS2TAS(
-                  Units::MetersPerSecondSpeed(ownship_kinematic_trajectory_predictor.GetVerticalPathVelocities().back()),
+                  Units::MetersPerSecondSpeed(
+                        ownship_kinematic_trajectory_predictor.GetVerticalPathVelocities().back()),
                   Units::MetersLength(ownship_kinematic_trajectory_predictor.GetVerticalPathAltitudes().back()));
             m_previous_im_speed_command_ias = Units::MetersPerSecondSpeed(
                   ownship_kinematic_trajectory_predictor.GetVerticalPathVelocities().back());
             m_previous_reference_im_speed_command_mach =
                   Units::MetersPerSecondSpeed(m_previous_reference_im_speed_command_tas).value() /
                   sqrt(GAMMA * R.value() * m_weather_prediction.getAtmosphere()->GetTemperature(
-                        Units::MetersLength(ownship_kinematic_trajectory_predictor.GetVerticalPathAltitudes().back())).value());
+                        Units::MetersLength(
+                              ownship_kinematic_trajectory_predictor.GetVerticalPathAltitudes().back())).value());
          }
 
          if (InternalObserver::getInstance()->GetRecordMaintainMetrics()) {
             if (Units::abs(ownship_true_dtg) < ownship_achieve_point_calcs.GetDistanceFromWaypoint()) {
-               MaintainMetric &maintain_metric = InternalObserver::getInstance()->GetMaintainMetric(ownship_aircraft_state.m_id);
+               MaintainMetric &maintain_metric = InternalObserver::getInstance()->GetMaintainMetric(
+                     ownship_aircraft_state.m_id);
                if (storespacingerror) {
                   maintain_metric.AddSpacingErrorSec(
                         Units::SecondsTime(spacingerrorformaintainstats).value());
@@ -174,9 +180,10 @@ Guidance IMKinematicTimeBasedMaintain::Update(const DynamicsState &dynamics_stat
       }
 
       Units::Speed gscommand = targetvelocity + (ownship_true_dtg - target_projected_dtg) * m_maintain_control_gain;
-      Units::Speed tascommand = sqrt(Units::sqr(gscommand - Units::MetersPerSecondSpeed(ownship_aircraft_state.m_Vw_para)) +
-                                     Units::sqr(Units::MetersPerSecondSpeed(ownship_aircraft_state.m_Vw_perp))) /
-                                cos(ownship_aircraft_state.m_gamma);
+      Units::Speed tascommand =
+            sqrt(Units::sqr(gscommand - Units::MetersPerSecondSpeed(ownship_aircraft_state.m_Vw_para)) +
+                 Units::sqr(Units::MetersPerSecondSpeed(ownship_aircraft_state.m_Vw_perp))) /
+            cos(ownship_aircraft_state.m_gamma);
       m_previous_reference_im_speed_command_tas = tascommand;  // remember the speed command
 
       if (tascommand < Units::zero()) {
@@ -204,11 +211,13 @@ Guidance IMKinematicTimeBasedMaintain::Update(const DynamicsState &dynamics_stat
          InternalObserver::getInstance()->IM_command_output(ownship_aircraft_state.m_id,
                                                             ownship_aircraft_state.m_time,
                                                             ownship_aircraft_state.m_z,
-                                                            Units::MetersPerSecondSpeed(dynamics_state.v_true_airspeed).value(),
+                                                            Units::MetersPerSecondSpeed(
+                                                                  dynamics_state.v_true_airspeed).value(),
                                                             Units::MetersPerSecondSpeed(
                                                                   ownship_aircraft_state.GetGroundSpeed()).value(),
                                                             Units::MetersPerSecondSpeed(m_im_speed_command_ias).value(),
-                                                            Units::MetersPerSecondSpeed(m_unmodified_im_speed_command_ias).value(),
+                                                            Units::MetersPerSecondSpeed(
+                                                                  m_unmodified_im_speed_command_ias).value(),
                                                             Units::MetersPerSecondSpeed(tascommand).value(),
                                                             Units::MetersPerSecondSpeed(targetvelocity).value(),
                                                             Units::MetersLength(-target_projected_dtg).value(),
@@ -231,12 +240,14 @@ Guidance IMKinematicTimeBasedMaintain::Update(const DynamicsState &dynamics_stat
          }
 
          if (Units::abs(ownship_true_dtg) <=
-               Units::NauticalMilesLength(nm_observer.curr_NM) &&
-               guidanceout.IsValid()) {
+             Units::NauticalMilesLength(nm_observer.curr_NM) &&
+             guidanceout.IsValid()) {
             --nm_observer.curr_NM;
 
-            double lval = LowLimit(ownship_kinematic_trajectory_predictor.GetVerticalPathVelocityByIndex(m_ownship_reference_lookup_index));
-            double hval = HighLimit(ownship_kinematic_trajectory_predictor.GetVerticalPathVelocityByIndex(m_ownship_reference_lookup_index));
+            double lval = LowLimit(ownship_kinematic_trajectory_predictor.GetVerticalPathVelocityByIndex(
+                  m_ownship_reference_lookup_index));
+            double hval = HighLimit(ownship_kinematic_trajectory_predictor.GetVerticalPathVelocityByIndex(
+                  m_ownship_reference_lookup_index));
 
             double ltas = Units::MetersPerSecondSpeed(
                   m_weather_prediction.getAtmosphere()->CAS2TAS(Units::MetersPerSecondSpeed(lval),
@@ -274,7 +285,8 @@ void IMKinematicTimeBasedMaintain::CalculateIas(const Units::Length current_owns
 
    m_im_speed_command_ias =
          LimitImSpeedCommand(m_im_speed_command_ias,
-                             ownship_kinematic_trajectory_predictor.GetVerticalPathVelocityByIndex(m_ownship_reference_lookup_index),
+                             ownship_kinematic_trajectory_predictor.GetVerticalPathVelocityByIndex(
+                                   m_ownship_reference_lookup_index),
                              Units::zero(), bada_calculator,
                              current_ownship_altitude,
                              dynamics_state.m_flap_configuration,

@@ -125,15 +125,15 @@ bool IMClearance::Validate(const AircraftIntent &ownship_aircraft_intent,
 
       if (m_clearance_type == ClearanceType::ACHIEVE ||
           m_clearance_type == ClearanceType::CUSTOM ||
-          m_clearance_type == ClearanceType::FAS)
-      {
+          m_clearance_type == ClearanceType::FAS) {
          m_valid = ValidateTrafficReferencePoint(ownship_aircraft_intent, target_aircraft_intent, im_algorithm_type);
       }
 
       if (m_valid) {
          if (m_planned_termination_point.empty()) {
             m_valid = true;
-            const string lastWptName = ownship_aircraft_intent.GetWaypointName(ownship_aircraft_intent.GetNumberOfWaypoints() - 1);
+            const string lastWptName = ownship_aircraft_intent.GetWaypointName(
+                  ownship_aircraft_intent.GetNumberOfWaypoints() - 1);
             string infomsg = "The planned termination point is empty. It is forced to: " + lastWptName;
             LOG4CPLUS_INFO(m_logger, infomsg);
             m_planned_termination_point = lastWptName;
@@ -149,7 +149,7 @@ bool IMClearance::Validate(const AircraftIntent &ownship_aircraft_intent,
       }
    }
 
-  return m_valid;
+   return m_valid;
 }
 
 bool IMClearance::IsValid() const {
@@ -218,7 +218,8 @@ void IMClearance::dump(string hdr) const {
    LOG4CPLUS_DEBUG(IMClearance::m_logger, "Spacing goal             " << m_assigned_spacing_goal);
    LOG4CPLUS_DEBUG(IMClearance::m_logger,
                    "Final Approach speed     " << Units::KnotsSpeed(m_planned_final_approach_speed).value());
-   LOG4CPLUS_DEBUG(IMClearance::m_logger, "Final Approach merge angle" << Units::DegreesAngle(m_final_approach_spacing_merge_angle_mean).value());
+   LOG4CPLUS_DEBUG(IMClearance::m_logger, "Final Approach merge angle"
+         << Units::DegreesAngle(m_final_approach_spacing_merge_angle_mean).value());
 }
 
 const bool IMClearance::IsCoincidentRoutePairing() const {
@@ -271,7 +272,8 @@ bool IMClearance::ValidateFinalApproachSpacingClearance(const AircraftIntent &ow
    //   PTP does not have to be the same as TRP (parallel runway approaches)
    //   merge point only added to aircraft on-vector
    const bool isLastWptNameOwnship =
-         ownship_aircraft_intent.GetWaypointName(ownship_aircraft_intent.GetNumberOfWaypoints() - 1) == m_planned_termination_point;
+         ownship_aircraft_intent.GetWaypointName(ownship_aircraft_intent.GetNumberOfWaypoints() - 1) ==
+         m_planned_termination_point;
 
    if (!isLastWptNameOwnship) {
       const string msg = "For FAS, the Planned Termination Point (" + m_planned_termination_point +
@@ -316,7 +318,8 @@ bool IMClearance::ValidateFinalApproachSpacingClearance(const AircraftIntent &ow
       }
    }
 
-   if (ownship_aircraft_intent.GetWaypointName(ownship_aircraft_intent.GetNumberOfWaypoints() - 1) != m_achieve_by_point) {
+   if (ownship_aircraft_intent.GetWaypointName(ownship_aircraft_intent.GetNumberOfWaypoints() - 1) !=
+       m_achieve_by_point) {
       const string msg = "For FAS, The ABP must be the final waypoint and it is not. This intent is malformed.";
       LOG4CPLUS_FATAL(m_logger, msg);
       throw LoadError(msg);
@@ -367,8 +370,10 @@ bool IMClearance::ValidateBasicInputs(const AircraftIntent &ownship_aircraft_int
       throw LoadError(msg);
    }
 
-   bool invalidCombo1 = m_assigned_spacing_goal_type == TIME && im_algorithm_type == IMUtils::IMAlgorithmTypes::DISTANCEBASEDACHIEVE;
-   bool invalidCombo2 = m_assigned_spacing_goal_type == DIST && im_algorithm_type != IMUtils::IMAlgorithmTypes::DISTANCEBASEDACHIEVE;
+   bool invalidCombo1 =
+         m_assigned_spacing_goal_type == TIME && im_algorithm_type == IMUtils::IMAlgorithmTypes::DISTANCEBASEDACHIEVE;
+   bool invalidCombo2 =
+         m_assigned_spacing_goal_type == DIST && im_algorithm_type != IMUtils::IMAlgorithmTypes::DISTANCEBASEDACHIEVE;
    if (invalidCombo1 || invalidCombo2) {
       const std::string msg = "The application_type does not match the ASG Type. Check your input file.";
       LOG4CPLUS_FATAL(m_logger, msg);

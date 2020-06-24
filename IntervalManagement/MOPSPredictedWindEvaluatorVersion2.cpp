@@ -25,7 +25,8 @@
 #include "imalgs/MOPSPredictedWindEvaluatorVersion2.h"
 #include "public/Environment.h"
 
-log4cplus::Logger MOPSPredictedWindEvaluatorVersion2::m_logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("MOPSPredictedWindEvaluatorVersion2"));
+log4cplus::Logger MOPSPredictedWindEvaluatorVersion2::m_logger = log4cplus::Logger::getInstance(
+      LOG4CPLUS_TEXT("MOPSPredictedWindEvaluatorVersion2"));
 
 Units::KnotsSpeed MOPSPredictedWindEvaluatorVersion2::MAX_PERMITTED_GROUNDSPEED_ERROR(8);
 
@@ -80,8 +81,9 @@ bool MOPSPredictedWindEvaluatorVersion2::ArePredictedWindsAccurate(
    Units::KnotsSpeed gs1 = tas_para1 + vw_para1;
    Units::KnotsSpeed gs2 = tas_para2 + vw_para2;
 
-   if (abs(gs1-gs2) > MAX_PERMITTED_GROUNDSPEED_ERROR) {
-      Units::KelvinTemperature predicted_temperature = weather_prediction.getAtmosphere()->GetTemperature(reference_altitude);
+   if (abs(gs1 - gs2) > MAX_PERMITTED_GROUNDSPEED_ERROR) {
+      Units::KelvinTemperature predicted_temperature = weather_prediction.getAtmosphere()->GetTemperature(
+            reference_altitude);
       Units::PascalsPressure predicted_pressure;
       Units::KilogramsMeterDensity predicted_density;
       weather_prediction.getAtmosphere()->AirDensity(reference_altitude, predicted_density, predicted_pressure);
@@ -92,29 +94,72 @@ bool MOPSPredictedWindEvaluatorVersion2::ArePredictedWindsAccurate(
       sensed_atmosphere->AirDensity(true_altitude, true_density, true_pressure);
 
       // This table format can be pasted into JIRA
-      LOG4CPLUS_DEBUG(m_logger, "Winds inaccurate:" << std::endl
+      LOG4CPLUS_DEBUG(m_logger, "Winds inaccurate:"
+            << std::endl
             << "||time||source||altitude(ft)||temperature(C)||pressure(Pa)||density(kg/m^3)||wind_ew(kts)||wind_ns(kts)"
-            << "||CAS(kts)||TAS(kts)||GS(kts)||" << std::endl
-            << "|" << state.m_time << "|predicted|" <<
-            Units::FeetLength(reference_altitude).value() << "|" <<
-            (predicted_temperature.value() - 273.15) << "|" <<
-            predicted_pressure.value() << "|" <<
-            predicted_density.value() << "|" <<
-            Units::KnotsSpeed(predicted_wind_x).value() << "|" <<
-            Units::KnotsSpeed(predicted_wind_y).value() << "|" <<
-            Units::KnotsSpeed(reference_cas).value() << "|" <<
-            Units::KnotsSpeed(tas1).value() << "|" <<
-            Units::KnotsSpeed(gs1).value() << "|" << std::endl
-            << "|" << state.m_time << "|  true   |" <<
-            true_altitude.value() << "|" <<
-            (true_temperature.value() - 273.15) << "|" <<
-            true_pressure.value() << "|" <<
-            true_density.value() << "|" <<
-            Units::KnotsSpeed(Units::MetersPerSecondSpeed(state.m_Vwx)).value() << "|" <<
-            Units::KnotsSpeed(Units::MetersPerSecondSpeed(state.m_Vwy)).value() << "|" <<
-            Units::KnotsSpeed(reference_cas).value() << "|" <<
-            Units::KnotsSpeed(tas2).value() << "|" <<
-            Units::KnotsSpeed(gs2).value() << "|");
+            << "||CAS(kts)||TAS(kts)||GS(kts)||"
+            << std::endl
+            << "|"
+            << state.m_time
+            << "|predicted|"
+            <<
+            Units::FeetLength(reference_altitude).value()
+            << "|"
+            <<
+            (predicted_temperature.value() - 273.15)
+            << "|"
+            <<
+            predicted_pressure.value()
+            << "|"
+            <<
+            predicted_density.value()
+            << "|"
+            <<
+            Units::KnotsSpeed(predicted_wind_x).value()
+            << "|"
+            <<
+            Units::KnotsSpeed(predicted_wind_y).value()
+            << "|"
+            <<
+            Units::KnotsSpeed(reference_cas).value()
+            << "|"
+            <<
+            Units::KnotsSpeed(tas1).value()
+            << "|"
+            <<
+            Units::KnotsSpeed(gs1).value()
+            << "|"
+            << std::endl
+            << "|"
+            << state.m_time
+            << "|  true   |"
+            <<
+            true_altitude.value()
+            << "|"
+            <<
+            (true_temperature.value() - 273.15)
+            << "|"
+            <<
+            true_pressure.value()
+            << "|"
+            <<
+            true_density.value()
+            << "|"
+            <<
+            Units::KnotsSpeed(Units::MetersPerSecondSpeed(state.m_Vwx)).value()
+            << "|"
+            <<
+            Units::KnotsSpeed(Units::MetersPerSecondSpeed(state.m_Vwy)).value()
+            << "|"
+            <<
+            Units::KnotsSpeed(reference_cas).value()
+            << "|"
+            <<
+            Units::KnotsSpeed(tas2).value()
+            << "|"
+            <<
+            Units::KnotsSpeed(gs2).value()
+            << "|");
 
 /*    Sensed state (alt, GS, temp, press, density, wind)
     Predicted Weather params: temp, press, density, wind

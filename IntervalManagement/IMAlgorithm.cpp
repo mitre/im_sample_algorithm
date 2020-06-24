@@ -16,6 +16,7 @@
 // ****************************************************************************
 
 #include <iomanip>
+#include <utility>
 #include "imalgs/IMAlgorithm.h"
 #include "math/CustomMath.h"
 #include "public/AircraftCalculations.h"
@@ -41,7 +42,8 @@ const double IMAlgorithm::UNDEFINED_INTERVAL(-INFINITY);
 IMAlgorithm::IMAlgorithm()
       : m_target_kinetic_trajectory_predictor(nullptr),
         m_ownship_kinetic_trajectory_predictor(nullptr),
-        m_im_clearance() {
+        m_im_clearance(),
+        m_initiate_signal_receipt_time(Units::Infinity()) {
    m_middle_to_final_quantize_transition_distance = DIST_QUANTIZE_1_DEFAULT;
    m_first_to_middle_quantize_transition_distance = DIST_QUANTIZE_2_DEFAULT;
 
@@ -58,7 +60,6 @@ IMAlgorithm::IMAlgorithm()
    m_quantize_flag = QUANTIZE_FLAG_DEFAULT;
 
    m_loaded = false;
-   m_is_guidance_valid = false;
 
    m_ownship_kinematic_dtg_to_ptp = Units::Infinity();
    m_ownship_kinetic_dtg_to_ptp = Units::Infinity();
@@ -67,7 +68,8 @@ IMAlgorithm::IMAlgorithm()
    IterClearIMAlg();
 }
 
-IMAlgorithm::IMAlgorithm(const IMAlgorithm &obj) {
+IMAlgorithm::IMAlgorithm(const IMAlgorithm &obj)
+      : m_initiate_signal_receipt_time(Units::Infinity()) {
    m_target_kinetic_trajectory_predictor = NULL;
    m_ownship_kinetic_trajectory_predictor = NULL;
    m_total_number_of_im_speed_changes = 0;
@@ -79,7 +81,6 @@ IMAlgorithm::IMAlgorithm(const IMAlgorithm &obj) {
    m_previous_reference_im_speed_command_mach = 0.0;
    m_loaded = false;
    m_im_operation_is_complete = false;
-   m_is_guidance_valid = false;
 
    m_ownship_kinematic_dtg_to_ptp = Units::Infinity();
    m_ownship_kinetic_dtg_to_ptp = Units::Infinity();
@@ -128,13 +129,10 @@ void IMAlgorithm::Copy(const IMAlgorithm &obj) {
    m_target_kinetic_trajectory_predictor = obj.m_target_kinetic_trajectory_predictor;
 
    m_target_aircraft_intent = obj.m_target_aircraft_intent;
-
    m_achieve_by_point = obj.m_achieve_by_point;
-
    m_weather_prediction = obj.m_weather_prediction;
-
    m_stage_of_im_operation = obj.m_stage_of_im_operation;
-
+   m_initiate_signal_receipt_time = obj.m_initiate_signal_receipt_time;
    m_target_trp_crossing_time = obj.m_target_trp_crossing_time;
    m_target_ttg_to_trp = obj.m_target_ttg_to_trp;
    m_target_ttg_to_end_of_route = obj.m_target_ttg_to_end_of_route;
@@ -153,8 +151,6 @@ void IMAlgorithm::Copy(const IMAlgorithm &obj) {
 
    m_rfleg_limits = obj.m_rfleg_limits;
    m_has_rf_leg = obj.m_has_rf_leg;
-
-   m_is_guidance_valid = obj.m_is_guidance_valid;
    m_active_filter_flag = obj.m_active_filter_flag;
    m_target_kinetic_dtg_to_trp = obj.m_target_kinetic_dtg_to_trp;
    m_target_kinetic_dtg_to_last_waypoint = obj.m_target_kinetic_dtg_to_last_waypoint;
@@ -166,6 +162,10 @@ void IMAlgorithm::Copy(const IMAlgorithm &obj) {
 
    m_high_speed_coef = obj.m_high_speed_coef;
    m_low_speed_coef = obj.m_low_speed_coef;
+
+   m_ownship_reference_gs = obj.m_ownship_reference_gs;
+   m_target_reference_ias = obj.m_target_reference_ias;
+   m_target_reference_gs = obj.m_target_reference_gs;
 }
 
 void IMAlgorithm::Initialize(const KineticTrajectoryPredictor &ownship_kinetic_trajectory_predictor,
@@ -183,13 +183,14 @@ void IMAlgorithm::Initialize(const KineticTrajectoryPredictor &ownship_kinetic_t
    m_target_aircraft_intent = target_aircraft_intent;
    m_achieve_by_point.assign(achieve_by_point);
    SetKineticTrajectoryPredictors(ownship_kinetic_trajectory_predictor, target_kinetic_trajectory_predictor);
-   SetTangentPlaneSequence(tangent_plane_sequence);
+   SetTangentPlaneSequence(std::move(tangent_plane_sequence));
    SetWeatherPrediction(weather_prediction);
+
    if (im_clearance.GetClearanceType() != IMClearance::CUSTOM) {
       ResetDefaults();
    }
-   m_has_maintain_stage = !im_clearance.AbpAndPtpAreColocated();
 
+   m_has_maintain_stage = !im_clearance.AbpAndPtpAreColocated();
 }
 
 void IMAlgorithm::ResetDefaults() {
@@ -246,7 +247,8 @@ void IMAlgorithm::ResetDefaults() {
    }
 
    if (m_high_speed_coef != 1 + DEFAULT_SPEED_DEVIATION_PERCENTAGE * 0.01) {
-      LOG4CPLUS_WARN(m_logger, "max_speed_deviation_percentage reset to " << DEFAULT_SPEED_DEVIATION_PERCENTAGE << RESET_MSG);
+      LOG4CPLUS_WARN(m_logger,
+                     "max_speed_deviation_percentage reset to " << DEFAULT_SPEED_DEVIATION_PERCENTAGE << RESET_MSG);
       SetMaxSpeedDeviationPercentage(DEFAULT_SPEED_DEVIATION_PERCENTAGE);
    }
 }
@@ -305,6 +307,10 @@ void IMAlgorithm::IterClearIMAlg() {
    m_unmodified_im_speed_command_ias = Units::MetersPerSecondSpeed(-1.0);
    m_im_speed_command_ias = Units::MetersPerSecondSpeed(-1.0);
    m_im_speed_command_with_pilot_delay = Units::MetersPerSecondSpeed(-1.0);
+
+   m_target_reference_gs = Units::negInfinity();
+   m_target_reference_ias = Units::negInfinity();
+   m_ownship_reference_gs = Units::negInfinity();
 
    m_im_clearance = IMClearance();
 }
@@ -510,13 +516,19 @@ Units::Speed IMAlgorithm::LimitImSpeedCommand(const Units::Speed im_speed_comman
    }
 
    LOG4CPLUS_TRACE(m_logger,
-                   "Quantized speed is " << std::setprecision(12) << Units::KnotsSpeed(quantspeed) << " and limiter is " << m_active_filter_flag);
+                   "Quantized speed is "
+                         << std::setprecision(12)
+                         << Units::KnotsSpeed(quantspeed)
+                         << " and limiter is "
+                         << m_active_filter_flag);
 
    return limitedspeed;
 }
 
-double IMAlgorithm::LimitImMachCommand(double estimated_mach, const double nominal_mach,
-      const BadaWithCalc &bada_calculator, const Units::Length current_ownship_altitude) {
+double IMAlgorithm::LimitImMachCommand(double estimated_mach,
+                                       const double nominal_mach,
+                                       const BadaWithCalc &bada_calculator,
+                                       const Units::Length current_ownship_altitude) {
 
    m_active_filter_flag = 0L;
 
@@ -553,8 +565,7 @@ double IMAlgorithm::LimitImMachCommand(double estimated_mach, const double nomin
    return estimated_mach;
 }
 
-const Units::Speed IMAlgorithm::GetRFLegSpeedLimit(Units::Length dtg_to_ptp) const
-{
+const Units::Speed IMAlgorithm::GetRFLegSpeedLimit(Units::Length dtg_to_ptp) const {
    if (m_rfleg_limits.size() <= 1) {
       return Units::zero();
    }
@@ -564,9 +575,9 @@ const Units::Speed IMAlgorithm::GetRFLegSpeedLimit(Units::Length dtg_to_ptp) con
          if (m_rfleg_limits[i].second < Units::MetersPerSecondSpeed(1)) {
             return Units::zero();
          }
-         return m_rfleg_limits[i-1].second +
-                ((dtg_to_ptp - m_rfleg_limits[i-1].first) / (m_rfleg_limits[i].first - m_rfleg_limits[i-1].first)) *
-                (m_rfleg_limits[i].second - m_rfleg_limits[i-1].second);
+         return m_rfleg_limits[i - 1].second +
+                ((dtg_to_ptp - m_rfleg_limits[i - 1].first) / (m_rfleg_limits[i].first - m_rfleg_limits[i - 1].first)) *
+                (m_rfleg_limits[i].second - m_rfleg_limits[i - 1].second);
       }
    }
    return Units::zero();

@@ -73,7 +73,6 @@ Guidance IMKinematicDistBasedMaintain::Update(const DynamicsState &dynamics_stat
    if (ownship_true_dtg <=
        Units::MetersLength(ownship_kinematic_trajectory_predictor.GetVerticalPathDistances().back())) {
       guidanceout.SetValid(true);
-      m_is_guidance_valid = true;
 
       m_measured_spacing_interval = ownship_true_dtg - target_dtg_along_ownships_path;
 
@@ -91,7 +90,8 @@ Guidance IMKinematicDistBasedMaintain::Update(const DynamicsState &dynamics_stat
       }
 
       Units::Speed ground_speed_command =
-            target_state_projected_on_ownships_path_at_adjusted_distance.GetGroundSpeed() + (ownship_true_dtg - target_projected_dtg) * m_maintain_control_gain;
+            target_state_projected_on_ownships_path_at_adjusted_distance.GetGroundSpeed() +
+            (ownship_true_dtg - target_projected_dtg) * m_maintain_control_gain;
       Units::Speed true_airspeed_command =
             sqrt(Units::sqr(ground_speed_command - Units::MetersPerSecondSpeed(ownship_aircraft_state.m_Vw_para)) +
                  Units::sqr(Units::MetersPerSecondSpeed(ownship_aircraft_state.m_Vw_perp))) /
@@ -128,7 +128,8 @@ Guidance IMKinematicDistBasedMaintain::Update(const DynamicsState &dynamics_stat
          guidanceout.m_ias_command = m_im_speed_command_ias;
       }
 
-      RecordInternalObserverData(ownship_aircraft_state, target_state_projected_on_ownships_path_at_adjusted_distance, dynamics_state, true_airspeed_command,
+      RecordInternalObserverData(ownship_aircraft_state, target_state_projected_on_ownships_path_at_adjusted_distance,
+                                 dynamics_state, true_airspeed_command,
                                  target_projected_dtg, ownship_true_dtg, target_aircraft_state_history,
                                  ownship_kinematic_trajectory_predictor);
    } else {
@@ -136,7 +137,6 @@ Guidance IMKinematicDistBasedMaintain::Update(const DynamicsState &dynamics_stat
             static_cast<int>(ownship_kinematic_trajectory_predictor.GetVerticalPathDistances().size() - 1);
 
       guidanceout.SetValid(false);
-      m_is_guidance_valid = false;
       m_measured_spacing_interval = Units::NegInfinity();
    }
 
@@ -177,11 +177,11 @@ void IMKinematicDistBasedMaintain::CalculateIas(const Units::Length current_owns
 }
 
 void IMKinematicDistBasedMaintain::CalculateMach(
-              const Units::Length current_ownship_altitude,
-              const Units::Length target_kinematic_dtg_to_end_of_route,
-              const Units::Speed true_airspeed_command,
-              const KinematicTrajectoryPredictor &ownship_kinematic_trajectory_predictor,
-              PilotDelay &pilot_delay) {
+      const Units::Length current_ownship_altitude,
+      const Units::Length target_kinematic_dtg_to_end_of_route,
+      const Units::Speed true_airspeed_command,
+      const KinematicTrajectoryPredictor &ownship_kinematic_trajectory_predictor,
+      PilotDelay &pilot_delay) {
 
    Units::Speed nominal_profile_ias =
          Units::MetersPerSecondSpeed(
@@ -241,7 +241,8 @@ RecordInternalObserverData(const AircraftState &ownship_aircraft_state,
       InternalObserver::getInstance()->IM_command_output(ownship_aircraft_state.m_id,
                                                          ownship_aircraft_state.m_time,
                                                          ownship_aircraft_state.m_z,
-                                                         Units::MetersPerSecondSpeed(dynamics_state.v_true_airspeed).value(),
+                                                         Units::MetersPerSecondSpeed(
+                                                               dynamics_state.v_true_airspeed).value(),
                                                          Units::MetersPerSecondSpeed(
                                                                ownship_aircraft_state.GetGroundSpeed()).value(),
                                                          Units::MetersPerSecondSpeed(m_im_speed_command_ias).value(),

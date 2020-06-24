@@ -57,11 +57,11 @@ AchievePointCalcs::AchievePointCalcs(const string &waypoint,
 }
 
 AchievePointCalcs::AchievePointCalcs(const string &waypoint,
-      const AircraftIntent &intent,
-      const VerticalPath &vpath,
-      const vector<HorizontalPath> &htraj,
-      const AchievePointCalcs &ownship_calcs,
-      const AircraftIntent &ownship_intent) {
+                                     const AircraftIntent &intent,
+                                     const VerticalPath &vpath,
+                                     const vector<HorizontalPath> &htraj,
+                                     const AchievePointCalcs &ownship_calcs,
+                                     const AircraftIntent &ownship_intent) {
    Clear();
 
    m_waypoint_name = waypoint;
@@ -80,10 +80,9 @@ AchievePointCalcs::AchievePointCalcs(const string &waypoint,
       EarthModel::GeodeticPosition geo;
       intent.GetTangentPlaneSequence()->convertLocalToGeodetic(xy, geo);
       LOG4CPLUS_DEBUG(m_logger, "(lat,lon) = (" <<
-            std::setprecision(10) << Units::DegreesAngle(geo.latitude) <<
-            "," << Units::DegreesAngle(geo.longitude) << ")");
-   }
-   else {
+                                                std::setprecision(10) << Units::DegreesAngle(geo.latitude) <<
+                                                "," << Units::DegreesAngle(geo.longitude) << ")");
+   } else {
       ComputePositions(intent);
    }
    ComputeEndValues(vpath);
@@ -110,8 +109,8 @@ void AchievePointCalcs::Clear() {
 
 
 void AchievePointCalcs::ComputeDefaultTRP(
-      const AchievePointCalcs& ownship_calcs,
-      const AircraftIntent& ownship_intent) {
+      const AchievePointCalcs &ownship_calcs,
+      const AircraftIntent &ownship_intent) {
 
    // "this" is the AchievePointCalcs object for the target trajectory.
 
@@ -172,10 +171,9 @@ void AchievePointCalcs::ComputeDefaultTRP(
             m_waypoint_x = Units::MetersLength(x1);
             m_waypoint_y = Units::MetersLength(y1);
             LOG4CPLUS_DEBUG(m_logger, "Target trajectory ends " << d1 <<
-                  " m from ABP projection line.  End point will be used if no crossing is found.");
+                                                                " m from ABP projection line.  End point will be used if no crossing is found.");
          }
-      }
-      else {
+      } else {
          // Is (x1,y1) exactly on the line?
          if (d1 == 0) {
             m_waypoint_x = Units::MetersLength(x1);
@@ -183,7 +181,7 @@ void AchievePointCalcs::ComputeDefaultTRP(
             crossed = true;
             break;
          }
-         if ((hpi-1)->m_segment_type != HorizontalPath::TURN) {
+         if ((hpi - 1)->m_segment_type != HorizontalPath::TURN) {
             // test if p0 and p1 are on opposite sides of the line
             if (d0 * d1 < 0) {
                // For now, interpolate to get d=0
@@ -198,10 +196,9 @@ void AchievePointCalcs::ComputeDefaultTRP(
                crossed = true;
                break;
             }
-         }
-         else {
+         } else {
             // turn segment, get info from "previous" segment
-            HorizontalTurnPath &turn((hpi-1)->m_turn_info);
+            HorizontalTurnPath &turn((hpi - 1)->m_turn_info);
             double turn_center_distance = a * turn.x_position_meters + b * turn.y_position_meters - c;
             if (abs(turn_center_distance) <= turn.radius.value()) {
                // turn's circle intersects line, probably twice
@@ -220,85 +217,84 @@ void AchievePointCalcs::ComputeDefaultTRP(
                   // y^2 - 2*y*yc + yc^2 + (xc-c/a)^2 + 2*(xc-c/a)*(b/a)*y + (b/a)^2 * y^2 - r^2 = 0
                   // y^2 + (b/a)^2 * y^2 - 2*y*yc + 2*(xc-c/a)*(b/a)*y + yc^2 + (xc-c/a)^2 - r^2 = 0
                   // quadratic formula for y
-                  double qa = 1 + SQR(b/a);
-                  double qb = -2 * turn.y_position_meters + 2 * (turn.x_position_meters - c/a) * (b/a);
-                  double qc = SQR(turn.y_position_meters) + SQR(turn.x_position_meters - c/a) - SQR(turn.radius.value());
+                  double qa = 1 + SQR(b / a);
+                  double qb = -2 * turn.y_position_meters + 2 * (turn.x_position_meters - c / a) * (b / a);
+                  double qc =
+                        SQR(turn.y_position_meters) + SQR(turn.x_position_meters - c / a) - SQR(turn.radius.value());
                   double discriminantRoot = sqrt(qb * qb - 4 * qa * qc);
-                  yi1 = (-qb + discriminantRoot) / (2*qa);
-                  yi2 = (-qb - discriminantRoot) / (2*qa);
-                  xi1 = c/a - (b/a) * yi1;
-                  xi2 = c/a - (b/a) * yi2;
-               }
-               else {
+                  yi1 = (-qb + discriminantRoot) / (2 * qa);
+                  yi2 = (-qb - discriminantRoot) / (2 * qa);
+                  xi1 = c / a - (b / a) * yi1;
+                  xi2 = c / a - (b / a) * yi2;
+               } else {
                   // substitute for y
                   // y = c/b - (a/b)*x
                   // (x-xc)^2 + (yc - c/b + (a/b)*x)^2 - r^2 = 0
                   // x^2 - 2*x*xc + xc^2 + (yc-c/b)^2 + 2*(yc-c/b)*(a/b)*x + (a/b)^2 * x^2 - r^2 = 0
                   // x^2 + (a/b)^2 * x^2 - 2*x*xc + 2*(yc-c/b)*(a/b)*x + xc^2 + (yc-c/b)^2 - r^2 = 0
                   // quadratic formula for x
-                  double qa = 1 + SQR(a/b);
-                  double qb = -2 * turn.x_position_meters + 2 * (turn.y_position_meters - c/b) * (a/b);
-                  double qc = SQR(turn.x_position_meters) + SQR(turn.y_position_meters - c/b) - SQR(turn.radius.value());
+                  double qa = 1 + SQR(a / b);
+                  double qb = -2 * turn.x_position_meters + 2 * (turn.y_position_meters - c / b) * (a / b);
+                  double qc =
+                        SQR(turn.x_position_meters) + SQR(turn.y_position_meters - c / b) - SQR(turn.radius.value());
                   double discriminantRoot = sqrt(qb * qb - 4 * qa * qc);
-                  xi1 = (-qb + discriminantRoot) / (2*qa);
-                  xi2 = (-qb - discriminantRoot) / (2*qa);
-                  yi1 = c/b - (a/b) * xi1;
-                  yi2 = c/b - (a/b) * xi2;
+                  xi1 = (-qb + discriminantRoot) / (2 * qa);
+                  xi2 = (-qb - discriminantRoot) / (2 * qa);
+                  yi1 = c / b - (a / b) * xi1;
+                  yi2 = c / b - (a / b) * xi2;
                }
                // Now we have (xi1,yi1) and (xi2,yi2) which are on the circle and on the line.
                // But are they within the arc, and if so, which one is last, chronologically?
-               HorizontalTurnPath::TURN_DIRECTION turn_direction = turn.GetTurnDirection(*(hpi+1), *hpi);
+               HorizontalTurnPath::TURN_DIRECTION turn_direction = turn.GetTurnDirection(*(hpi + 1), *hpi);
                Units::UnsignedRadiansAngle q1(atan2(yi1 - turn.y_position_meters, xi1 - turn.x_position_meters));
                Units::UnsignedRadiansAngle q2(atan2(yi2 - turn.y_position_meters, xi2 - turn.x_position_meters));
                bool p1_on_path(false), p2_on_path(false), p1_is_last(false);
                switch (turn_direction) {
-               case HorizontalTurnPath::TURN_DIRECTION::LEFT_TURN:
-                  if (turn.q_end > turn.q_start) {
-                     // no wrap
-                     p1_on_path = (turn.q_start < q1) && (turn.q_end > q1);
-                     p2_on_path = (turn.q_start < q2) && (turn.q_end > q2);
-                  }
-                  else {
-                     // wrap
-                     // check end first
-                     p1_on_path = (q1 < turn.q_end);
-                     p2_on_path = (q2 < turn.q_end);
+                  case HorizontalTurnPath::TURN_DIRECTION::LEFT_TURN:
+                     if (turn.q_end > turn.q_start) {
+                        // no wrap
+                        p1_on_path = (turn.q_start < q1) && (turn.q_end > q1);
+                        p2_on_path = (turn.q_start < q2) && (turn.q_end > q2);
+                     } else {
+                        // wrap
+                        // check end first
+                        p1_on_path = (q1 < turn.q_end);
+                        p2_on_path = (q2 < turn.q_end);
 
-                     // check start if we don't have a winner yet
-                     if (!(p1_on_path || p2_on_path)) {
-                        p1_on_path = (q1 > turn.q_start);
-                        p2_on_path = (q2 > turn.q_start);
+                        // check start if we don't have a winner yet
+                        if (!(p1_on_path || p2_on_path)) {
+                           p1_on_path = (q1 > turn.q_start);
+                           p2_on_path = (q2 > turn.q_start);
+                        }
                      }
-                  }
-                  if (p1_on_path && p2_on_path) {
-                     p1_is_last = (q1 > q2);
-                  }
-                  break;
-               case HorizontalTurnPath::TURN_DIRECTION::RIGHT_TURN:
-                  if (turn.q_end < turn.q_start) {
-                     // no wrap
-                     p1_on_path = (turn.q_start > q1) && (turn.q_end < q1);
-                     p2_on_path = (turn.q_start > q2) && (turn.q_end < q2);
-                  }
-                  else {
-                     // wrap
-                     // check end first
-                     p1_on_path = (q1 > turn.q_end);
-                     p2_on_path = (q2 > turn.q_end);
-
-                     // check start if we don't have a winner yet
-                     if (!(p1_on_path || p2_on_path)) {
-                        p1_on_path = (q1 < turn.q_start);
-                        p2_on_path = (q2 < turn.q_start);
+                     if (p1_on_path && p2_on_path) {
+                        p1_is_last = (q1 > q2);
                      }
-                  }
+                     break;
+                  case HorizontalTurnPath::TURN_DIRECTION::RIGHT_TURN:
+                     if (turn.q_end < turn.q_start) {
+                        // no wrap
+                        p1_on_path = (turn.q_start > q1) && (turn.q_end < q1);
+                        p2_on_path = (turn.q_start > q2) && (turn.q_end < q2);
+                     } else {
+                        // wrap
+                        // check end first
+                        p1_on_path = (q1 > turn.q_end);
+                        p2_on_path = (q2 > turn.q_end);
 
-                  if (p1_on_path && p2_on_path) {
-                     p1_is_last = (q1 < q2);
-                  }
-                  break;
-               default:
-                  throw new logic_error("This should be a turn.");
+                        // check start if we don't have a winner yet
+                        if (!(p1_on_path || p2_on_path)) {
+                           p1_on_path = (q1 < turn.q_start);
+                           p2_on_path = (q2 < turn.q_start);
+                        }
+                     }
+
+                     if (p1_on_path && p2_on_path) {
+                        p1_is_last = (q1 < q2);
+                     }
+                     break;
+                  default:
+                     throw new logic_error("This should be a turn.");
                }
 
                if (p1_on_path && (p1_is_last || !p2_on_path)) {
@@ -306,8 +302,7 @@ void AchievePointCalcs::ComputeDefaultTRP(
                   m_waypoint_y = Units::MetersLength(yi1);
                   crossed = true;
                   break;
-               }
-               else if (p2_on_path) {
+               } else if (p2_on_path) {
                   m_waypoint_x = Units::MetersLength(xi2);
                   m_waypoint_y = Units::MetersLength(yi2);
                   crossed = true;
@@ -330,12 +325,15 @@ void AchievePointCalcs::ComputeDefaultTRP(
       if (end_is_usable) {
          // trajectory end is within 50m of the line, put the TRP there.
          LOG4CPLUS_WARN(m_logger,
-               "Target trajectory ends near ABP projection line, using end-of-trajectory as TRP (" <<
-               m_waypoint_x << "," << m_waypoint_y << ").");
-      }
-      else {
+                        "Target trajectory ends near ABP projection line, using end-of-trajectory as TRP ("
+                              <<
+                              m_waypoint_x
+                              << ","
+                              << m_waypoint_y
+                              << ").");
+      } else {
          string emsg = "Target trajectory never crosses line " +
-               std::to_string(a) + " * x + " + std::to_string(b) + " * y = " + std::to_string(c);
+                       std::to_string(a) + " * x + " + std::to_string(b) + " * y = " + std::to_string(c);
          LOG4CPLUS_FATAL(m_logger, emsg);
          throw logic_error(emsg);
       }
@@ -358,7 +356,7 @@ void AchievePointCalcs::ComputePositions(const AircraftIntent &intent) {
          throw logic_error(emsg);
       }
       LOG4CPLUS_DEBUG(m_logger, "Waypoint[" << ix << "] = " << m_waypoint_name <<
-            "(" << m_waypoint_x << "," << m_waypoint_y << ")");
+                                            "(" << m_waypoint_x << "," << m_waypoint_y << ")");
    }
 }
 
@@ -372,7 +370,7 @@ void AchievePointCalcs::ComputeAlongPathDistanceFromWaypointToEnd() {
                                                                    distance_from_waypoint_to_end);
 
       m_distance_from_waypoint = distance_from_waypoint_to_end;
-
+      m_distance_calculator.InitializeStartingIndex(); // because we just messed up the index
    }
 
 }
@@ -427,7 +425,8 @@ void AchievePointCalcs::ComputeEndValues(const VerticalPath &vertical_path) {
                // Points valid for interpolation.
                m_time_to_go_to_waypoint = Units::SecondsTime((ttg1 - ttg0) /
                                                              (dtg1 - dtg0) *
-                                                             (Units::MetersLength(m_distance_from_waypoint).value() - dtg0) + ttg0);
+                                                             (Units::MetersLength(m_distance_from_waypoint).value() -
+                                                              dtg0) + ttg0);
             }
 
          } else {
@@ -445,6 +444,14 @@ const bool AchievePointCalcs::IsWaypointPassed(const AircraftState &acstate) {
                                                                 distance_to_end);
 
    return (distance_to_end < m_distance_from_waypoint);
+}
+
+const Units::Length AchievePointCalcs::ComputeDistanceToWaypoint(const AircraftState &acstate) {
+   Units::Length distance_to_end;
+   m_distance_calculator.CalculateAlongPathDistanceFromPosition(Units::FeetLength(acstate.m_x),
+                                                                Units::FeetLength(acstate.m_y),
+                                                                distance_to_end);
+   return distance_to_end - m_distance_from_waypoint;
 }
 
 
