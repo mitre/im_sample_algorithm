@@ -2,7 +2,7 @@
 
 [Back to Landing Page](/README.md)
 
-_Note: this code is provided as MATLAB m-code. We do not provide any connection between the MATLAB code and the C++ code base._
+_Note: this algorithm prototype is provided as [MATLAB m-code](https://github.com/mitre/im_sample_algorithm/blob/master/IMTurn/main_closedLoopTurn_pathShortening.m). We do not provide any compilable connection between the MATLAB code and the C++ code base._
 
 ## Entry Points
 
@@ -11,7 +11,7 @@ The code is run by calling `main_closedLoopTurn_pathShortening.m`. The function 
 Loading one of these files and calling main is done as follows:
 
 ```matlab
-load(‘Data\LongRouteResults.mat')
+load('Data\LongRouteResults.mat')
 [totalIterations, validity, initError_s, waypointSequence, turnPoint] = main_closedLoopTurn_pathShortening(airports,initSpacing,plotting,routeType)
 ```
 
