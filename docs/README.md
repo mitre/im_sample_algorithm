@@ -7,6 +7,7 @@
     + [Licensing](#licensing)
   * [Published Documentation](#published-documentation)
   * [Living Documentation](#living-documentation)
+  * [EUROCONTROL BADA Development Necessary](#eurocontrol-bada-development-necessary)
   * [Related Project](#related-project)
 
 # MITRE's Interval Management Sample Algorithm
@@ -68,10 +69,14 @@ Living, developer-level documentation is provided on this GitHub site. Here the 
     * How does an algorithm receive a new aircraft state? Read [entry points.](entry_points.md)
     * Which algorithm is running and when? [Coming Soon](coming_soon.md)
     * Find your own (shorter) path: [IM Turn Implementation](imturn.md)
-    * Missing code? Can't find that implementation you need? [Coming Soon](coming_soon.md)
+    * Missing code? Can't find that implementation you need? [Coming Soon](missing_code.md)
 
 
 Not seeing what you need to know about? [Post an issue](https://github.com/mitre/im_sample_algorithm/issues). We gladly prioritize specific requests. Thanks!
+
+## EUROCONTROL BADA Development Necessary
+
+This code uses [EUROCONTROL's BADA](https://eurocontrol.int/services/bada) for aircraft performance data that drive the aircraft dynamics modeling. However, BADA functionality and code cannot be provided due to licensing restrictions imposed by EUROCONTROL. Therefore, stub classes exist in this code repository that represent MITRE's suggested implementation in order to use this software. See /include/aaesim/Bada.h and BadaWithCalc.h. Please complete an implementation of these classes before using the code.
 
 ## Related Project
 
