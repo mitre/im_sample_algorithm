@@ -76,7 +76,7 @@ Not seeing what you need to know about? [Post an issue](https://github.com/mitre
 
 ## EUROCONTROL BADA Development Necessary
 
-This code uses [EUROCONTROL's BADA](https://eurocontrol.int/services/bada) for aircraft performance data that drive the aircraft dynamics modeling. However, BADA functionality and code cannot be provided due to licensing restrictions imposed by EUROCONTROL. Therefore, stub classes exist in this code repository that represent MITRE's suggested implementation in order to use this software. See /include/aaesim/Bada.h and BadaWithCalc.h. Please complete an implementation of these classes before using the code.
+This code uses [EUROCONTROL's BADA](https://eurocontrol.int/services/bada) for aircraft performance data. However, BADA functionality and code cannot be provided due to licensing restrictions imposed by EUROCONTROL. Please complete your own implementation of these concepts before using the code. See our related project, the [FIM MOPS Aircraft Dynamics & Control Model](https://mitre.github.io/FMACM), for a guide of what is needed.
 
 ## Related Project
 
