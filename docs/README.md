@@ -68,6 +68,7 @@ Living, developer-level documentation is provided on this GitHub site. Here the 
     * How does an algorithm receive a new aircraft state? Read [entry points.](entry_points.md)
     * Which algorithm is running and when? [Coming Soon](coming_soon.md)
     * Find your own (shorter) path: [IM Turn Implementation](imturn.md)
+    * Missing code? Can't find that implementation you need? [Coming Soon](coming_soon.md)
 
 
 Not seeing what you need to know about? [Post an issue](https://github.com/mitre/im_sample_algorithm/issues). We gladly prioritize specific requests. Thanks!
