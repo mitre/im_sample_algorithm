@@ -64,12 +64,12 @@ Living, developer-level documentation is provided on this GitHub site. Here the 
     * How does the kinematic trajectory prediction work? [Coming Soon](coming_soon.md)
 * Code Topics
     * Who you gonna call? [Code entry points](entry_points.md)
-    * How does an algorithm receive IM Clearance details? Read [entry points.](entry_points.md)
+    * How does an algorithm receive IM Clearance details? Read [entry points](entry_points.md).
     * Where is the IFPI defined? [Coming Soon](coming_soon.md)
-    * How does an algorithm receive a new aircraft state? Read [entry points.](entry_points.md)
+    * How does an algorithm receive a new aircraft state? Read [entry points](entry_points.md).
     * Which algorithm is running and when? [Coming Soon](coming_soon.md)
     * Find your own (shorter) path: [IM Turn Implementation](imturn.md)
-    * Missing code? Can't find that implementation you need? [Coming Soon](missing_code.md)
+    * Missing code? Can't find that implementation you need? Review the [missing code table](missing_code.md).
 
 
 Not seeing what you need to know about? [Post an issue](https://github.com/mitre/im_sample_algorithm/issues). We gladly prioritize specific requests. Thanks!
