@@ -63,7 +63,7 @@ Living, developer-level documentation is provided on this GitHub site. Here the 
     * [Coordinate systems](coordinate_systems.md) used in the code
     * How does the kinematic trajectory prediction work? [Coming Soon](coming_soon.md)
 * Code Topics
-    * Who you gonna call? :ghost: [Code entry points](entry_points.md)
+    * Who you gonna call? [Code entry points](entry_points.md)
     * How does an algorithm receive IM Clearance details? Read [entry points.](entry_points.md)
     * Where is the IFPI defined? [Coming Soon](coming_soon.md)
     * How does an algorithm receive a new aircraft state? Read [entry points.](entry_points.md)
