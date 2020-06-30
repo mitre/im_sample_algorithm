@@ -13,5 +13,7 @@ Okay, we know this repository is incomplete from a code perspective. And we reco
 | aaesim/VerticalPredictor.h | You need to implement DO-361A Appendix C.2.2. See also [KinematicDescent4DPredictor](https://github.com/mitre/im_sample_algorithm/blob/master/IntervalManagement/KinematicDescent4DPredictor.cpp). |
 | aaesim/Bada.h | Sorry, we can't help this. See our [note in the project README](./README.md). |
 | aaesim/PredictedWindEvaluator | This is missing in 3.4.1, but will be provided in the following [release](https://github.com/mitre/im_sample_algorithm/tags). |
+| log4cplus/logger.h | Available from https://github.com/log4cplus/log4cplus |
+| log4cplus/loggingmacros.h | Available from https://github.com/log4cplus/log4cplus |
 
 Not seeing what you need to know about? [Post an issue](https://github.com/mitre/im_sample_algorithm/issues). We gladly prioritize specific requests. Thanks!
