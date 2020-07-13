@@ -11,6 +11,6 @@ Achieve-by Then Maintain (dist) | [IMDistBasedAchieve](https://github.com/mitre/
 Capture Then Maintain (time) | [IMKinematicTimeBasedMaintain](https://github.com/mitre/im_sample_algorithm/blob/master/include/imalgs/IMKinematicTimeBasedMaintain.h)
 Capture Then Maintain (dist) | [IMKinematicDistBasedMaintain](https://github.com/mitre/im_sample_algorithm/blob/master/include/imalgs/IMKinematicDistBasedMaintain.h)
 Final Approach Spacing | [IMKinematicAchieve](https://github.com/mitre/im_sample_algorithm/blob/master/include/imalgs/IMKinematicAchieve.h)
-IM Turn | :disappointed: Not currently available (read [Where is IM Turn?](where_is_im_turn.md))
+IM Turn | Read [IM Turn Overview](imturn.md)
 Maintain Current Spacing (time) | [IMKinematicTimeBasedMaintain](https://github.com/mitre/im_sample_algorithm/blob/master/include/imalgs/IMKinematicTimeBasedMaintain.h)
 Maintain Current Spacing (dist) | [IMKinematicDistBasedMaintain](https://github.com/mitre/im_sample_algorithm/blob/master/include/imalgs/IMKinematicDistBasedMaintain.h)
