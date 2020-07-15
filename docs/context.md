@@ -22,14 +22,14 @@ MITRE has hosted this Sample Algorithm in two different simulation paradigms, de
 
 The first paradigm is a fast-time, parametric simulation environment developed to implement and debug the initial algorithm concept. This simulation is capable of thousands of runs (in a short wall-time sense), sweeping the many inputs while adhering to [technically sound physics principles](https://www.mitre.org/publications/technical-papers/derivation-of-a-point-mass-aircraft-model-used-for-fast-time) in order to generate quality results appropriate to the studies. This simulation has been used, among other activities, to validate operational concepts supporting [RTCA DO-328B](https://my.rtca.org/nc__store?search=do-328b), explore [alternate algorithm variations](https://arc.aiaa.org/doi/abs/10.2514/6.2014-3149), and mature the final copy of the Sample Algorithm as published in [RTCA DO-361A](https://my.rtca.org/nc__store?search=do-361a). A simple architecture diagram of this parametric simulation environment follows.
 
-![cartoon graphic of parametric simulation architecture](parametric_simulation_cartoon.png)
+![cartoon graphic of parametric simulation architecture](images/parametric_simulation_cartoon.png)
 
 
 ### Human-In-The-Loop Simulations
 
 The second simulation paradigm is MITRE's [Aviation IDEA Lab](https://www.mitre.org/publications/project-stories/mitre-experimentation-lab-gives-wings-to-aviation-technology-research), a real-time simulation environment used to study humans and their behavior as they interact with new concepts in aviation technology. In this environment, the Sample Algorithm is one small cog in a large infrastucture of software and hardware. The only thing this simulation environment holds in common with the parametric environment is the Sample Algorithm library. All other simulation elements, including aircraft state propagation models, are completely different. 
 
-![cartoon graphic of hitl simulation architecture](hitl_simulation_cartoon.png)
+![cartoon graphic of hitl simulation architecture](images/hitl_simulation_cartoon.png)
 
 ## How External Collaborators Can Use This Code
 
