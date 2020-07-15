@@ -28,7 +28,7 @@ virtual void Initialize(const KineticTrajectoryPredictor &ownship_kinetic_trajec
                         WeatherPrediction &weather_prediction);
 ```
 
-## Returned Data
+## Calling the Algorithm
 
 The code provides a `virtual` declaration for the `Update` method in [IMAlgorithm.h](https://github.com/mitre/im_sample_algorithm/blob/master/include/imalgs/IMAlgorithm.h#L80).
 
@@ -39,6 +39,8 @@ virtual Guidance Update(const Guidance &prevguidance,
                         const AircraftState &targettruthstate,
                         const vector<AircraftState> &targethistory);
 ```
+
+## Data Returned by the Algorithm
 
 Each time this method is called, it is assumed that the simulation clock has advanced and new data is being provided to the algorithm. The return is a `Guidance` object. That object has [many class members](https://github.com/mitre/FMACM/blob/master/include/public/Guidance.h), but it operates as a `struct` by holding the latest value of any given member; most members are `public`. There are only two output members of importance in the Guidance object that is returned:
 

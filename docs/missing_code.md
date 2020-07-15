@@ -1,5 +1,7 @@
 # Missing Code
 
+[Back to Landing Page](/README.md)
+
 Okay, we know this repository is incomplete from a code perspective. And we recognize that's not ideal for interested parties that would like to see a working sample algorithm. While we can't make this all better, we can do our best to help the traveller find their way. Here are some thoughts and responses to code questions we've received.
 
 | Missing Implementation | Our Response | 

@@ -1,4 +1,4 @@
-# Documentation of Coordinate Systems
+# Kinematic Trajectory Prediction
 
 [Back to Landing Page](/README.md)
 

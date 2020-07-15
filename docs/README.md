@@ -61,20 +61,20 @@ Living, developer-level documentation is provided on this GitHub site. Here the 
 * **Modeling Topics**
     * Mapping DO-361A [Appendix C to published code](appendix_url_mapping.md)
     * [Interval Management clearance types](im_clearance_types.md)
-    * [Coordinate systems](coordinate_systems.md) used in the code
-    * How does the kinematic trajectory prediction work? -- [Coming Soon](coming_soon.md)
-    * Navigation Database/ARINC424 -- [Coming Soon](coming_soon.md)
-    * Runtime Frequency -- [Coming Soon](coming_soon.md)
-
+    * [Navigation Database/ARINC-424](navdb.md) discussion
+    * [Runtime Frequency](traffic_data.md) considerations
+    * How does the [kinematic trajectory prediction](kinematic_prediction.md) work? -- [Coming Soon](coming_soon.md)
+    * [Coordinate systems](coordinate_systems.md) used in the code -- [Coming Soon](coming_soon.md)
+    
 * **Code Topics**
     * Who you gonna call? Read [code entry points](entry_points.md)
     * How does an algorithm receive IM Clearance details? Read [code entry points](entry_points.md)
-    * Where is the IFPI defined? -- [Coming Soon](coming_soon.md)
     * How does an algorithm receive a new aircraft state? Read [code entry points](entry_points.md)
-    * Which algorithm is running and when? -- [Coming Soon](coming_soon.md)
     * Find your own (shorter) path: [IM Turn Implementation](imturn.md)
     * Missing code? Can't find that implementation you need? Review the [missing code table](missing_code.md)
-    * ADS-B Data Expectations -- [Coming Soon](coming_soon.md)
+    * ADS-B Data Expectations -- Reveiw the [traffic data discussion](traffic_data.md)
+    * Where is the [IFPI defined](ifpi.md)? -- [Coming Soon](coming_soon.md)
+    * Which algorithm is running and when? -- [Coming Soon](coming_soon.md)
     
 
 Not seeing what you need to know about? [Post an issue](https://github.com/mitre/im_sample_algorithm/issues). We gladly prioritize specific requests. Thanks!
