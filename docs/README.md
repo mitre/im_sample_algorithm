@@ -56,31 +56,38 @@ Official algorithm descriptions are available via [RTCA's DO-361A](https://my.rt
 
 Living, developer-level documentation is provided on this GitHub site. Here the goal is to provide deeper detail regarding how our code works and how others might use this code to inform their own implementations of DO-361A. All topics assume the reader has access to DO-361A, specifically Appendix C.
 
-* **Developer Talk**: [Does it compile & pass tests?](dev_talk.md)
+* **Big Picture** of this codebase -- read [the context](context.md) overview
+
+* **Developer Talk**: [Does it compile & pass tests?](dev_talk.md) -- hint: nope
 
 * **Modeling Topics**
     * Mapping DO-361A [Appendix C to published code](appendix_url_mapping.md)
-    * [Interval Management clearance types](im_clearance_types.md)
+    * Interval Management [clearance types](im_clearance_types.md)
     * [Navigation Database/ARINC-424](navdb.md) discussion
     * [Runtime Frequency](traffic_data.md) considerations
     * How does the [kinematic trajectory prediction](kinematic_prediction.md) work? -- [Coming Soon](coming_soon.md)
     * [Coordinate systems](coordinate_systems.md) used in the code -- [Coming Soon](coming_soon.md)
+    * EUROCONTROL BADA v3.7. Do you need it? -- [Coming Soon](coming_soon.md)
     
 * **Code Topics**
     * Who you gonna call? Read [code entry points](entry_points.md)
     * How does an algorithm receive IM Clearance details? Read [code entry points](entry_points.md)
     * How does an algorithm receive a new aircraft state? Read [code entry points](entry_points.md) and the [traffic data discussion](traffic_data.md)
     * Find your own (shorter) path: [IM Turn Implementation](imturn.md)
-    * ADS-B Data Expectations -- Reveiw the [traffic data discussion](traffic_data.md)
+    * What are the ADS-B Data expectations? -- Reveiw the [traffic data discussion](traffic_data.md)
     * Where is the [IFPI defined](ifpi.md)? -- [Coming Soon](coming_soon.md)
-    * Uh...Which algorithm is running and when? -- Review [the algorithm stages](which_algorithm.md) discussion
-    * Missing code? Review the [missing code table](missing_code.md)
+    * Uh...Which algorithm is running? -- Review [the algorithm stages](which_algorithm.md) discussion
+    * Are we missing some code? Review the [missing code table](missing_code.md)
     
 Not seeing what you need to know about? [Post an issue](https://github.com/mitre/im_sample_algorithm/issues). We gladly prioritize specific requests. Thanks!
 
 ## EUROCONTROL BADA Development Necessary
 
 This code uses [EUROCONTROL's BADA](https://eurocontrol.int/services/bada) for aircraft performance data. However, BADA functionality and code cannot be provided due to licensing restrictions imposed by EUROCONTROL. Please complete your own implementation of these concepts before using the code. See our related project, the [FIM MOPS Aircraft Dynamics & Control Model](https://mitre.github.io/FMACM), for a guide of what is needed.
+
+But, do you need BADA implemented to use this code base? **Nope.** 
+
+Do you need BADA implemented for your project? Take a look at our guide  -- [Coming Soon](coming_soon.md)
 
 ## Related Project
 
