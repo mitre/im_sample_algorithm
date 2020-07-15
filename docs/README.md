@@ -69,14 +69,13 @@ Living, developer-level documentation is provided on this GitHub site. Here the 
 * **Code Topics**
     * Who you gonna call? Read [code entry points](entry_points.md)
     * How does an algorithm receive IM Clearance details? Read [code entry points](entry_points.md)
-    * How does an algorithm receive a new aircraft state? Read [code entry points](entry_points.md)
+    * How does an algorithm receive a new aircraft state? Read [code entry points](entry_points.md) and the [traffic data discussion](traffic_data.md)
     * Find your own (shorter) path: [IM Turn Implementation](imturn.md)
-    * Missing code? Can't find that implementation you need? Review the [missing code table](missing_code.md)
     * ADS-B Data Expectations -- Reveiw the [traffic data discussion](traffic_data.md)
     * Where is the [IFPI defined](ifpi.md)? -- [Coming Soon](coming_soon.md)
     * Uh...Which algorithm is running and when? -- Review [the algorithm stages](which_algorithm.md) discussion
+    * Missing code? Review the [missing code table](missing_code.md)
     
-
 Not seeing what you need to know about? [Post an issue](https://github.com/mitre/im_sample_algorithm/issues). We gladly prioritize specific requests. Thanks!
 
 ## EUROCONTROL BADA Development Necessary
