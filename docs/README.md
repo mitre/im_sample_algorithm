@@ -18,7 +18,7 @@ You should be familiar with the [FAA's Flight-deck Interval Management](https://
 
 The code is in [this git repo](https://github.com/mitre/im_sample_algorithm). It doesn't compile; that's intentional. We are considering providing some unit tests.
 
-MITRE is happy to answer questions; the email is opensource@mitre.org.
+MITRE is happy to answer questions; please [post your questions publicly](https://github.com/mitre/im_sample_algorithm/issues) and we'll gladly respond.
 
 Good luck. :crossed_fingers: :four_leaf_clover:
 
@@ -83,12 +83,12 @@ Not seeing what you need to know about? [Post an issue](https://github.com/mitre
 
 ## EUROCONTROL BADA Development -- Necessary?
 
-This code uses [EUROCONTROL's BADA](https://eurocontrol.int/services/bada) for aircraft performance data. However, our BADA functionality and code cannot be provided due to licensing restrictions imposed by EUROCONTROL. 
+As discussed in the [DevTalk](dev_talk.md) documentation, this code uses [EUROCONTROL's BADA](https://eurocontrol.int/services/bada) for aircraft performance data. However, our BADA functionality and code cannot be provided due to licensing restrictions imposed by EUROCONTROL. 
 
 Do you need BADA implemented to use this code base? **Nope**. Take a look at [the BADA usage guide](bada_usage_guide.md) to get more details.
 
 ## Related Project
 
-Directly related to this sample algorithm implementation is the [FIM MOPS Aircraft Dynamics & Control Model](https://mitre.github.io/FMACM). That code is a fully operational aircraft simulation the comes with compile instructions and passing unit tests. It is the core simulation that MITRE used to implement and test the Sample Algorithm control law discussed here.
+Directly related to this Sample Algorithm implementation is the [FIM MOPS Aircraft Dynamics & Control Model](https://mitre.github.io/FMACM). That code is a fully operational aircraft simulation the comes with compile instructions and passing unit tests. It is the core simulation that MITRE used to implement and test the Sample Algorithm control law discussed here.
 
 <small><i><a href='http://ecotrust-canada.github.io/markdown-toc/'>(Table of Contents generated with markdown-toc)</a></i></small>

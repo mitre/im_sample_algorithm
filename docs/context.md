@@ -16,7 +16,11 @@ From a software perspective, this code base does not represent a self-contained 
 
 ## How MITRE Has Used This Code
 
-MITRE has hosted this Sample Algorithm in two different simulation paradigms, depending on the kind of research being performed. In each case, the algorithm is a library linked into a larger simulation environment. And the two environments are very different, which means the Sample Algorithm has been well exercised (from a control-law perspective) and shows similar performance in both paradigms, mutatis mutandis. When key Interval Management metrics are compared between the two simulation paradigms, we find similar reponses from the Sample Algorithm.
+MITRE has hosted this Sample Algorithm in two different simulation paradigms, depending on the kind of research being performed. In each case, the algorithm is a library linked into a larger simulation environment. And the two environments are very different, which means the Sample Algorithm has been well exercised (from a control-law perspective) and shows similar performance in both paradigms, mutatis mutandis. 
+
+```
+When key Interval Management metrics are compared between the two simulation paradigms, we find similar reponses from the Sample Algorithm.
+```
 
 Let's look at these two simulation paradigms in more detail.
 
@@ -26,6 +30,7 @@ The first paradigm is a fast-time, parametric simulation environment developed t
 
 ![cartoon graphic of parametric simulation architecture](images/parametric_simulation_cartoon.png)
 
+A core part of this fast-time simulation has also been publicly released as the [FIM MOPS Aircraft Dynamics & Control Model](https://mitre.github.io/FMACM). Review the [dev-talk discussion](dev_talk.md) for more information.
 
 ### Human-In-The-Loop Simulations
 
