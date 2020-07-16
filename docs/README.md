@@ -14,7 +14,7 @@
 
 ## TL;DR
 
-You need [RTCA's DO-361A, Appendix C](https://my.rtca.org/nc__store?search=do-361) to understand any of this.
+You should be familiar with the [FAA's Flight-deck Interval Management](https://www.faa.gov/about/office_org/headquarters_offices/ang/offices/tc/library/storyboard/detailedwebpages/im.html) concept. To understand any of this content at a techincal level, you need to also have [RTCA's DO-361A, Appendix C](https://my.rtca.org/nc__store?search=do-361).
 
 The code is in [this git repo](https://github.com/mitre/im_sample_algorithm). It doesn't compile; that's intentional. We are considering providing some unit tests.
 
@@ -67,7 +67,7 @@ Living, developer-level documentation is provided on this GitHub site. Here the 
     * [Runtime Frequency](traffic_data.md) considerations
     * How does the [kinematic trajectory prediction](kinematic_prediction.md) work? -- [Coming Soon](coming_soon.md)
     * [Coordinate systems](coordinate_systems.md) used in the code -- [Coming Soon](coming_soon.md)
-    * EUROCONTROL BADA v3.7. Do you need it? -- [Coming Soon](coming_soon.md)
+    * EUROCONTROL BADA v3.7. Do you need it? -- Review [the usage guide](bada_usage_guide.md)
     
 * **Code Topics**
     * Who you gonna call? Read [code entry points](entry_points.md)
@@ -85,9 +85,7 @@ Not seeing what you need to know about? [Post an issue](https://github.com/mitre
 
 This code uses [EUROCONTROL's BADA](https://eurocontrol.int/services/bada) for aircraft performance data. However, BADA functionality and code cannot be provided due to licensing restrictions imposed by EUROCONTROL. Please complete your own implementation of these concepts before using the code. See our related project, the [FIM MOPS Aircraft Dynamics & Control Model](https://mitre.github.io/FMACM), for a guide of what is needed.
 
-But, do you need BADA implemented to use this code base? **Nope.** 
-
-Do you need BADA implemented for your project? Take a look at our guide  -- [Coming Soon](coming_soon.md)
+Do you need BADA implemented for your project? Take a look at [the BADA usage guide](bada_usage_guide.md).
 
 ## Related Project
 
