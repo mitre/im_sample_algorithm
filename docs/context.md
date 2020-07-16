@@ -18,9 +18,7 @@ From a software perspective, this code base does not represent a self-contained 
 
 MITRE has hosted this Sample Algorithm in two different simulation paradigms, depending on the kind of research being performed. In each case, the algorithm is a library linked into a larger simulation environment. And the two environments are very different, which means the Sample Algorithm has been well exercised (from a control-law perspective) and shows similar performance in both paradigms, mutatis mutandis. 
 
-```
-When key Interval Management metrics are compared between the two simulation paradigms, we find similar reponses from the Sample Algorithm.
-```
+> When key Interval Management metrics are compared between the two simulation paradigms, we find similar reponses from the Sample Algorithm.
 
 Let's look at these two simulation paradigms in more detail.
 
