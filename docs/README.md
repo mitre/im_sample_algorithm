@@ -85,7 +85,7 @@ Not seeing what you need to know about? [Post an issue](https://github.com/mitre
 
 This code uses [EUROCONTROL's BADA](https://eurocontrol.int/services/bada) for aircraft performance data. However, BADA functionality and code cannot be provided due to licensing restrictions imposed by EUROCONTROL. Please complete your own implementation of these concepts before using the code. See our related project, the [FIM MOPS Aircraft Dynamics & Control Model](https://mitre.github.io/FMACM), for a guide of what is needed.
 
-Do you need BADA implemented for your project? Take a look at [the BADA usage guide](bada_usage_guide.md).
+Do you need BADA implemented to use this code base? **Nope**. Take a look at [the BADA usage guide](bada_usage_guide.md) to get more details.
 
 ## Related Project
 
