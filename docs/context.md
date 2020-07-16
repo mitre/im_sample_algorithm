@@ -8,15 +8,17 @@ In order to understand this code, what it can (or can't) do, and why it has been
 
 This code base is the Sample Algorithm developed & used for research and minimum requirements validation of the [FAA's Flight-deck Interval Management](https://www.faa.gov/about/office_org/headquarters_offices/ang/offices/tc/library/storyboard/detailedwebpages/im.html) concept. The code has been developed & used extensively for over a decade to examine technical questions that occurred during the writing of [RTCA DO-360 and DO-361A](https://my.rtca.org/nc__store?search=do-361a). 
 
-The code is considered a mature prototype which takes into account as many of the minimum requirements as possible. In order to be used for validation of the minimum requirements, the prototype also intentionally attempts to _not exceed_ the minimum requirements. This means that we recognize that further optimization & maturation of the behavior (software or control-law-response perspective) could be undertake, but that work is left for others. 
+The code is considered a mature prototype which takes into account as many of the minimum requirements as possible. In order to be used for validation of the minimum requirements, the prototype also intentionally attempts to _not exceed_ the minimum requirements. This means that we recognize that further optimization & maturation of the behavior (software or control-law-response perspective) could be pursued, but that work is outside the scope of our research objectives. 
 
-The Sample Algorithm is made available as a reference implementation of these requirements and it is freely available (via the Apache 2.0 license agreement) for examination and reuse.
+The Sample Algorithm is made available as a reference implementation of the DO-361A requirements and it is freely available (via the Apache 2.0 license agreement) for examination and reuse.
 
 From a software perspective, this code base does not represent a self-contained executable. It should probably be compiled as a library and linked with other software that provides the rest of your simulation environment.
 
 ## How MITRE Has Used This Code
 
-MITRE has hosted this Sample Algorithm in two different simulation paradigms, depending on the kind of research being performed. In each case, the algorithm is a library linked into a larger simulation environment. And the two environments are very different, which means the Sample Algorithm has been well exercised (from a software perspective and a control-law-behavior perspective) and shows similar performance in both paradigms. When key Interval Management metrics are compared between the two simulation paradigms, we find similar reponses from the Sample Algorithm.
+MITRE has hosted this Sample Algorithm in two different simulation paradigms, depending on the kind of research being performed. In each case, the algorithm is a library linked into a larger simulation environment. And the two environments are very different, which means the Sample Algorithm has been well exercised (from a control-law perspective) and shows similar performance in both paradigms, mutatis mutandis. When key Interval Management metrics are compared between the two simulation paradigms, we find similar reponses from the Sample Algorithm.
+
+Let's look at these two simulation paradigms in more detail.
 
 ### Parametric Simulations
 
