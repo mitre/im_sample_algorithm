@@ -81,9 +81,9 @@ Living, developer-level documentation is provided on this GitHub site. Here the 
     
 Not seeing what you need to know about? [Post an issue](https://github.com/mitre/im_sample_algorithm/issues). We gladly prioritize specific requests. Thanks!
 
-## EUROCONTROL BADA Development Necessary
+## EUROCONTROL BADA Development -- Necessary?
 
-This code uses [EUROCONTROL's BADA](https://eurocontrol.int/services/bada) for aircraft performance data. However, BADA functionality and code cannot be provided due to licensing restrictions imposed by EUROCONTROL. Please complete your own implementation of these concepts before using the code. See our related project, the [FIM MOPS Aircraft Dynamics & Control Model](https://mitre.github.io/FMACM), for a guide of what is needed.
+This code uses [EUROCONTROL's BADA](https://eurocontrol.int/services/bada) for aircraft performance data. However, our BADA functionality and code cannot be provided due to licensing restrictions imposed by EUROCONTROL. 
 
 Do you need BADA implemented to use this code base? **Nope**. Take a look at [the BADA usage guide](bada_usage_guide.md) to get more details.
 
