@@ -2,7 +2,7 @@
 
 [Back to Landing Page](/README.md)
 
-This Sample Algorithm code uses [EUROCONTROL's BADA](https://eurocontrol.int/services/bada) for aircraft performance data and some calculations. But, the use of BADA data is limited and you may not need to use the same approach that we did. As a minimum operational requirement, your algorithm implementation must limit the IM Speeds according to ownship's flight envelope. 
+This Sample Algorithm code uses [EUROCONTROL's BADA](https://eurocontrol.int/services/bada) for aircraft performance data and some calculations. But, the use of BADA data is limited and you may not need to use the same approach that we did. 
 
 For discussions of IM Speed Limiting, see also DO-361A Section 2.2.4.5.3, Appendix C.4.7, and Appendix K. 
 
@@ -10,7 +10,7 @@ For discussions of IM Speed Limiting, see also DO-361A Section 2.2.4.5.3, Append
 
 ## Code Overview of BADA Usage
 
-In our implementation, we chose to use BADA's flight envelope as a way to meet the miniumum requirement and ensure that the IM Speeds produced by the algorithm were not outside of ownship's speed bounds. 
+As a minimum operational requirement, your algorithm implementation must limit the IM Speeds according to ownship's flight envelope. In our implementation, we chose to use BADA's flight envelope as a way to meet the miniumum requirements. It provided the data to help us ensure that the IM Speeds produced by the algorithm were within ownship's speed bounds. 
 
 The significant portion of this implementation is found in [IMAlgorithm::LimitImSpeedCommand()](https://github.com/mitre/im_sample_algorithm/blob/968030837f662a197c0e2755280756b18ce9f5b6/IntervalManagement/IMAlgorithm.cpp#L397):
 
@@ -58,4 +58,6 @@ Units::Speed IMAlgorithm::LimitImSpeedCommand(
 
 ## Using this Code without BADA
 
-External users of this code may prefer not to use the BADA model for aircraft performance data. It is reasonably possible to entirely remove BADA from this code base and still get desired performance. To do so, supply an alternate data source for ownship's flight envelope (e.g. min/max speeds under various operating conditions) and provide those instead. Pay particular attention to [IMAlgorithm::LimitImSpeedCommand()](https://github.com/mitre/im_sample_algorithm/blob/968030837f662a197c0e2755280756b18ce9f5b6/IntervalManagement/IMAlgorithm.cpp#L397). 
+External users of this code may prefer not to rely upon the BADA model for aircraft performance data. It is possible to fully remove BADA references from this code base and still get desired performance. To do so, supply an alternate data source for ownship's flight envelope (e.g. min/max speeds under various operating conditions) and provide those instead. Pay particular attention to populating the code in [IMAlgorithm::LimitImSpeedCommand()](https://github.com/mitre/im_sample_algorithm/blob/968030837f662a197c0e2755280756b18ce9f5b6/IntervalManagement/IMAlgorithm.cpp#L397). 
+
+As an alternative to BADA, one may consider using the open-source [WRAP](https://github.com/junzis/wrap) aviation data product. However no attempt has been made by MITRE to use that project. Let us know how it goes! :four_leaf_clover:
