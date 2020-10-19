@@ -36,14 +36,37 @@ KinematicTrajectoryPredictor::~KinematicTrajectoryPredictor() {
 }
 
 void KinematicTrajectoryPredictor::CalculateWaypoints(const AircraftIntent &aircraft_intent) {
-   Units::Length altitude_at_faf = Units::MetersLength(
-         aircraft_intent.GetFms().m_altitude[aircraft_intent.GetNumberOfWaypoints() - 1]);
-   Units::Speed ias_at_faf = Units::FeetPerSecondSpeed(
-         aircraft_intent.GetFms().m_nominal_ias[aircraft_intent.GetNumberOfWaypoints() - 1]);
-   GetKinematicDescent4dPredictor()->SetConditionsAtEndOfRoute(altitude_at_faf, ias_at_faf);
+   // KinematicTrajectoryPredictor needs to calculate proper IAS when Aircraft Intent last waypoint
+   // is at or above transition altitude.  The method requires a weather_prediction parameter to
+   // perform the calculation.  Therefore, this method, inherited from TrajectoryPredictor
+   // should never be called.
+   // throw error
+   const string msg = "KinematicTrajectoryPredictor::CalculateWaypoints(AircraftIntent) incorrectly called.  Should call the method with weather as a parameter.";
+   LOG4CPLUS_FATAL(m_logger, msg);
+   throw runtime_error(msg);
+}
 
+void KinematicTrajectoryPredictor::CalculateWaypoints(const AircraftIntent &aircraft_intent, const WeatherEstimate &weather_estimate) {
+   Units::Length altitude_at_faf = Units::MetersLength(
+           aircraft_intent.GetFms().m_altitude[aircraft_intent.GetNumberOfWaypoints() - 1]);
+   Units::Speed ias_at_faf;
+   Units::Speed nominal_ias_at_faf = Units::FeetPerSecondSpeed(
+           aircraft_intent.GetFms().m_nominal_ias[aircraft_intent.GetNumberOfWaypoints() - 1]);
+   // Get the Mach from GetFms().  If it is zero, then use Fms.m_nominal_ias.
+   double mach_at_faf = aircraft_intent.GetFms().m_mach[aircraft_intent.GetNumberOfWaypoints() - 1];
+   if (mach_at_faf == 0)
+      ias_at_faf = nominal_ias_at_faf;
+   else { // else calculate ias from mach and set ias_at_faf to the calculated ias.
+      ias_at_faf = weather_estimate.MachToCAS(mach_at_faf, altitude_at_faf);
+      // Compare with the nominal_ias and if higher, print a warning.
+      if (ias_at_faf > nominal_ias_at_faf) {
+         LOG4CPLUS_WARN(m_logger, "Aircraft Intent may be malformed.  Last waypoint has non-zero mach and faf altitude is below transition altitude");
+      }
+   }
+   GetKinematicDescent4dPredictor()->SetConditionsAtEndOfRoute(altitude_at_faf, ias_at_faf);
    TrajectoryPredictor::CalculateWaypoints(aircraft_intent);
 }
+
 
 void KinematicTrajectoryPredictor::SetMembers(const KineticTrajectoryPredictor &kinetic_trajectory_predictor) {
    m_bank_angle = kinetic_trajectory_predictor.GetBankAngle();

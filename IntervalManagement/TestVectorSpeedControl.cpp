@@ -19,12 +19,21 @@
 #include <imalgs/TestVectorSpeedControl.h>
 #include <public/StandardAtmosphere.h>
 
+unsigned int TestVectorSpeedControl::DEFAULT_DECELERATION_START_TIME_SEC = 60;
+unsigned int TestVectorSpeedControl::DEFAULT_ACCELERATION_START_TIME_SEC = 240;
+unsigned long TestVectorSpeedControl::DEFAULT_DECELERATION_DELTA_IAS = 30.0;
+unsigned long TestVectorSpeedControl::DEFAULT_ACCELERATION_DELTA_IAS = 40.0;
+
 TestVectorSpeedControl::TestVectorSpeedControl()
       : m_distance_calculator(),
         m_acceleration_phase_target_ias(),
         m_deceleration_phase_target_ias(),
         m_acceleration_phase_hold_duration(),
         m_acceleration_phase_count(),
+        m_acceleration_phase_delta_ias(),
+        m_deceleration_phase_delta_ias(),
+        m_deceleration_start_time_sec(),
+        m_acceleration_start_time_sec(),
         m_acceleration_phase_complete(false),
         m_acceleration_target_achieved(false),
         m_pilot_delayed_speeds() {
@@ -43,14 +52,18 @@ void TestVectorSpeedControl::Initialize(const KineticTrajectoryPredictor &ownshi
                            tangent_plane_sequence, target_aircraft_intent, im_clearance, achieve_by_point,
                            weather_prediction);
 
+   if (!m_loaded) {
+      ResetDefaults();
+      m_loaded = true;
+   }
+
    m_distance_calculator = AlongPathDistanceCalculator(ownship_kinetic_trajectory_predictor.GetHorizontalPath(),
                                                        TrajectoryIndexProgressionDirection::DECREMENTING);
-   m_loaded = true;
 
    const Units::Speed initial_speed = Units::MetersPerSecondSpeed(
-         ownship_kinetic_trajectory_predictor.GetVerticalPredictor()->GetVerticalPath().v.back());
-   m_deceleration_phase_target_ias = initial_speed - Units::KnotsSpeed(30);
-   m_acceleration_phase_target_ias = m_deceleration_phase_target_ias + Units::KnotsSpeed(40);
+         ownship_kinetic_trajectory_predictor.GetVerticalPredictor()->GetVerticalPath().cas_mps.back());
+   m_deceleration_phase_target_ias = initial_speed - m_deceleration_phase_delta_ias;
+   m_acceleration_phase_target_ias = m_deceleration_phase_target_ias + m_acceleration_phase_delta_ias;
    m_acceleration_phase_complete = false;
    m_acceleration_target_achieved = false;
    m_acceleration_phase_hold_duration = 10;
@@ -79,16 +92,17 @@ Guidance TestVectorSpeedControl::Update(const Guidance &prevguidance,
    Units::Speed new_ias_command = prevguidance.m_ias_command;
    Units::Speed new_delayed_ias_command = prevguidance.m_ias_command;
 
-   if (current_time < 60) {
+   if (current_time < m_deceleration_start_time_sec) {
       return_guidance.SetValid(false);
-   } else if (current_time >= 60 && current_time <= 240) {
+   } else if (current_time >= m_deceleration_start_time_sec && current_time <= m_acceleration_start_time_sec) {
       new_ias_command = m_deceleration_phase_target_ias;
       return_guidance.SetValid(true);
    } else if (current_time > 240 and !m_acceleration_phase_complete) {
       new_ias_command = m_acceleration_phase_target_ias;
       if (!m_acceleration_target_achieved) {
+         const Units::Speed tolerance = Units::KnotsSpeed(1.0);
          m_acceleration_target_achieved =
-               dynamicsstate.v_cas > (m_acceleration_phase_target_ias - Units::KnotsSpeed(1.0));
+               dynamicsstate.v_cas > (m_acceleration_phase_target_ias - tolerance);
       }
       m_acceleration_phase_complete =
             m_acceleration_target_achieved && m_acceleration_phase_count > m_acceleration_phase_hold_duration;
@@ -141,9 +155,31 @@ Guidance TestVectorSpeedControl::Update(const Guidance &prevguidance,
 }
 
 void TestVectorSpeedControl::SetAssignedSpacingGoal(const IMClearance &clearance) {
-
+    // leave blank
 }
 
 const double TestVectorSpeedControl::GetSpacingError() const {
    return UNDEFINED_INTERVAL;
+}
+
+bool TestVectorSpeedControl::load(DecodedStream *input) {
+    set_stream(input);
+
+    ResetDefaults();
+
+    register_var("deceleration_phase_delta_ias", &m_deceleration_phase_delta_ias, false);
+    register_var("acceleration_phase_delta_ias", &m_acceleration_phase_delta_ias, false);
+    register_var("deceleration_start_time_sec", &m_deceleration_start_time_sec, false);
+    register_var("acceleration_start_time_sec", &m_acceleration_start_time_sec, false);
+
+    // Complete parameter loading.
+    m_loaded = complete();
+
+    return m_loaded;
+}
+void TestVectorSpeedControl::ResetDefaults() {
+   m_deceleration_start_time_sec = DEFAULT_DECELERATION_START_TIME_SEC;
+   m_acceleration_start_time_sec = DEFAULT_ACCELERATION_START_TIME_SEC;
+   m_deceleration_phase_delta_ias = Units::KnotsSpeed(DEFAULT_DECELERATION_DELTA_IAS);
+   m_acceleration_phase_delta_ias = Units::KnotsSpeed(DEFAULT_ACCELERATION_DELTA_IAS);
 }

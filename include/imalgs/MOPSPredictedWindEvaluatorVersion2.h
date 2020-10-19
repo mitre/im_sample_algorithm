@@ -15,16 +15,9 @@
 // Copyright 2020 The MITRE Corporation. All Rights Reserved.
 // ****************************************************************************
 
-/*
- * MOPSPredictedWindEvaluator.h
- *
- *  Created on: Jan 11, 2017
- *      Author: klewis
- */
-
 #pragma once
 
-#include "aaesim/PredictedWindEvaluator.h"
+#include "public/PredictedWindEvaluator.h"
 
 class MOPSPredictedWindEvaluatorVersion2 : public PredictedWindEvaluator
 {

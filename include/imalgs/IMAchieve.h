@@ -19,7 +19,7 @@
 
 #include "imalgs/IMAlgorithm.h"
 #include "Frequency.h"
-#include "aaesim/PredictedWindEvaluator.h"
+#include "public/PredictedWindEvaluator.h"
 
 class IMAchieve : public IMAlgorithm
 {
@@ -108,7 +108,6 @@ protected:
 
 private:
    void IterClearIMAch();
-   bool m_is_target_aligned;
 
    static log4cplus::Logger m_logger;
 };

@@ -102,7 +102,7 @@ public:
    const bool IsTargetAligned() const;
 
    const Units::SignedAngle CalculateTargetTrackAngle(const vector<AircraftState> &target_adsb_history);
-
+   const Waypoint& GetTrafficReferencePoint() const;
 
 protected:
 
@@ -122,10 +122,15 @@ protected:
          const AircraftState& owntruthstate,
          const AircraftState& targettruthstate);
 
+   void SetTrafficReferencePointConstraints(
+         const AircraftState& owntruthstate,
+         const AircraftState& targetsyncstate);
+
    KinematicTrajectoryPredictor m_ownship_kinematic_trajectory_predictor;
    KinematicTrajectoryPredictor m_target_kinematic_trajectory_predictor;
 
    AchievePointCalcs m_ownship_kinematic_achieve_by_calcs;
+   Waypoint m_traffic_reference_point;    // can be specified or generated
    AchievePointCalcs m_target_kinematic_traffic_reference_point_calcs;
 
    AircraftIntent m_ownship_aircraft_intent;
@@ -173,6 +178,10 @@ private:
    bool m_blend_wind;
    bool m_new_trajectory_prediction_available;
 };
+
+inline const Waypoint& IMKinematicAchieve::GetTrafficReferencePoint() const {
+   return m_traffic_reference_point;
+}
 
 inline void IMKinematicAchieve::CalculateOwnshipDtgToAchieveByPoint() {
    m_ownship_kinematic_dtg_to_abp =

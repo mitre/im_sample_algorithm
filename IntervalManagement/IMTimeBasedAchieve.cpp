@@ -17,7 +17,6 @@
 
 #include <stdexcept>
 
-#include "aaesim/SimpleAircraft.h"
 #include "imalgs/IMTimeBasedAchieve.h"
 #include "math/CustomMath.h"
 #include "public/AircraftCalculations.h"
@@ -578,7 +577,8 @@ IMTimeBasedAchieve::CalculateMeasuredSpacingInterval(
       const AircraftState &current_ownship_state, const AircraftState &current_target_state) {
 
    if (m_target_kinematic_traffic_reference_point_calcs.IsWaypointSet() &&
-         !m_target_kinematic_traffic_reference_point_calcs.IsWaypointPassed(current_target_state)) {
+         GetTargetKinematicDtgToTrp() > Units::zero()) {
+
       // special calculation if target has not passed TRP
       Units::Length target_dtg_trp = m_target_kinematic_traffic_reference_point_calcs.ComputeDistanceToWaypoint(current_target_state);
       Units::SecondsTime target_ttg_trp = target_dtg_trp / current_target_state.GetGroundSpeed();

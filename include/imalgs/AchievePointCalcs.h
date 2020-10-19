@@ -93,6 +93,15 @@ public:
 
    const bool IsWaypointSet() const;
 
+   static void ComputeDefaultTRP(
+         const AchievePointCalcs &ownship_calcs,
+         const AircraftIntent &ownship_intent,
+         const AircraftIntent &target_intent,
+         const std::vector<HorizontalPath> &target_horizontal_path,
+         Waypoint &traffic_reference_point,
+         Units::Length &waypoint_x,
+         Units::Length &waypoint_y,
+         size_t &waypoint_index_in_target_intent);
 
 protected:
 
@@ -104,10 +113,6 @@ protected:
     * @param intent
     */
    void ComputePositions(const AircraftIntent &intent);
-
-   void ComputeDefaultTRP(
-         const AchievePointCalcs &ownship_calcs,
-         const AircraftIntent &ownship_intent);
 
    std::string m_waypoint_name;
    Units::MetersLength m_waypoint_x;

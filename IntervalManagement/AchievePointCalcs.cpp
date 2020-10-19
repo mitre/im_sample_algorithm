@@ -48,9 +48,6 @@ AchievePointCalcs::AchievePointCalcs(const string &waypoint,
    m_distance_calculator = AlongPathDistanceCalculator(htraj, TrajectoryIndexProgressionDirection::UNDEFINED);
 
    if (m_waypoint_is_set) {
-      if (m_waypoint_name == "CALCULATED_TRP") {
-         throw logic_error("TRP cannot be calculated from this constructor.");
-      }
       ComputePositions(intent);
       ComputeEndValues(vpath);
    }
@@ -70,7 +67,10 @@ AchievePointCalcs::AchievePointCalcs(const string &waypoint,
    m_distance_calculator = AlongPathDistanceCalculator(htraj, TrajectoryIndexProgressionDirection::UNDEFINED);
 
    if (m_waypoint_name == "CALCULATED_TRP") {
-      ComputeDefaultTRP(ownship_calcs, ownship_intent);
+      Waypoint traffic_reference_point;
+      size_t waypoint_index;
+      ComputeDefaultTRP(ownship_calcs, ownship_intent, intent, m_horizontal_path, traffic_reference_point,
+            m_waypoint_x, m_waypoint_y, waypoint_index);
       LOG4CPLUS_DEBUG(m_logger, "Calculated TRP = (" << m_waypoint_x << "," << m_waypoint_y << ")");
       // log the geographic coordinates
       EarthModel::LocalPositionEnu xy;
@@ -110,9 +110,14 @@ void AchievePointCalcs::Clear() {
 
 void AchievePointCalcs::ComputeDefaultTRP(
       const AchievePointCalcs &ownship_calcs,
-      const AircraftIntent &ownship_intent) {
-
-   // "this" is the AchievePointCalcs object for the target trajectory.
+      const AircraftIntent &ownship_intent,
+      const AircraftIntent &target_intent,
+      const vector<HorizontalPath> &target_horizontal_path,
+      Waypoint &traffic_reference_point,
+      Units::Length &waypoint_x,
+      Units::Length &waypoint_y,
+      size_t &waypoint_index_in_target_intent
+      ) {
 
    // Get ABP index from ownship
    int ix0 = ownship_intent.GetWaypointIndexByName(ownship_calcs.GetWaypointName());
@@ -155,10 +160,11 @@ void AchievePointCalcs::ComputeDefaultTRP(
    }
 
    // Search horizontal path for an intersecting segment
+   HorizontalTurnPath trp_turn;
    bool first(true), crossed(false), end_is_usable(false);
    double x0, y0, d0;
-   vector<HorizontalPath>::iterator hpi;
-   for (hpi = m_horizontal_path.begin(); hpi != m_horizontal_path.end(); ++hpi) {
+   vector<HorizontalPath>::const_iterator hpi;
+   for (hpi = target_horizontal_path.begin(); hpi != target_horizontal_path.end(); ++hpi) {
       double x1 = hpi->GetXPositionMeters();
       double y1 = hpi->GetYPositionMeters();
       double d1 = a * x1 + b * y1 - c;
@@ -168,16 +174,16 @@ void AchievePointCalcs::ComputeDefaultTRP(
          if (abs(d1) <= 50) {
             end_is_usable = true;
             // record "first" point (chronologically last), but keep searching
-            m_waypoint_x = Units::MetersLength(x1);
-            m_waypoint_y = Units::MetersLength(y1);
+            waypoint_x = Units::MetersLength(x1);
+            waypoint_y = Units::MetersLength(y1);
             LOG4CPLUS_DEBUG(m_logger, "Target trajectory ends " << d1 <<
                                                                 " m from ABP projection line.  End point will be used if no crossing is found.");
          }
       } else {
          // Is (x1,y1) exactly on the line?
          if (d1 == 0) {
-            m_waypoint_x = Units::MetersLength(x1);
-            m_waypoint_y = Units::MetersLength(y1);
+            waypoint_x = Units::MetersLength(x1);
+            waypoint_y = Units::MetersLength(y1);
             crossed = true;
             break;
          }
@@ -191,14 +197,14 @@ void AchievePointCalcs::ComputeDefaultTRP(
                // x = (99 * 1.75 + 107 * -.25) / 2 = 100
                double x = (x0 * d1 - x1 * d0) / dist_change;
                double y = (y0 * d1 - y1 * d0) / dist_change;
-               m_waypoint_x = Units::MetersLength(x);
-               m_waypoint_y = Units::MetersLength(y);
+               waypoint_x = Units::MetersLength(x);
+               waypoint_y = Units::MetersLength(y);
                crossed = true;
                break;
             }
          } else {
             // turn segment, get info from "previous" segment
-            HorizontalTurnPath &turn((hpi - 1)->m_turn_info);
+            const HorizontalTurnPath &turn((hpi - 1)->m_turn_info);
             double turn_center_distance = a * turn.x_position_meters + b * turn.y_position_meters - c;
             if (abs(turn_center_distance) <= turn.radius.value()) {
                // turn's circle intersects line, probably twice
@@ -298,14 +304,16 @@ void AchievePointCalcs::ComputeDefaultTRP(
                }
 
                if (p1_on_path && (p1_is_last || !p2_on_path)) {
-                  m_waypoint_x = Units::MetersLength(xi1);
-                  m_waypoint_y = Units::MetersLength(yi1);
+                  waypoint_x = Units::MetersLength(xi1);
+                  waypoint_y = Units::MetersLength(yi1);
                   crossed = true;
+                  trp_turn = turn;
                   break;
                } else if (p2_on_path) {
-                  m_waypoint_x = Units::MetersLength(xi2);
-                  m_waypoint_y = Units::MetersLength(yi2);
+                  waypoint_x = Units::MetersLength(xi2);
+                  waypoint_y = Units::MetersLength(yi2);
                   crossed = true;
+                  trp_turn = turn;
                   break;
                }
             }  // end if line crosses turn circle
@@ -326,11 +334,8 @@ void AchievePointCalcs::ComputeDefaultTRP(
          // trajectory end is within 50m of the line, put the TRP there.
          LOG4CPLUS_WARN(m_logger,
                         "Target trajectory ends near ABP projection line, using end-of-trajectory as TRP ("
-                              <<
-                              m_waypoint_x
-                              << ","
-                              << m_waypoint_y
-                              << ").");
+                              << Units::MetersLength(waypoint_x) << ","
+                              << Units::MetersLength(waypoint_y) << ").");
       } else {
          string emsg = "Target trajectory never crosses line " +
                        std::to_string(a) + " * x + " + std::to_string(b) + " * y = " + std::to_string(c);
@@ -338,6 +343,55 @@ void AchievePointCalcs::ComputeDefaultTRP(
          throw logic_error(emsg);
       }
    }
+
+   //convert position to (lat,lon)
+   EarthModel::LocalPositionEnu xy;
+   xy.x = waypoint_x;
+   xy.y = waypoint_y;
+   xy.z = Units::zero();
+   EarthModel::GeodeticPosition geo;
+   target_intent.GetTangentPlaneSequence()->convertLocalToGeodetic(xy, geo);
+
+   // populate traffic_reference_point
+   traffic_reference_point.SetName("CALCULATED_TRP");
+   traffic_reference_point.SetWaypointLatLon(geo.latitude, geo.longitude);
+   // populate RF center+radius
+   traffic_reference_point.SetRfTurnArcRadius(trp_turn.radius);
+   if (trp_turn.radius > Units::zero()) {
+      xy.x = Units::MetersLength(trp_turn.x_position_meters);
+      xy.y = Units::MetersLength(trp_turn.y_position_meters);
+      target_intent.GetTangentPlaneSequence()->convertLocalToGeodetic(xy, geo);
+      traffic_reference_point.SetRfTurnCenterLatitude(geo.latitude);
+      traffic_reference_point.SetRfTurnCenterLongitude(geo.longitude);
+   }
+   else {
+      traffic_reference_point.SetRfTurnCenterLatitude(Units::zero());
+      traffic_reference_point.SetRfTurnCenterLongitude(Units::zero());
+   }
+   // populate waypoint_index_in_target_intent
+   AlongPathDistanceCalculator distance_calculator(target_horizontal_path, TrajectoryIndexProgressionDirection::UNDEFINED);
+   Units::MetersLength distance_trp_to_end;
+   distance_calculator.CalculateAlongPathDistanceFromPosition(waypoint_x, waypoint_y, distance_trp_to_end);
+   for (int i = 0; i < target_intent.GetNumberOfWaypoints(); i++) {
+      distance_calculator.InitializeStartingIndex();
+      Units::MetersLength x(target_intent.GetFms().m_x[i]);
+      Units::MetersLength y(target_intent.GetFms().m_y[i]);
+      Units::MetersLength distance_to_end;
+      try {
+            distance_calculator.CalculateAlongPathDistanceFromPosition(x, y, distance_to_end);
+      } catch (std::logic_error e) {
+         LOG4CPLUS_ERROR(m_logger, target_intent.GetWaypointName(i) << " at (" << x << "," << y << ") is not on horizontal path.");
+         continue;
+      }
+      Units::MetersLength distance_to_trp = distance_to_end - distance_trp_to_end;
+      LOG4CPLUS_TRACE(m_logger, "Distance from " << target_intent.GetWaypointName(i)
+            << " to TRP is " << distance_to_trp);
+      if (distance_to_trp <= Units::MetersLength(100)) {
+         waypoint_index_in_target_intent = i;
+         break;
+      }
+   }
+   LOG4CPLUS_DEBUG(m_logger, "Calculated TRP inserts at " << waypoint_index_in_target_intent << endl << traffic_reference_point);
 }
 
 void AchievePointCalcs::ComputePositions(const AircraftIntent &intent) {
@@ -394,11 +448,11 @@ void AchievePointCalcs::ComputeEndValues(const VerticalPath &vertical_path) {
 
          // get index at achieve by distance from end of route (beginning of our search).
 
-         int firsttimeix = vertical_path.time.size() - 1;
+         int firsttimeix = vertical_path.time_to_go_sec.size() - 1;
 
          int ix = firsttimeix;
 
-         while ((m_distance_from_waypoint < Units::MetersLength(vertical_path.x[ix])) && ix > 0) {
+         while ((m_distance_from_waypoint < Units::MetersLength(vertical_path.along_path_distance_m[ix])) && ix > 0) {
             ix--;
          }
 
@@ -409,10 +463,10 @@ void AchievePointCalcs::ComputeEndValues(const VerticalPath &vertical_path) {
 
             // ttg:time to go at points 1 and 0.
             // dtg:distance to go at points 1 and 0.
-            const double ttg0 = vertical_path.time[ix];
-            const double ttg1 = vertical_path.time[ix + 1];
-            const double dtg0 = vertical_path.x[ix];
-            const double dtg1 = vertical_path.x[ix + 1];
+            const double ttg0 = vertical_path.time_to_go_sec[ix];
+            const double ttg1 = vertical_path.time_to_go_sec[ix + 1];
+            const double dtg0 = vertical_path.along_path_distance_m[ix];
+            const double dtg1 = vertical_path.along_path_distance_m[ix + 1];
 
             if (m_distance_from_waypoint == Units::MetersLength(dtg0)) {
                // Don't interpolate, take time at pt 0.
@@ -431,13 +485,18 @@ void AchievePointCalcs::ComputeEndValues(const VerticalPath &vertical_path) {
 
          } else {
             // Take time at last point (beginning of our search).
-            m_time_to_go_to_waypoint = Units::SecondsTime(vertical_path.time[firsttimeix]);
+            m_time_to_go_to_waypoint = Units::SecondsTime(vertical_path.time_to_go_sec[firsttimeix]);
          }
       }
    }
 }
 
 const bool AchievePointCalcs::IsWaypointPassed(const AircraftState &acstate) {
+   if (!m_waypoint_is_set) {
+      string msg("No waypoint set, cannot check whether passed.");
+      LOG4CPLUS_FATAL(m_logger, msg);
+      throw logic_error(msg);
+   }
    Units::Length distance_to_end;
    m_distance_calculator.CalculateAlongPathDistanceFromPosition(Units::FeetLength(acstate.m_x),
                                                                 Units::FeetLength(acstate.m_y),
@@ -447,6 +506,11 @@ const bool AchievePointCalcs::IsWaypointPassed(const AircraftState &acstate) {
 }
 
 const Units::Length AchievePointCalcs::ComputeDistanceToWaypoint(const AircraftState &acstate) {
+   if (!m_waypoint_is_set) {
+      string msg("No waypoint set, cannot compute distance.");
+      LOG4CPLUS_FATAL(m_logger, msg);
+      throw logic_error(msg);
+   }
    Units::Length distance_to_end;
    m_distance_calculator.CalculateAlongPathDistanceFromPosition(Units::FeetLength(acstate.m_x),
                                                                 Units::FeetLength(acstate.m_y),
