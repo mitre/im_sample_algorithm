@@ -18,7 +18,6 @@
 #include <stdexcept>
 #include <imalgs/IMTimeBasedAchieveMutableASG.h>
 
-#include "aaesim/SimpleAircraft.h"
 #include "math/CustomMath.h"
 #include "public/AircraftCalculations.h"
 #include "public/CoreUtils.h"

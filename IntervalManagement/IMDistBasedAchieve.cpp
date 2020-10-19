@@ -437,19 +437,17 @@ Guidance IMDistBasedAchieve::Update(const Guidance &previous_im_guidance,
 
             SetActiveFilter(m_im_kinematic_dist_based_maintain->GetActiveFilter());
 
-            Units::Length target_dtg_to_trp = m_target_kinematic_traffic_reference_point_calcs
-                  .ComputeDistanceToWaypoint(current_target_state);
-            if (target_dtg_to_trp < Units::zero() ||
-                  !m_target_kinematic_traffic_reference_point_calcs.IsWaypointSet()) {
-               // normal case:  target has passed TRP
-               m_measured_spacing_interval = Units::NauticalMilesLength(m_im_kinematic_dist_based_maintain->GetMsi());
-            }
-            else {
+            if (m_target_kinematic_traffic_reference_point_calcs.IsWaypointSet() &&
+                  GetTargetKinematicDtgToTrp() > Units::zero()) {
                // special case:  target has not passed TRP, MSI will be negative
                Units::Length ownship_dtg_to_abp = m_ownship_kinematic_achieve_by_calcs
-                     .ComputeDistanceToWaypoint(current_ownship_state);
-               m_measured_spacing_interval = ownship_dtg_to_abp - target_dtg_to_trp;   // AAES-1036
+                                  .ComputeDistanceToWaypoint(current_ownship_state);
+               m_measured_spacing_interval = ownship_dtg_to_abp - GetTargetKinematicDtgToTrp();   // AAES-1036
                LOG4CPLUS_TRACE(m_logger, "Special MSI = " << Units::MetersLength(m_measured_spacing_interval));
+            }
+            else {
+               // normal case:  target has passed TRP
+               m_measured_spacing_interval = Units::NauticalMilesLength(m_im_kinematic_dist_based_maintain->GetMsi());
             }
             m_im_speed_command_ias = m_im_kinematic_dist_based_maintain->GetImSpeedCommandIas();
             m_im_speed_command_with_pilot_delay = m_im_kinematic_dist_based_maintain->GetDelayedImSpeedCommandIas();

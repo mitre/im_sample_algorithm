@@ -23,7 +23,7 @@
 #include <deque>
 
 
-class TestVectorSpeedControl : public IMAlgorithm
+class TestVectorSpeedControl : public IMAlgorithm, Loadable
 {
 public:
    TestVectorSpeedControl();
@@ -43,6 +43,10 @@ public:
                            const AircraftState &targettruthstate,
                            const vector<AircraftState> &targethistory);
 
+    bool load(DecodedStream *input) override;
+
+   void ResetDefaults() override;
+
 protected:
 
    virtual void SetAssignedSpacingGoal(const IMClearance &clearance);
@@ -50,12 +54,17 @@ protected:
    virtual const double GetSpacingError() const;
 
 private:
+   static unsigned int DEFAULT_DECELERATION_START_TIME_SEC, DEFAULT_ACCELERATION_START_TIME_SEC;
+   static unsigned long DEFAULT_DECELERATION_DELTA_IAS, DEFAULT_ACCELERATION_DELTA_IAS;
 
    AlongPathDistanceCalculator m_distance_calculator;
    Units::KnotsSpeed m_acceleration_phase_target_ias;
    Units::KnotsSpeed m_deceleration_phase_target_ias;
    unsigned long m_acceleration_phase_hold_duration;
    unsigned long m_acceleration_phase_count;
+   Units::KnotsSpeed m_acceleration_phase_delta_ias;
+   Units::KnotsSpeed m_deceleration_phase_delta_ias;
+   unsigned int m_deceleration_start_time_sec, m_acceleration_start_time_sec;
    bool m_acceleration_phase_complete;
    bool m_acceleration_target_achieved;
    std::deque<Units::Speed> m_pilot_delayed_speeds;

@@ -40,7 +40,9 @@ public:
 
    virtual ~KinematicTrajectoryPredictor();
 
-   void CalculateWaypoints(const AircraftIntent &aircraft_intent) override;
+   void CalculateWaypoints(const AircraftIntent &aircraft_intent) final;
+
+   void CalculateWaypoints(const AircraftIntent &aircraft_intent, const WeatherEstimate &weather_estimate);
 
    void SetMembers(const KineticTrajectoryPredictor &kinetic_trajectory_predictor);
 
@@ -76,38 +78,38 @@ private:
 
 
 inline const std::vector<double> &KinematicTrajectoryPredictor::GetVerticalPathDistances() const {
-   return m_vertical_predictor->GetVerticalPath().x;
+   return m_vertical_predictor->GetVerticalPath().along_path_distance_m;
 }
 
 inline const double KinematicTrajectoryPredictor::GetVerticalPathDistanceByIndex(int index) const {
-   return m_vertical_predictor->GetVerticalPath().x[index];
+   return m_vertical_predictor->GetVerticalPath().along_path_distance_m[index];
 }
 
 inline const std::vector<double> &KinematicTrajectoryPredictor::GetVerticalPathTimes() const {
-   return m_vertical_predictor->GetVerticalPath().time;
+   return m_vertical_predictor->GetVerticalPath().time_to_go_sec;
 }
 
 inline const double KinematicTrajectoryPredictor::GetVerticalPathTimeByIndex(int index) const {
-   return m_vertical_predictor->GetVerticalPath().time[index];
+   return m_vertical_predictor->GetVerticalPath().time_to_go_sec[index];
 }
 
 inline const std::vector<double> &KinematicTrajectoryPredictor::GetVerticalPathGroundspeeds() const {
-   return m_vertical_predictor->GetVerticalPath().gs;
+   return m_vertical_predictor->GetVerticalPath().gs_mps;
 }
 
 inline const std::vector<double> &KinematicTrajectoryPredictor::GetVerticalPathVelocities() const {
-   return m_vertical_predictor->GetVerticalPath().v;
+   return m_vertical_predictor->GetVerticalPath().cas_mps;
 }
 
 inline const double KinematicTrajectoryPredictor::GetVerticalPathVelocityByIndex(int index) const {
-   return m_vertical_predictor->GetVerticalPath().v[index];
+   return m_vertical_predictor->GetVerticalPath().cas_mps[index];
 }
 
 inline const std::vector<double> &KinematicTrajectoryPredictor::GetVerticalPathAltitudes() const {
-   return m_vertical_predictor->GetVerticalPath().h;
+   return m_vertical_predictor->GetVerticalPath().altitude_m;
 }
 
 inline const double KinematicTrajectoryPredictor::GetVerticalPathAltitudeByIndex(const int index) const {
-   return m_vertical_predictor->GetVerticalPath().h[index];
+   return m_vertical_predictor->GetVerticalPath().altitude_m[index];
 }
 
