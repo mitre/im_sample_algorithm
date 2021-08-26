@@ -93,6 +93,13 @@ public:
     */
    std::shared_ptr<VerticalPredictor> GetTargetVerticalPredictor() const;
 
+   /*
+    * API
+    * Return a boolean indicating if the most recent call to Update() caused a new
+    * trajectory prediction to occur for either ownship or target.
+    */
+   bool IsNewTrajectoryPredictionAvailable() const;
+
    const KinematicTrajectoryPredictor& GetOwnshipKinematicPredictor() const;
 
    const KinematicTrajectoryPredictor& GetTargetKinematicPredictor() const;
@@ -178,6 +185,10 @@ private:
    bool m_blend_wind;
    bool m_new_trajectory_prediction_available;
 };
+
+inline bool IMKinematicAchieve::IsNewTrajectoryPredictionAvailable() const {
+   return m_new_trajectory_prediction_available;
+}
 
 inline const Waypoint& IMKinematicAchieve::GetTrafficReferencePoint() const {
    return m_traffic_reference_point;

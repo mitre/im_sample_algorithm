@@ -306,7 +306,7 @@ void IMKinematicAchieve::HandleTrajectoryPrediction(const AircraftState &owntrut
          m_compute_ownship_kinematic_trajectory || m_compute_target_kinematic_trajectory;
 
    if (m_compute_ownship_kinematic_trajectory) {
-      LOG4CPLUS_DEBUG(logger, "compute ownship kinematic trajectory: " << owntruthstate.m_id);
+      LOG4CPLUS_TRACE(logger, "compute ownship kinematic trajectory: " << owntruthstate.m_id);
       Units::RadiansAngle dummy_course = Units::RadiansAngle(0);
       std::vector<HorizontalPath>::size_type dummy_index = 0;
 
@@ -355,11 +355,11 @@ void IMKinematicAchieve::HandleTrajectoryPrediction(const AircraftState &owntrut
 
    if (m_target_aircraft_exists && m_target_history_exists && m_compute_target_kinematic_trajectory) {
       if (!InAchieveStage()) {
-         LOG4CPLUS_DEBUG(logger, "Skipping target prediction for ac " << owntruthstate.m_id);
+         LOG4CPLUS_TRACE(logger, "Skipping target prediction for ac " << owntruthstate.m_id);
          // but we still want to set m_compute_target_kinematic_trajectory = false at the end
       }
       else {
-         LOG4CPLUS_DEBUG(logger,
+         LOG4CPLUS_TRACE(logger,
                "ac " << owntruthstate.m_id << " compute target kinematic trajectory: " << targetsyncstate.m_id);
          const Units::Speed targetgroundspeed = Units::FeetPerSecondSpeed(
                sqrt(pow(targetsyncstate.m_xd, 2) + pow(targetsyncstate.m_yd, 2)));
@@ -406,7 +406,7 @@ void IMKinematicAchieve::HandleTrajectoryPrediction(const AircraftState &owntrut
                m_weather_prediction.getAtmosphere()->GetMachIASTransition(target_descent_cas, estimated_cruise_mach);
          if (estimated_cruise_altitude < target_transition_altitude) {
             // there isn't enough information to guess at a cruise mach condition. Set mach to
-            // zero so that no mach transition is predicted.I vaguely remember talking
+            // zero and transition altitude to negInfinity so that no mach transition is predicted.
             estimated_cruise_mach = 0;
             target_transition_altitude = Units::Length(Units::negInfinity());
          }
@@ -435,14 +435,16 @@ void IMKinematicAchieve::HandleTrajectoryPrediction(const AircraftState &owntrut
                      m_weather_prediction);
          }
 
-         if (!AircraftCalculations::CalculateDistanceAlongPathFromPosition(Units::FeetLength(targetsyncstate.m_x),
-                  Units::FeetLength(targetsyncstate.m_y),
-                  target_horizontal_path, 0,
-                  target_distance_to_go,
-                  dummy_course, dummy_index)) {
-            target_distance_to_go = Units::MetersLength(Units::infinity());
-         }
-
+	 if (!IsTargetPassedTrp()) {
+	    if (!AircraftCalculations::CalculateDistanceAlongPathFromPosition(Units::FeetLength(targetsyncstate.m_x),
+									      Units::FeetLength(targetsyncstate.m_y),
+									      target_horizontal_path, 0,
+									      target_distance_to_go,
+									      dummy_course, dummy_index)) {
+	       target_distance_to_go = Units::MetersLength(Units::infinity());
+	    }
+	 }
+	 
          const std::string &trp_name(m_im_clearance.GetTrafficReferencePoint());
          if (trp_name == "CALCULATED_TRP") {
             // calculate TRP
@@ -540,23 +542,26 @@ void IMKinematicAchieve::CheckPredictionAccuracy(
             owntruthstate, m_weather_prediction, m_ownship_reference_cas,
             m_ownship_reference_altitude, sensed_atmosphere.get())) {
 
-//         bool recalc = true;
-
-//         if (recalc) {
+         if (logger.isEnabledFor(log4cplus::DEBUG_LOG_LEVEL)) {
+            LOG4CPLUS_TRACE(logger, "Poor wind prediction at t=" << owntruthstate.m_time <<
+                                                                ", target ac exists=" << m_target_aircraft_exists <<
+                                                                ", ref_cas=" << m_ownship_reference_cas <<
+                                                                ", ref_alt="
+                                                                << Units::FeetLength(m_ownship_reference_altitude) <<
+                                                                ", true_alt=" << Units::FeetLength(owntruthstate.m_z) <<
+                                                                ", recalc=" << "true");
+            LOG4CPLUS_DEBUG(logger, "Before wind blending...:");
+            m_weather_prediction.Dump();
+         }
          Wind::UpdatePredictedWindsAtAltitudeFromSensedWind(owntruthstate, m_weather_prediction);
+         if (logger.isEnabledFor(log4cplus::DEBUG_LOG_LEVEL)) {
+            LOG4CPLUS_DEBUG(logger, "After wind blending...:");
+            owntruthstate.DumpParms("owntruthstate");
+            m_weather_prediction.Dump();
+         }
          m_compute_ownship_kinematic_trajectory = true;
          // propagate sensed atmosphere
          m_weather_prediction.SetAtmosphere(sensed_atmosphere);
-         //m_ownship_kinetic_trajectory_predictor->SetAtmosphere(sensed_atmosphere);
-         //m_ownship_kinematic_trajectory_predictor->SetAtmosphere(IMsensed_atmosphere);
-//         }
-         LOG4CPLUS_DEBUG(logger, "Bad wind prediction at t=" << owntruthstate.m_time <<
-                                                             ", target ac exists=" << m_target_aircraft_exists <<
-                                                             ", ref_cas=" << m_ownship_reference_cas <<
-                                                             ", ref_alt="
-                                                             << Units::FeetLength(m_ownship_reference_altitude) <<
-                                                             ", true_alt=" << Units::FeetLength(owntruthstate.m_z) <<
-                                                             ", recalc=" << "true");
 
       }
    }
@@ -596,7 +601,7 @@ void IMKinematicAchieve::CheckPredictionAccuracy(
          if (++m_target_altitude_failure_count >= 2) {
             m_compute_target_kinematic_trajectory = true;
          }
-         LOG4CPLUS_DEBUG(logger, "Target altitude ref=" <<
+         LOG4CPLUS_TRACE(logger, "Target altitude ref=" <<
                                                         Units::FeetLength(m_target_reference_altitude) <<
                                                         ", true=" << Units::FeetLength(targettruthstate.m_z) <<
                                                         ", " << m_target_altitude_failure_count <<
@@ -613,6 +618,7 @@ void IMKinematicAchieve::CalculateOwnshipDtgToPlannedTerminationPoint(const Airc
    m_ownship_distance_calculator.CalculateAlongPathDistanceFromPosition(Units::FeetLength(current_ownship_state.m_x),
                                                                         Units::FeetLength(current_ownship_state.m_y),
                                                                         m_ownship_kinematic_dtg_to_ptp);
+   LOG4CPLUS_TRACE(logger, "ownship kinematic distance to go (m): " << Units::MetersLength(m_ownship_kinematic_dtg_to_ptp));
    m_ownship_kinetic_distance_calculator.CalculateAlongPathDistanceFromPosition(
          Units::FeetLength(current_ownship_state.m_x),
          Units::FeetLength(current_ownship_state.m_y),
@@ -898,7 +904,7 @@ void IMKinematicAchieve::ComputeFASTrajectories(
 
    using namespace std;
 
-   LOG4CPLUS_DEBUG(logger, "Calculating FAS trajectories on AC " <<
+   LOG4CPLUS_TRACE(logger, "Calculating FAS trajectories on AC " <<
                                                                  owntruthstate.m_id << " at " << owntruthstate.m_time);
 
    // find merge point
@@ -910,7 +916,7 @@ void IMKinematicAchieve::ComputeFASTrajectories(
    size_t target_end_waypoint_ix = m_target_aircraft_intent.GetNumberOfWaypoints() - 1;
    Waypoint target_end_waypoint(m_target_aircraft_intent.GetWaypoint(target_end_waypoint_ix));
 
-   LOG4CPLUS_DEBUG(logger, "Achieve by = " << achieve_by_waypoint_name);
+   LOG4CPLUS_TRACE(logger, "Achieve by = " << achieve_by_waypoint_name);
 
    // use CalculateTrackAngle to find merge angle
    Units::Angle merge_angle_mean;
@@ -935,7 +941,7 @@ void IMKinematicAchieve::ComputeFASTrajectories(
             Units::FeetLength(owntruthstate.m_y) - m_ownship_aircraft_intent.GetWaypointY(achieve_by_waypoint_index);
    }
    Units::DegreesAngle reverse_final_approach_angle = Units::arctan2(delta_y.value(), delta_x.value());
-   LOG4CPLUS_DEBUG(logger, reverse_final_approach_angle);
+   LOG4CPLUS_TRACE(logger, reverse_final_approach_angle);
    x1 = x2 + Units::NauticalMilesLength(50) * Units::cos(reverse_final_approach_angle);
    y1 = y2 + Units::NauticalMilesLength(50) * Units::sin(reverse_final_approach_angle);
 
@@ -944,7 +950,7 @@ void IMKinematicAchieve::ComputeFASTrajectories(
    Units::Angle merge_angle = Scenario::m_rand.GaussianSample(
          merge_angle_mean, merge_angle_std);
    Units::DegreesAngle final_approach_angle = reverse_final_approach_angle + Units::PI_RADIANS_ANGLE;
-   LOG4CPLUS_DEBUG(logger, "Average track angle = " <<
+   LOG4CPLUS_TRACE(logger, "Average track angle = " <<
                                                     Units::DegreesAngle(merge_angle_mean) <<
                                                     ", randomized merge angle = " <<
                                                     Units::DegreesAngle(merge_angle) <<
@@ -955,7 +961,7 @@ void IMKinematicAchieve::ComputeFASTrajectories(
    IMUtils::CalculateMergePoint(x1, y1, x2, y2, x3, y3,
                                 xMerge, yMerge, merge_angle);
 
-   LOG4CPLUS_DEBUG(logger, "Merge point is (" << xMerge << "," << yMerge << ")");
+   LOG4CPLUS_TRACE(logger, "Merge point is (" << xMerge << "," << yMerge << ")");
 
    // construct intents
    // final AC:  current_pos last_wp
@@ -980,18 +986,18 @@ void IMKinematicAchieve::ComputeFASTrajectories(
    Units::MetersLength current_to_merge_distance =
          CoreUtils::CalculateEuclideanDistance(current_coords, merge_coords);
 
-   LOG4CPLUS_DEBUG(logger, "current = (" <<
+   LOG4CPLUS_TRACE(logger, "current = (" <<
                                          Units::MetersLength(current_coords.first) << "," <<
                                          Units::MetersLength(current_coords.second) << ")");
-   LOG4CPLUS_DEBUG(logger, "merge = (" <<
+   LOG4CPLUS_TRACE(logger, "merge = (" <<
                                        Units::MetersLength(merge_coords.first) << "," <<
                                        Units::MetersLength(merge_coords.second) << ")");
-   LOG4CPLUS_DEBUG(logger, "last wpt = (" <<
+   LOG4CPLUS_TRACE(logger, "last wpt = (" <<
                                           Units::MetersLength(final_wpt_coords.first) << "," <<
                                           Units::MetersLength(final_wpt_coords.second) << ")");
-   LOG4CPLUS_DEBUG(logger, "Current to merge = " << current_to_merge_distance);
-   LOG4CPLUS_DEBUG(logger, "Current to lastwpt = " << current_to_lastwpt_distance);
-   LOG4CPLUS_DEBUG(logger, "Merge to lastwpt = " << merge_to_lastwpt_distance);
+   LOG4CPLUS_TRACE(logger, "Current to merge = " << current_to_merge_distance);
+   LOG4CPLUS_TRACE(logger, "Current to lastwpt = " << current_to_lastwpt_distance);
+   LOG4CPLUS_TRACE(logger, "Merge to lastwpt = " << merge_to_lastwpt_distance);
 
    // convert states to waypoints, using ownship's sensed winds
    own_intent.InsertWaypointAtIndex(
@@ -1111,6 +1117,11 @@ void IMKinematicAchieve::SetTrafficReferencePointConstraints(
    // adjust TRP speed and altitude constraints
 
    LOG4CPLUS_DEBUG(logger, "Old TRP constraints:  " << m_traffic_reference_point);
+   if (logger.isEnabledFor(log4cplus::DEBUG_LOG_LEVEL)) {
+      owntruthstate.DumpParms("Incoming ownship state");
+      targetsyncstate.DumpParms("Incoming target state");
+   }
+
    Units::KnotsSpeed target_trp_speed;
    Units::FeetLength target_trp_altitude;
 
@@ -1174,36 +1185,55 @@ void IMKinematicAchieve::SetTrafficReferencePointConstraints(
 
       if (abs(ownship_current_cas - ownship_cas_at_abp) < Units::KnotsSpeed(5)) {
          // assume CAS is "constant" in the intervening range:  Speed case 1a
-         Units::Speed target_tas(targetsyncstate.GetTrueAirspeed());
+         Units::Speed estimated_wind_speed_x, estimated_wind_speed_y;
+         Units::Frequency estimated_wind_gradient_x, estimated_wind_gradient_y;
+         m_weather_prediction.GetForecastAtmosphere()->CalculateWindGradientAtAltitude(targetsyncstate.GetPositionZ(),
+                                                                                       m_weather_prediction.east_west,
+                                                                                       estimated_wind_speed_x,
+                                                                                       estimated_wind_gradient_x);
+         m_weather_prediction.GetForecastAtmosphere()->CalculateWindGradientAtAltitude(targetsyncstate.GetPositionZ(),
+                                                                                       m_weather_prediction.north_south,
+                                                                                       estimated_wind_speed_y,
+                                                                                       estimated_wind_gradient_y);
+
+         AircraftState target_copy_state(targetsyncstate);
+         target_copy_state.m_Vwx = Units::MetersPerSecondSpeed(estimated_wind_speed_x).value();
+         target_copy_state.m_Vwy = Units::MetersPerSecondSpeed(estimated_wind_speed_y).value();
+         Units::Speed target_tas(target_copy_state.GetTrueAirspeed());
          Units::Speed target_cas = m_weather_prediction.TAS2CAS(target_tas, targetsyncstate.GetPositionZ());
          target_trp_speed = target_cas;
+         LOG4CPLUS_TRACE(logger, "Speed case 1a, target_cas: " << Units::KnotsSpeed(target_cas));
       }
       else {
          // Speed case 1b
          target_trp_speed = ownship_cas_at_abp;
+         LOG4CPLUS_TRACE(logger, "Speed case 1b, ownship_cas_at_abp: " << Units::KnotsSpeed(ownship_cas_at_abp));
       }
 
-      if (abs(ownship_altitude_at_abp.value() - owntruthstate.m_z) < 500) {
+      const Units::FeetLength constant_altitude_tolerance(500.0);
+      if (Units::abs(ownship_altitude_at_abp - owntruthstate.GetPositionZ()) < constant_altitude_tolerance) {
          // assume altitude is "constant" in the intervening range:  Altitude case 2a
-         target_trp_altitude = Units::FeetLength(targetsyncstate.m_z);
+         target_trp_altitude = targetsyncstate.GetPositionZ();
+         LOG4CPLUS_TRACE(logger, "Altitude case 2a, targetsyncstate altitude: " << Units::FeetLength(targetsyncstate.GetPositionZ()));
       }
       else {
          // Altitude case 2b
          target_trp_altitude = ownship_altitude_at_abp;
+         LOG4CPLUS_TRACE(logger, "Altitude case 2b, ownship_altitude_at_abp: " << Units::FeetLength(ownship_altitude_at_abp));
       }
    } // end Speed case 1 / Altitude case 2
 
-   m_traffic_reference_point.SetSpeedConstraintHigh(target_trp_speed);
-   if (m_traffic_reference_point.GetNominalIas() > target_trp_speed || m_traffic_reference_point.GetNominalIas() == Units::zero()) {
+   if (m_traffic_reference_point.GetNominalIas() == Units::zero()) {
+      m_traffic_reference_point.SetSpeedConstraintHigh(target_trp_speed);
       m_traffic_reference_point.SetNominalIas(target_trp_speed);
    }
-   m_traffic_reference_point.SetAltitudeConstraintHigh(target_trp_altitude);
-   if (m_traffic_reference_point.GetAltitude() > target_trp_altitude || m_traffic_reference_point.GetAltitude() == Units::zero()) {
+   if (m_traffic_reference_point.GetAltitude() == Units::zero()) {
+      m_traffic_reference_point.SetAltitudeConstraintHigh(target_trp_altitude);
       m_traffic_reference_point.SetAltitude(target_trp_altitude);
    }
    m_traffic_reference_point.SetMach(0);
 
-   LOG4CPLUS_DEBUG(logger, "New TRP constraints:  " << m_traffic_reference_point);
+   LOG4CPLUS_TRACE(logger, "New TRP constraints:  " << m_traffic_reference_point);
    m_target_aircraft_intent.UpdateWaypoint(m_traffic_reference_point);
 
 }

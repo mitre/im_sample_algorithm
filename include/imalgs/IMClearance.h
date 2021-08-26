@@ -139,8 +139,8 @@ private:
    ClearanceType m_clearance_type;
    SpacingGoalType m_assigned_spacing_goal_type;
 
-   Units::Angle m_final_approach_spacing_merge_angle_mean;
-   Units::Angle m_final_approach_spacing_merge_angle_std;
+   Units::RadiansAngle m_final_approach_spacing_merge_angle_mean;
+   Units::RadiansAngle m_final_approach_spacing_merge_angle_std;
    Units::Speed m_planned_final_approach_speed;
 
    std::string m_achieve_by_point;

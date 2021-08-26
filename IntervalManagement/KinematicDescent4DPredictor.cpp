@@ -73,7 +73,7 @@ void KinematicDescent4DPredictor::BuildVerticalPrediction(vector<HorizontalPath>
    m_prediction_too_low = false;
    m_prediction_too_high = false;
    HorizontalPath start_pos(horizontal_path.back());
-   LOG4CPLUS_DEBUG(m_logger, "Building vertical prediction from ("
+   LOG4CPLUS_TRACE(m_logger, "Building vertical prediction from ("
          <<
          start_pos.GetXPositionMeters()
          << ","
@@ -120,11 +120,22 @@ void KinematicDescent4DPredictor::ConstrainedVerticalPath(vector<HorizontalPath>
    Units::UnsignedAngle course = m_course_calculator.GetCourseAtPathEnd();
    ComputeWindCoefficients(m_altitude_at_end_of_route, Units::RadiansAngle(course), weather_prediction, vwpara, vwperp,
                            Vwx, Vwy);
+   LOG4CPLUS_TRACE(m_logger,
+                   "Initial wind components (mps): Vwx " << Units::MetersPerSecondSpeed(Vwx) << ", Vwy "
+                                                         << Units::MetersPerSecondSpeed(Vwy));
+   LOG4CPLUS_TRACE(m_logger, "wind_velocity_parallel_to_track (mps): " << Units::MetersPerSecondSpeed(vwpara));
+   LOG4CPLUS_TRACE(m_logger, "wind_velocity_perpendicular_to_track (mps): " << Units::MetersPerSecondSpeed(vwperp));
+   LOG4CPLUS_TRACE(m_logger, "m_ias_at_end_of_route (mps): " << Units::MetersPerSecondSpeed(m_ias_at_end_of_route));
 
    Units::Speed initialgs =
-         sqrt(Units::sqr(
-               weather_prediction.getAtmosphere()->CAS2TAS(m_ias_at_end_of_route, m_altitude_at_end_of_route)) -
-              Units::sqr(vwperp)) + vwpara;
+      sqrt(Units::sqr(
+         weather_prediction.getAtmosphere()->CAS2TAS(m_ias_at_end_of_route, m_altitude_at_end_of_route)) -
+         Units::sqr(vwperp)) + vwpara;
+   LOG4CPLUS_TRACE(m_logger, "initial_ground_speed (mps): " << Units::MetersPerSecondSpeed(initialgs));
+   if (m_logger.isEnabledFor(log4cplus::TRACE_LOG_LEVEL)) {
+      LOG4CPLUS_TRACE(m_logger, "weather_prediction.dump()");
+      weather_prediction.Dump();
+   }
 
    trajTemp.gs_mps.push_back(Units::MetersPerSecondSpeed(initialgs).value());
    trajTemp.wind_velocity_east.push_back(Vwx);
@@ -136,7 +147,7 @@ void KinematicDescent4DPredictor::ConstrainedVerticalPath(vector<HorizontalPath>
 
    VerticalPath last_state = m_vertical_path;
    VerticalPath last_waypoint_state = m_vertical_path;
-   VerticalPath low_tolerance_state; // earliesr waypoint in prediction that can do FPA to current aircraft position
+   VerticalPath low_tolerance_state; // earliest waypoint in prediction that can do FPA to current aircraft position
    bool low_tolerance_state_found = false;
 
    double FPA;
@@ -1537,7 +1548,6 @@ void KinematicDescent4DPredictor::ComputeWindCoefficients(Units::Length altitude
                                                           Units::Speed &wind_velocity_x,
                                                           Units::Speed &wind_velocity_y) {
    Units::HertzFrequency dVwx_dh, dVwy_dh;
-
    m_wind_calculator.ComputeWindGradients(altitude, weather_prediction, wind_velocity_x, wind_velocity_y, dVwx_dh,
                                           dVwy_dh);
 
