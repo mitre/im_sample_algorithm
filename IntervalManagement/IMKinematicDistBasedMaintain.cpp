@@ -15,6 +15,7 @@
 // Copyright 2020 The MITRE Corporation. All Rights Reserved.
 // ****************************************************************************
 
+#include <iomanip>
 #include "imalgs/IMKinematicDistBasedMaintain.h"
 
 #include "math/CustomMath.h"
@@ -48,6 +49,21 @@ Guidance IMKinematicDistBasedMaintain::Update(const DynamicsState &dynamics_stat
                                               const AchievePointCalcs &ownship_achieve_point_calcs,
                                               const AchievePointCalcs &traffic_reference_point_calcs,
                                               PilotDelay &pilot_delay) {
+   LOG4CPLUS_DEBUG(logger, "ownship_aircraft_state.m_time," << std::setprecision(15) <<  ownship_aircraft_state.m_time);
+   LOG4CPLUS_DEBUG(logger, "ownship_aircraft_state.m_id," << ownship_aircraft_state.m_id);
+   LOG4CPLUS_DEBUG(logger, "target_dtg_along_ownships_path," << std::setprecision(12) << Units::MetersLength(target_dtg_along_ownships_path));
+   LOG4CPLUS_DEBUG(logger, "target_dtg_along_ownships_path_at_adjusted_distance," << std::setprecision(12) << Units::MetersLength(target_dtg_along_ownships_path_at_adjusted_distance));
+   LOG4CPLUS_DEBUG(logger, "target_state_projected_on_ownships_path_at_adjusted_distance.x," << std::setprecision(12) << Units::MetersLength(target_state_projected_on_ownships_path_at_adjusted_distance.GetPositionX()));
+   LOG4CPLUS_DEBUG(logger, "target_state_projected_on_ownships_path_at_adjusted_distance.y," << std::setprecision(12) << Units::MetersLength(target_state_projected_on_ownships_path_at_adjusted_distance.GetPositionY()));
+   LOG4CPLUS_DEBUG(logger, "target_state_projected_on_ownships_path_at_adjusted_distance.z," << std::setprecision(12) << Units::MetersLength(target_state_projected_on_ownships_path_at_adjusted_distance.GetPositionZ()));
+   LOG4CPLUS_DEBUG(logger, "target_state_projected_on_ownships_path_at_adjusted_distance.xd," << std::setprecision(12) << Units::KnotsSpeed(target_state_projected_on_ownships_path_at_adjusted_distance.GetSpeedXd()));
+   LOG4CPLUS_DEBUG(logger, "target_state_projected_on_ownships_path_at_adjusted_distance.yd," << std::setprecision(12) << Units::KnotsSpeed(target_state_projected_on_ownships_path_at_adjusted_distance.GetSpeedYd()));
+   LOG4CPLUS_DEBUG(logger, "ownship_aircraft_state.x," << std::setprecision(12) << Units::MetersLength(ownship_aircraft_state.GetPositionX()));
+   LOG4CPLUS_DEBUG(logger, "ownship_aircraft_state.y," << std::setprecision(12) << Units::MetersLength(ownship_aircraft_state.GetPositionY()));
+   LOG4CPLUS_DEBUG(logger, "ownship_aircraft_state.z," << std::setprecision(12) << Units::MetersLength(ownship_aircraft_state.GetPositionZ()));
+   LOG4CPLUS_DEBUG(logger, "ownship_aircraft_state.xd," << std::setprecision(12) << Units::KnotsSpeed(ownship_aircraft_state.GetSpeedXd()));
+   LOG4CPLUS_DEBUG(logger, "ownship_aircraft_state.yd," << std::setprecision(12) << Units::KnotsSpeed(ownship_aircraft_state.GetSpeedYd()));
+
    /*
     * Developer's note: In this level of the algorithm, all uses of the /target state/
     * must be projected onto ownship's route prior to use. This includes all items
@@ -64,7 +80,7 @@ Guidance IMKinematicDistBasedMaintain::Update(const DynamicsState &dynamics_stat
    Units::Length target_projected_y(target_state_projected_on_ownships_path_at_adjusted_distance.GetPositionY());
    Units::Length target_projected_dtg(target_dtg_along_ownships_path_at_adjusted_distance);
 
-   Units::Length ownship_true_dtg;  // AAES-564
+   Units::Length ownship_true_dtg;
    m_ownship_decrementing_distance_calculator.CalculateAlongPathDistanceFromPosition(
          Units::FeetLength(ownship_aircraft_state.m_x),
          Units::FeetLength(ownship_aircraft_state.m_y),
@@ -96,6 +112,10 @@ Guidance IMKinematicDistBasedMaintain::Update(const DynamicsState &dynamics_stat
             sqrt(Units::sqr(ground_speed_command - Units::MetersPerSecondSpeed(ownship_aircraft_state.m_Vw_para)) +
                  Units::sqr(Units::MetersPerSecondSpeed(ownship_aircraft_state.m_Vw_perp))) /
             cos(ownship_aircraft_state.m_gamma);
+      LOG4CPLUS_DEBUG(logger, "ground_speed_command," << std::setprecision(12) << Units::KnotsSpeed(ground_speed_command));
+      LOG4CPLUS_DEBUG(logger, "ownship_true_dtg," << std::setprecision(12) << Units::MetersLength(ownship_true_dtg));
+      LOG4CPLUS_DEBUG(logger, "target_projected_dtg," << std::setprecision(12) << Units::MetersLength(target_projected_dtg));
+      LOG4CPLUS_DEBUG(logger, "true_airspeed_command," << std::setprecision(12) << Units::KnotsSpeed(true_airspeed_command));
 
       if (true_airspeed_command < Units::zero()) {
          true_airspeed_command = Units::zero();
@@ -124,8 +144,18 @@ Guidance IMKinematicDistBasedMaintain::Update(const DynamicsState &dynamics_stat
 
       if (pilot_delay.IsPilotDelayOn()) {
          guidanceout.m_ias_command = m_im_speed_command_with_pilot_delay;
+         if (guidanceout.GetSelectedSpeed().GetSpeedType() == MACH_SPEED) {
+            const auto true_airspeed_equivalent = m_weather_prediction.CAS2TAS(m_im_speed_command_with_pilot_delay, ownship_aircraft_state.GetPositionZ());
+            const auto mach_equivalent = m_weather_prediction.TAS2Mach(true_airspeed_equivalent, ownship_aircraft_state.GetPositionZ());
+            guidanceout.SetMachCommand(mach_equivalent);
+         }
       } else {
          guidanceout.m_ias_command = m_im_speed_command_ias;
+         if (guidanceout.GetSelectedSpeed().GetSpeedType() == MACH_SPEED) {
+            const auto true_airspeed_equivalent = m_weather_prediction.CAS2TAS(m_im_speed_command_ias, ownship_aircraft_state.GetPositionZ());
+            const auto mach_equivalent = m_weather_prediction.TAS2Mach(true_airspeed_equivalent, ownship_aircraft_state.GetPositionZ());
+            guidanceout.SetMachCommand(mach_equivalent);
+         }
       }
 
       RecordInternalObserverData(ownship_aircraft_state, target_state_projected_on_ownships_path_at_adjusted_distance,

@@ -443,8 +443,18 @@ Guidance IMTimeBasedAchieve::HandleAchieveStage(const AircraftState &current_own
 
    if (m_pilot_delay.IsPilotDelayOn()) {
       guidance_out.m_ias_command = m_im_speed_command_with_pilot_delay;
+      if (guidance_out.GetSelectedSpeed().GetSpeedType() == MACH_SPEED) {
+         const auto true_airspeed_equivalent = m_weather_prediction.CAS2TAS(m_im_speed_command_with_pilot_delay, current_ownship_state.GetPositionZ());
+         const auto mach_equivalent = m_weather_prediction.TAS2Mach(true_airspeed_equivalent, current_ownship_state.GetPositionZ());
+         guidance_out.SetMachCommand(mach_equivalent);
+      }
    } else {
       guidance_out.m_ias_command = m_im_speed_command_ias;
+      if (guidance_out.GetSelectedSpeed().GetSpeedType() == MACH_SPEED) {
+         const auto true_airspeed_equivalent = m_weather_prediction.CAS2TAS(m_im_speed_command_ias, current_ownship_state.GetPositionZ());
+         const auto mach_equivalent = m_weather_prediction.TAS2Mach(true_airspeed_equivalent, current_ownship_state.GetPositionZ());
+         guidance_out.SetMachCommand(mach_equivalent);
+      }
    }
 
    return guidance_out;
@@ -541,7 +551,7 @@ Guidance IMTimeBasedAchieve::HandleMaintainStage(const AircraftState &current_ow
 
       m_im_speed_command_ias = m_im_kinematic_time_based_maintain->GetImSpeedCommandIas();
       m_im_speed_command_with_pilot_delay = m_im_kinematic_time_based_maintain->GetDelayedImSpeedCommandIas();
-
+      m_unmodified_im_speed_command_ias = m_im_kinematic_time_based_maintain->GetUnmodifiedImSpeedCommandIas();
       m_previous_im_speed_command_ias = m_im_kinematic_time_based_maintain->GetPreviousSpeedCommandIas();
       return guidance_out;
    }

@@ -16,6 +16,7 @@
 // ****************************************************************************
 
 #include "imalgs/IMDistBasedAchieve.h"
+#include <iomanip>
 
 #include "public/SimulationTime.h"
 #include "math/CustomMath.h"
@@ -117,13 +118,18 @@ Guidance IMDistBasedAchieve::Update(const Guidance &previous_im_guidance,
                static_cast<int>(m_target_kinematic_trajectory_predictor.GetVerticalPathDistances().size() - 1);
          m_ownship_reference_lookup_index =
                static_cast<int>(m_ownship_kinematic_trajectory_predictor.GetVerticalPathDistances().size() - 1);
-         //TODO: What is this?
          m_reference_precalc_index =
                static_cast<int>(m_ownship_kinematic_trajectory_predictor.GetVerticalPathDistances().size() - 1);
       }
 
       if (InAchieveStage()) {
          m_stage_of_im_operation = ACHIEVE;
+
+         if (m_logger.isEnabledFor(log4cplus::DEBUG_LOG_LEVEL)) {
+            LOG4CPLUS_DEBUG(m_logger, "Doing dist-achieve calculations using:");
+            current_ownship_state.DumpParms("ownship_state");
+            current_target_state.DumpParms("target_state");
+         }
 
          InternalObserver::getInstance()->updateFinalGS(current_target_state.m_id, Units::MetersPerSecondSpeed(
                AircraftCalculations::GsAtACS(target_adsb_history.back())).value());
@@ -322,11 +328,18 @@ Guidance IMDistBasedAchieve::Update(const Guidance &previous_im_guidance,
                                   m_achieve_control_gain;
 
          m_unmodified_im_speed_command_ias = m_im_speed_command_ias;
+         LOG4CPLUS_TRACE(m_logger, "achieve_unmodified_im_speed_command_ias_kts," << std::setprecision(12) << Units::KnotsSpeed(m_unmodified_im_speed_command_ias));
+         LOG4CPLUS_TRACE(m_logger, "achieve_ownship_reference_cas_kts," << std::setprecision(12) << Units::KnotsSpeed(m_ownship_reference_cas));
+         LOG4CPLUS_TRACE(m_logger, "achieve_ownship_reference_dtg_to_ptp_m," << std::setprecision(12) << Units::MetersLength(ownship_reference_dtg_to_ptp));
+         LOG4CPLUS_TRACE(m_logger, "achieve_ownship_kinematic_dtg_to_ptp_m," << std::setprecision(12) << Units::MetersLength(m_ownship_kinematic_dtg_to_ptp));
+         LOG4CPLUS_TRACE(m_logger, "achieve_predicted_spacing_interval_m," << std::setprecision(12) << Units::MetersLength(m_predicted_spacing_interval));
 
          if (im_guidance.GetSelectedSpeed().GetSpeedType() == INDICATED_AIR_SPEED) {
             CalculateIas(current_ownship_state.GetPositionZ(), three_dof_dynamics_state);
+            LOG4CPLUS_TRACE(m_logger, "achieve_limited_im_speed_command_ias_kts," << std::setprecision(12) << Units::KnotsSpeed(m_im_speed_command_ias));
          } else {
             CalculateMach(reference_ttg, current_ownship_state.GetPositionZ());
+            LOG4CPLUS_TRACE(m_logger, "achieve_limited_im_speed_command_ias_kts_mach," << std::setprecision(12) << Units::KnotsSpeed(m_im_speed_command_ias));
          }
 
          m_previous_im_speed_command_ias = m_im_speed_command_ias;
@@ -341,8 +354,18 @@ Guidance IMDistBasedAchieve::Update(const Guidance &previous_im_guidance,
 
          if (m_pilot_delay.IsPilotDelayOn()) {
             im_guidance.m_ias_command = m_im_speed_command_with_pilot_delay;
+            if (im_guidance.GetSelectedSpeed().GetSpeedType() == MACH_SPEED) {
+               const auto true_airspeed_equivalent = m_weather_prediction.CAS2TAS(m_im_speed_command_with_pilot_delay, current_ownship_state.GetPositionZ());
+               const auto mach_equivalent = m_weather_prediction.TAS2Mach(true_airspeed_equivalent, current_ownship_state.GetPositionZ());
+               im_guidance.SetMachCommand(mach_equivalent);
+            }
          } else {
             im_guidance.m_ias_command = m_im_speed_command_ias;
+            if (im_guidance.GetSelectedSpeed().GetSpeedType() == MACH_SPEED) {
+               const auto true_airspeed_equivalent = m_weather_prediction.CAS2TAS(m_im_speed_command_ias, current_ownship_state.GetPositionZ());
+               const auto mach_equivalent = m_weather_prediction.TAS2Mach(true_airspeed_equivalent, current_ownship_state.GetPositionZ());
+               im_guidance.SetMachCommand(mach_equivalent);
+            }
          }
       } else {
          m_stage_of_im_operation = MAINTAIN;
@@ -451,6 +474,7 @@ Guidance IMDistBasedAchieve::Update(const Guidance &previous_im_guidance,
             }
             m_im_speed_command_ias = m_im_kinematic_dist_based_maintain->GetImSpeedCommandIas();
             m_im_speed_command_with_pilot_delay = m_im_kinematic_dist_based_maintain->GetDelayedImSpeedCommandIas();
+            m_unmodified_im_speed_command_ias = m_im_kinematic_dist_based_maintain->GetUnmodifiedImSpeedCommandIas();
             m_previous_im_speed_command_ias = m_im_kinematic_dist_based_maintain->GetPreviousSpeedCommandIas();
          }
       }
@@ -539,7 +563,7 @@ void IMDistBasedAchieve::CalculateMach(const Units::Time reference_ttg,
                      Units::FeetLength(current_ownship_altitude)).value());
 
          // Make sure velocity is within nominal limits (AAES-694)
-         Units::Speed nominal_indicated_airspeed(
+         Units::MetersPerSecondSpeed nominal_indicated_airspeed(
                m_ownship_kinematic_trajectory_predictor.GetVerticalPathVelocityByIndex(
                      m_ownship_reference_lookup_index));
          Units::Speed nominal_true_airspeed =
@@ -572,15 +596,21 @@ void IMDistBasedAchieve::CalculateMach(const Units::Time reference_ttg,
       m_total_number_of_im_speed_changes++;
    }
 
-   m_previous_reference_im_speed_command_mach = estimated_mach;
    m_im_speed_command_ias = m_weather_prediction.getAtmosphere()->MachToIAS(estimated_mach, current_ownship_altitude);
 
    if (m_pilot_delay.IsPilotDelayOn()) {
+      LOG4CPLUS_TRACE(m_logger, "achieve_previous_reference_im_speed_command_mach," << std::setprecision(12) << m_previous_reference_im_speed_command_mach);
+      LOG4CPLUS_TRACE(m_logger, "achieve_estimated_mach," << std::setprecision(12) << estimated_mach);
+      LOG4CPLUS_TRACE(m_logger, "achieve_ownship_kinematic_trajectory_predictor.GetAltitudeAtFinalWaypoint()," << std::setprecision(12) << Units::MetersLength (m_ownship_kinematic_trajectory_predictor.GetAltitudeAtFinalWaypoint()));
+      LOG4CPLUS_TRACE(m_logger, "achieve_current_ownship_altitude," << std::setprecision(12) << Units::MetersLength(current_ownship_altitude));
       m_im_speed_command_with_pilot_delay =
             m_pilot_delay.UpdateMach(m_previous_reference_im_speed_command_mach, estimated_mach,
                                      current_ownship_altitude,
                                      m_ownship_kinematic_trajectory_predictor.GetAltitudeAtFinalWaypoint());
+      LOG4CPLUS_TRACE(m_logger, "achieve_im_speed_command_with_pilot_delay," << std::setprecision(12) << Units::KnotsSpeed(m_im_speed_command_with_pilot_delay));
    }
+   m_previous_reference_im_speed_command_mach = estimated_mach;
+
 }
 
 void IMDistBasedAchieve::RecordData(Guidance &im_guidance,
@@ -687,7 +717,17 @@ IMDistBasedAchieve::CalculatePredictedSpacingInterval(const Units::Time target_r
    const auto index_ttg = CoreUtils::FindNearestIndex(predicted_spacing_interval_lookup_ttg.value(),
                                                       m_ownship_kinematic_trajectory_predictor.GetVerticalPathTimes());
 
+   LOG4CPLUS_TRACE(m_logger, "target_reference_ttg_to_trp:" << Units::SecondsTime (target_reference_ttg_to_trp));
+   LOG4CPLUS_TRACE(m_logger, "ownship_reference_dtg_to_ptp:" << Units::MetersLength (ownship_reference_dtg_to_ptp));
+   LOG4CPLUS_TRACE(m_logger, "own_ttg_to_ptp:" << Units::SecondsTime (own_ttg_to_ptp));
+   LOG4CPLUS_TRACE(m_logger, "ownship_kinematic_ttg_to_abp:" << Units::SecondsTime (ownship_kinematic_ttg_to_abp));
+   LOG4CPLUS_TRACE(m_logger, "ownship_target_delta_ttg:" << Units::SecondsTime (ownship_target_delta_ttg));
+   LOG4CPLUS_TRACE(m_logger, "predicted_spacing_interval_lookup_ttg:" << Units::SecondsTime (predicted_spacing_interval_lookup_ttg));
+   LOG4CPLUS_TRACE(m_logger, "ownship_dtg_from_abp_to_ptp:" << Units::MetersLength (ownship_dtg_from_abp_to_ptp));
+   LOG4CPLUS_TRACE(m_logger, "index_ttg:" << index_ttg);
+
    if ((ownship_target_delta_ttg < Units::zero()) && (index_ttg == 0)) {
+      LOG4CPLUS_TRACE(m_logger, "neg-PSI logic:");
       // This calculation handles negative PSI situations in which there is no maintain stage afterward. In this
       // situation, the PSI must be guessed using ownship's predicted groundspeed.
       const Units::Speed ownship_groundspeed_at_ptp = Units::MetersPerSecondSpeed(
@@ -697,9 +737,15 @@ IMDistBasedAchieve::CalculatePredictedSpacingInterval(const Units::Time target_r
             ownship_groundspeed_at_ptp * ownship_time_past_ptp + ownship_dtg_from_abp_to_ptp;
       const Units::Length predicted_spacing_interval = -ownship_distance_passed_abp;
 
+      LOG4CPLUS_TRACE(m_logger, "ownship_groundspeed_at_ptp:" << Units::MetersPerSecondSpeed (ownship_groundspeed_at_ptp));
+      LOG4CPLUS_TRACE(m_logger, "ownship_time_past_ptp:" << Units::SecondsTime(ownship_time_past_ptp));
+      LOG4CPLUS_TRACE(m_logger, "ownship_distance_passed_abp:" << Units::MetersLength (ownship_distance_passed_abp));
+      LOG4CPLUS_TRACE(m_logger, "predicted_spacing_interval:" << Units::MetersLength (predicted_spacing_interval));
+
       // expect this to be negative
       return predicted_spacing_interval;
    } else {
+      LOG4CPLUS_TRACE(m_logger, "normal-PSI logic:");
       // This calculation handles:
       // ** positive PSI situations
       // ** negative PSI situations in which there is a valid 4D prediction that goes beyond the ABP
@@ -711,6 +757,9 @@ IMDistBasedAchieve::CalculatePredictedSpacingInterval(const Units::Time target_r
 
       const Units::Length predicted_spacing_interval =
             ownship_reference_dtg_at_predicted_spacing_interval_lookup_distance - ownship_dtg_from_abp_to_ptp;
+
+      LOG4CPLUS_TRACE(m_logger, "ownship_reference_dtg_at_predicted_spacing_interval_lookup_distance:" << Units::MetersLength (ownship_reference_dtg_at_predicted_spacing_interval_lookup_distance));
+      LOG4CPLUS_TRACE(m_logger, "predicted_spacing_interval:" << Units::MetersLength (predicted_spacing_interval));
 
       return predicted_spacing_interval;
    }

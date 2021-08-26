@@ -227,8 +227,16 @@ Guidance IMKinematicTimeBasedMaintain::Update(const DynamicsState &dynamics_stat
 
       if (pilot_delay_model.IsPilotDelayOn()) {
          guidanceout.m_ias_command = m_im_speed_command_with_pilot_delay;
+         if (guidanceout.GetSelectedSpeed().GetSpeedType() == MACH_SPEED) {
+            const auto true_airspeed_equivalent = m_weather_prediction.CAS2TAS(m_im_speed_command_ias, ownship_aircraft_state.GetPositionZ());
+            const auto mach_equivalent = m_weather_prediction.TAS2Mach(true_airspeed_equivalent, ownship_aircraft_state.GetPositionZ());
+            guidanceout.SetMachCommand(mach_equivalent);
+         }
       } else {
          guidanceout.m_ias_command = m_im_speed_command_ias;
+         if (guidanceout.GetSelectedSpeed().GetSpeedType() == MACH_SPEED) {
+            guidanceout.SetMachCommand(m_previous_reference_im_speed_command_mach);
+         }
       }
 
       if (InternalObserver::getInstance()->outputNM()) {
