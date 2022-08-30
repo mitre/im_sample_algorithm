@@ -1,30 +1,34 @@
 // ****************************************************************************
 // NOTICE
 //
-// This is the copyright work of The MITRE Corporation, and was produced
-// for the U. S. Government under Contract Number DTFAWA-10-C-00080, and
-// is subject to Federal Aviation Administration Acquisition Management
-// System Clause 3.5-13, Rights In Data-General, Alt. III and Alt. IV
-// (Oct. 1996).  No other use other than that granted to the U. S.
-// Government, or to those acting on behalf of the U. S. Government,
-// under that Clause is authorized without the express written
-// permission of The MITRE Corporation. For further information, please
-// contact The MITRE Corporation, Contracts Office, 7515 Colshire Drive,
-// McLean, VA  22102-7539, (703) 983-6000. 
+// This work was produced for the U.S. Government under Contract 693KA8-22-C-00001 
+// and is subject to Federal Aviation Administration Acquisition Management System 
+// Clause 3.5-13, Rights In Data-General, Alt. III and Alt. IV (Oct. 1996).
 //
-// Copyright 2020 The MITRE Corporation. All Rights Reserved.
+// The contents of this document reflect the views of the author and The MITRE 
+// Corporation and do not necessarily reflect the views of the Federal Aviation 
+// Administration (FAA) or the Department of Transportation (DOT). Neither the FAA 
+// nor the DOT makes any warranty or guarantee, expressed or implied, concerning 
+// the content or accuracy of these views.
+//
+// For further information, please contact The MITRE Corporation, Contracts Management 
+// Office, 7515 Colshire Drive, McLean, VA 22102-7539, (703) 983-6000.
+//
+// 2022 The MITRE Corporation. All Rights Reserved.
 // ****************************************************************************
 
 #pragma once
 
-#include "utility/Logging.h"
-#include <vector>
-#include <Time.h>
-#include <Length.h>
-#include "public/AircraftState.h"
-#include "public/HorizontalPath.h"
 #include <map>
-#include <public/AircraftIntent.h>
+#include <vector>
+#include <scalar/Time.h>
+#include <scalar/Length.h>
+#include "utility/Logging.h"
+#include "public/AircraftState.h"
+#include "imalgs/AircraftState.h"
+#include "aaesim/Wgs84HorizontalPathSegment.h"
+#include "public/HorizontalPath.h"
+#include "public/AircraftIntent.h"
 #include "public/AlongPathDistanceCalculator.h"
 
 // Class containing utility functions primarily used with the IM classes.
@@ -52,23 +56,28 @@ public:
     * @deprecated
     */
    static bool GetCrossingTime(const Units::Length current_dtg,
-                               const std::vector<AircraftState> &aircraft_state_history,
+                               const std::vector<interval_management::AircraftState> &aircraft_state_history,
                                const std::vector<HorizontalPath> &horizontal_path,
                                Units::Time &crossing_time);
 
    static bool GetCrossingTime(const Units::Length current_dtg,
-                               const std::vector<AircraftState> &aircraft_state_history,
+                               const std::vector<interval_management::AircraftState> &aircraft_state_history,
                                const std::vector<HorizontalPath> &horizontal_path,
                                Units::Time &crossing_time,
                                Units::Length &projected_x,
                                Units::Length &projected_y);
 
    static bool GetCrossingTime(const Units::Length current_dtg,
-                               const std::vector<AircraftState> &aircraft_state_history,
+                               const std::vector<interval_management::AircraftState> &aircraft_state_history,
                                AlongPathDistanceCalculator &distance_calculator,
                                Units::Time &crossing_time,
                                Units::Length &projected_x,
                                Units::Length &projected_y);
+
+   static bool GetCrossingTime(const Units::Length current_dtg,
+                               const std::vector<interval_management::AircraftState> &aircraft_state_history,
+                               const std::vector<aaesim::Wgs84HorizontalPathSegment> &horizontal_path,
+                               Units::Time &crossing_time);
 
    static void CalculateMergePoint(const Units::Length x1,
                                    const Units::Length y1,
@@ -81,7 +90,7 @@ public:
                                    const Units::Angle theta_merge);
 
    static void CalculateTimeBasedExtrapolate(const Units::Length &ownship_dtg,
-                                             const AircraftState &oldest_target_state,
+                                             const interval_management::AircraftState &oldest_target_state,
                                              const std::vector<HorizontalPath> &ownship_horizontal_traj,
                                              Units::Time &extrapolated_target_time,
                                              Units::Length &projected_x,
@@ -89,25 +98,25 @@ public:
                                              Units::Length &projected_distance_to_go);
 
    static void CalculateTimeBasedExtrapolate(const Units::Length &ownship_dtg,
-                                             const AircraftState &oldest_target_state,
+                                             const interval_management::AircraftState &oldest_target_state,
                                              AlongPathDistanceCalculator &distance_calculator,
                                              Units::Time &extrapolated_target_time,
                                              Units::Length &projected_x,
                                              Units::Length &projected_y,
                                              Units::Length &projected_distance_to_go);
 
-   static bool CalculateTargetStateAtTime(const AircraftState &target_state,
+   static bool CalculateTargetStateAtTime(const interval_management::AircraftState &target_state,
                                           const std::vector<HorizontalPath> &ownship_horizontal_traj,
                                           const Units::Time extrapolation_time,
                                           const Units::Angle ownship_true_heading,
-                                          AircraftState &extrapolation_state);
+                                          interval_management::AircraftState &extrapolation_state);
 
-   static void GetTimeBasedExtrapolateState(const AircraftState &current_ownship_state,
-                                            const AircraftState &oldest_target_state,
+   static void GetTimeBasedExtrapolateState(const interval_management::AircraftState &current_ownship_state,
+                                            const interval_management::AircraftState &oldest_target_state,
                                             const std::vector<HorizontalPath> &ownship_horizontal_traj,
                                             const std::vector<HorizontalPath> &target_horizontal_traj,
                                             Units::Time &measured_spacing_interval,
-                                            AircraftState &aircraft_state_to_return);
+                                            interval_management::AircraftState &aircraft_state_to_return);
 
    static void GetPositionFromPathLength(const Units::Length distance_to_go_in,
                                          const std::vector<HorizontalPath> &horizontal_path_in,
@@ -137,6 +146,13 @@ public:
                                      Units::Length &x_projected,
                                      Units::Length &y_projected);
 
+   static bool ProjectTargetPosition(const Units::Length x_target,
+                                     const Units::Length y_target,
+                                     const std::vector<aaesim::Wgs84HorizontalPathSegment> &ownship_horizontal_path,
+                                     Units::Length &x_projected,
+                                     Units::Length &y_projected,
+                                     Units::Length &dtg);
+
    /**
     * @deprecated AAES-994 make this method unused. It will be removed.
     * @param target_state
@@ -145,11 +161,11 @@ public:
     * @param ownship_true_heading
     * @param extrapstate
     */
-   static void CalculateTargetStateAtDistance(const AircraftState &target_state,
+   static void CalculateTargetStateAtDistance(const interval_management::AircraftState &target_state,
                                               const std::vector<HorizontalPath> &ownship_horizontal_traj,
                                               const Units::Length extrapolation_distance,
                                               const Units::Angle ownship_true_heading,
-                                              AircraftState &extrapstate);
+                                              interval_management::AircraftState &extrapstate);
 
    /**
     * @deprecated AAES-994 has made this method unnecessary. It will be removed.
@@ -159,7 +175,7 @@ public:
     * @param ownship_true_heading
     * @return
     */
-   static AircraftState GetTargetStateOnOwnshipPathForDtg(const std::vector<AircraftState> &target_adsb_history,
+   static interval_management::AircraftState GetTargetStateOnOwnshipPathForDtg(const std::vector<interval_management::AircraftState> &target_adsb_history,
                                                           const std::vector<HorizontalPath> &ownship_horizontal_path,
                                                           const Units::Length target_distance,
                                                           const Units::Angle ownship_true_heading);
@@ -183,21 +199,20 @@ public:
     * @param target_state_is_valid
     * @return
     */
-   static AircraftState GetProjectedTargetState(const std::vector<AircraftState> &target_state_history,
+   static interval_management::AircraftState GetProjectedTargetState(const std::vector<interval_management::AircraftState> &target_state_history,
                                                 const std::vector<HorizontalPath> &ownship_horizontal_traj,
                                                 const Units::Time target_time,
                                                 const Units::Angle ownship_true_heading,
                                                 bool &target_state_is_valid);
 
-   static AircraftState GetProjectedTargetState(AlongPathDistanceCalculator &distance_calculator,
-                                                const std::vector<AircraftState> &target_state_history,
+   static interval_management::AircraftState GetProjectedTargetState(AlongPathDistanceCalculator &distance_calculator,
+                                                const std::vector<interval_management::AircraftState> &target_state_history,
                                                 const std::vector<HorizontalPath> &ownship_horizontal_traj,
                                                 const Units::Time target_time,
                                                 const Units::Angle ownship_true_heading,
-   bool &target_state_is_valid);
+                                                bool &target_state_is_valid);
 
-   static Units::SignedAngle CalculateTrackAngle(
-         const std::list<Units::Angle> angle_history);
+   static Units::SignedAngle CalculateTrackAngle(const std::list<Units::Angle> angle_history);
 
    /**
      * This map is a simple container that provides retrieval of a string that represents an enum values.
@@ -205,7 +220,12 @@ public:
      */
    static std::map<IMUtils::IMAlgorithmTypes, std::string> algorithm_type_dictionary;
 
-private:
+   static interval_management::AircraftState ConvertToIntervalManagementAircraftState(const aaesim::open_source::AircraftState &aircraft_state);
+
+   static aaesim::open_source::AircraftState ConvertToAaesimAircraftState(const interval_management::AircraftState &aircraft_state);
+
+ private:
 
    static log4cplus::Logger m_logger;
+
 };

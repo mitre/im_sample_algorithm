@@ -1,18 +1,20 @@
 // ****************************************************************************
 // NOTICE
 //
-// This is the copyright work of The MITRE Corporation, and was produced
-// for the U. S. Government under Contract Number DTFAWA-10-C-00080, and
-// is subject to Federal Aviation Administration Acquisition Management
-// System Clause 3.5-13, Rights In Data-General, Alt. III and Alt. IV
-// (Oct. 1996).  No other use other than that granted to the U. S.
-// Government, or to those acting on behalf of the U. S. Government,
-// under that Clause is authorized without the express written
-// permission of The MITRE Corporation. For further information, please
-// contact The MITRE Corporation, Contracts Office, 7515 Colshire Drive,
-// McLean, VA  22102-7539, (703) 983-6000. 
+// This work was produced for the U.S. Government under Contract 693KA8-22-C-00001 
+// and is subject to Federal Aviation Administration Acquisition Management System 
+// Clause 3.5-13, Rights In Data-General, Alt. III and Alt. IV (Oct. 1996).
 //
-// Copyright 2020 The MITRE Corporation. All Rights Reserved.
+// The contents of this document reflect the views of the author and The MITRE 
+// Corporation and do not necessarily reflect the views of the Federal Aviation 
+// Administration (FAA) or the Department of Transportation (DOT). Neither the FAA 
+// nor the DOT makes any warranty or guarantee, expressed or implied, concerning 
+// the content or accuracy of these views.
+//
+// For further information, please contact The MITRE Corporation, Contracts Management 
+// Office, 7515 Colshire Drive, McLean, VA 22102-7539, (703) 983-6000.
+//
+// 2022 The MITRE Corporation. All Rights Reserved.
 // ****************************************************************************
 
 #include "imalgs/AchievePointCalcs.h"
@@ -23,6 +25,8 @@
 #include <iomanip>
 
 using namespace std;
+using namespace aaesim::open_source;
+using namespace interval_management;
 
 #define SQR(x) ({    \
     typeof(x) y = (x);  \
@@ -141,7 +145,7 @@ void AchievePointCalcs::ComputeDefaultTRP(
 
    double a, b, c;
    {
-      const struct AircraftIntent::RouteData &ownship_fms(ownship_intent.GetFms());
+      const struct AircraftIntent::RouteData &ownship_fms(ownship_intent.GetRouteData());
 
       double x0 = ownship_fms.m_x[ix0].value();
       double y0 = ownship_fms.m_y[ix0].value();
@@ -374,8 +378,8 @@ void AchievePointCalcs::ComputeDefaultTRP(
    distance_calculator.CalculateAlongPathDistanceFromPosition(waypoint_x, waypoint_y, distance_trp_to_end);
    for (int i = 0; i < target_intent.GetNumberOfWaypoints(); i++) {
       distance_calculator.InitializeStartingIndex();
-      Units::MetersLength x(target_intent.GetFms().m_x[i]);
-      Units::MetersLength y(target_intent.GetFms().m_y[i]);
+      Units::MetersLength x(target_intent.GetRouteData().m_x[i]);
+      Units::MetersLength y(target_intent.GetRouteData().m_y[i]);
       Units::MetersLength distance_to_end;
       try {
             distance_calculator.CalculateAlongPathDistanceFromPosition(x, y, distance_to_end);
@@ -401,8 +405,8 @@ void AchievePointCalcs::ComputePositions(const AircraftIntent &intent) {
       int ix = intent.GetWaypointIndexByName(m_waypoint_name);
 
       if (ix > -1) {
-         m_waypoint_x = Units::MetersLength(intent.GetFms().m_x[ix]);
-         m_waypoint_y = Units::MetersLength(intent.GetFms().m_y[ix]);
+         m_waypoint_x = Units::MetersLength(intent.GetRouteData().m_x[ix]);
+         m_waypoint_y = Units::MetersLength(intent.GetRouteData().m_y[ix]);
       } else {
          string emsg = "Illegal achieve point " + m_waypoint_name +
                        " encountered while computing achieve point calculations positions";
@@ -491,7 +495,7 @@ void AchievePointCalcs::ComputeEndValues(const VerticalPath &vertical_path) {
    }
 }
 
-const bool AchievePointCalcs::IsWaypointPassed(const AircraftState &acstate) {
+const bool AchievePointCalcs::IsWaypointPassed(const interval_management::AircraftState &acstate) {
    if (!m_waypoint_is_set) {
       string msg("No waypoint set, cannot check whether passed.");
       LOG4CPLUS_FATAL(m_logger, msg);
@@ -505,7 +509,7 @@ const bool AchievePointCalcs::IsWaypointPassed(const AircraftState &acstate) {
    return (distance_to_end < m_distance_from_waypoint);
 }
 
-const Units::Length AchievePointCalcs::ComputeDistanceToWaypoint(const AircraftState &acstate) {
+const Units::Length AchievePointCalcs::ComputeDistanceToWaypoint(const interval_management::AircraftState &acstate) {
    if (!m_waypoint_is_set) {
       string msg("No waypoint set, cannot compute distance.");
       LOG4CPLUS_FATAL(m_logger, msg);
@@ -519,7 +523,7 @@ const Units::Length AchievePointCalcs::ComputeDistanceToWaypoint(const AircraftS
 }
 
 
-void AchievePointCalcs::ComputeCrossingTime(const AircraftState &acstate) {
+void AchievePointCalcs::ComputeCrossingTime(const interval_management::AircraftState &acstate) {
    /*
     * This implementation does not ensure crossing! It assumes the caller has already
     * calculated a state just after crossing the Achieve waypoint and simply
@@ -527,19 +531,19 @@ void AchievePointCalcs::ComputeCrossingTime(const AircraftState &acstate) {
     */
 
    // NOTE:Only working with x,y position throughout; not setting z.
-   AircraftState prevstate = acstate;
+   interval_management::AircraftState prevstate = acstate;
    prevstate.m_x -= acstate.m_xd;
    prevstate.m_y -= acstate.m_yd;
 
 
    // get achieve-by waypoint coordinates
-   AircraftState endstate;
+   interval_management::AircraftState endstate;
    endstate.m_x = Units::FeetLength(m_waypoint_x).value();
    endstate.m_y = Units::FeetLength(m_waypoint_y).value();
 
    // translate origin point to the previous aircraft state
    // translate end point
-   AircraftState current_state = acstate;
+   interval_management::AircraftState current_state = acstate;
    current_state.m_x -= prevstate.m_x;
    current_state.m_y -= prevstate.m_y;
 
@@ -572,6 +576,6 @@ void AchievePointCalcs::ComputeCrossingTime(const AircraftState &acstate) {
    // calculates the ratio of distance to the closest point compared to the distance to the aircraft end point
    double ratio = distclosest / distaircraft;
 
-   m_crossing_time = Units::SecondsTime(current_state.m_time - 1.0 + ratio);
+   m_crossing_time = Units::SecondsTime(current_state.GetTimeStamp().value() - 1.0 + ratio);
 
 }

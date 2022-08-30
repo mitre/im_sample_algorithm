@@ -1,18 +1,20 @@
 // ****************************************************************************
 // NOTICE
 //
-// This is the copyright work of The MITRE Corporation, and was produced
-// for the U. S. Government under Contract Number DTFAWA-10-C-00080, and
-// is subject to Federal Aviation Administration Acquisition Management
-// System Clause 3.5-13, Rights In Data-General, Alt. III and Alt. IV
-// (Oct. 1996).  No other use other than that granted to the U. S.
-// Government, or to those acting on behalf of the U. S. Government,
-// under that Clause is authorized without the express written
-// permission of The MITRE Corporation. For further information, please
-// contact The MITRE Corporation, Contracts Office, 7515 Colshire Drive,
-// McLean, VA  22102-7539, (703) 983-6000. 
+// This work was produced for the U.S. Government under Contract 693KA8-22-C-00001 
+// and is subject to Federal Aviation Administration Acquisition Management System 
+// Clause 3.5-13, Rights In Data-General, Alt. III and Alt. IV (Oct. 1996).
 //
-// Copyright 2020 The MITRE Corporation. All Rights Reserved.
+// The contents of this document reflect the views of the author and The MITRE 
+// Corporation and do not necessarily reflect the views of the Federal Aviation 
+// Administration (FAA) or the Department of Transportation (DOT). Neither the FAA 
+// nor the DOT makes any warranty or guarantee, expressed or implied, concerning 
+// the content or accuracy of these views.
+//
+// For further information, please contact The MITRE Corporation, Contracts Management 
+// Office, 7515 Colshire Drive, McLean, VA 22102-7539, (703) 983-6000.
+//
+// 2022 The MITRE Corporation. All Rights Reserved.
 // ****************************************************************************
 
 #include <iomanip>
@@ -35,9 +37,6 @@ IMKinematicAchieve::IMKinematicAchieve()
    IterClearIMKinAch();
 }
 
-IMKinematicAchieve::~IMKinematicAchieve() = default;
-
-
 void IMKinematicAchieve::IterationReset() {
    IMAchieve::IterationReset();
    IterClearIMKinAch();
@@ -52,8 +51,6 @@ void IMKinematicAchieve::IterClearIMKinAch() {
    m_new_trajectory_prediction_available = false;
    m_compute_ownship_kinematic_trajectory = true;
    m_compute_target_kinematic_trajectory = true;
-   m_ownship_kinematic_trajectory_dumped = false;
-   m_target_kinematic_trajectory_dumped = false;
 
    m_target_aircraft_exists = false;
    m_target_history_exists = false;
@@ -63,57 +60,84 @@ void IMKinematicAchieve::IterClearIMKinAch() {
    m_ownship_kinematic_trajectory_predictor = dummytraj;
    m_target_kinematic_trajectory_predictor = dummytraj;
 
-   m_ownship_kinematic_achieve_by_calcs = AchievePointCalcs();
-   m_target_kinematic_traffic_reference_point_calcs = AchievePointCalcs();
+   m_ownship_kinematic_achieve_by_calcs = interval_management::AchievePointCalcs();
+   m_target_kinematic_traffic_reference_point_calcs = interval_management::AchievePointCalcs();
 
    m_fas_intent_valid = false;
    m_is_target_aligned = false;
+
+   m_ownship_kinetic_distance_calculator = Wgs84AlongPathDistanceCalculator();
 }
 
-// Initialize replaces HorizontalPath with a HorizontalPath the terminates at the planned_termination_point
-void IMKinematicAchieve::Initialize(const KineticTrajectoryPredictor &ownship_kinetic_trajectory_predictor,
-                                    const KineticTrajectoryPredictor &target_kinetic_trajectory_predictor,
-                                    std::shared_ptr<TangentPlaneSequence> tangent_plane_sequence,
-                                    AircraftIntent &target_aircraft_intent,
+void IMKinematicAchieve::Initialize(std::shared_ptr<const aaesim::BadaPerformanceCalculator> aircraft_performance_calculator,
+                                    OwnshipPredictionParameters ownship_prediction_parameters,
+                                    const AircraftIntent &ownship_aircraft_intent,
+                                    const AircraftIntent &target_aircraft_intent,
                                     const IMClearance &im_clearance,
-                                    const std::string &achieve_by_point,
                                     WeatherPrediction &weather_prediction) {
-   IMAchieve::Initialize(ownship_kinetic_trajectory_predictor, target_kinetic_trajectory_predictor,
-                         tangent_plane_sequence, target_aircraft_intent,
-                         im_clearance, achieve_by_point, weather_prediction);
+   IMAchieve::Initialize(aircraft_performance_calculator,
+                         ownship_prediction_parameters,
+                         ownship_aircraft_intent,
+                         target_aircraft_intent,
+                         im_clearance,
+                         weather_prediction);
 
+   SetTangentPlaneSequence(std::move(ownship_aircraft_intent.GetTangentPlaneSequence()));
    m_ownship_track_angle_history.clear();
    m_target_track_angle_history.clear();
    m_fas_intent_valid = false;
    m_is_target_aligned = false;
 
-   // Setup the IM Achieve algorithm to only know about waypoints down to the PTP. This
-   // is accomplished by updating the aircraft intent. Note that only the IM intent should
-   // be modified. The target intent is supposed to be provided only down to the PTP anyway
-   // (and we can't assume in code that we know where the PTP is for non-coincident routes).
-   m_ownship_aircraft_intent = ownship_kinetic_trajectory_predictor.GetAircraftIntent();
+   // --- Prepare Ownship objects -------------
+   // Strip any ownship waypoints after the PTP
+   m_ownship_aircraft_intent = ownship_aircraft_intent;
    TrimAircraftIntentAfterWaypoint(m_ownship_aircraft_intent, m_im_clearance.GetPlannedTerminationPoint());
+   m_ownship_aircraft_intent = m_ownship_aircraft_intent;
 
-   // Initialize these objects with kinetic horizontal path. The horizontal paths will be updated to kinematic before
-   // the first call.
+   // Create the kinematic trajectory predictors using ownship assumptions
+   m_ownship_kinematic_trajectory_predictor = KinematicTrajectoryPredictor(
+      aircraft_performance_calculator,
+      ownship_prediction_parameters.maximum_allowable_bank_angle,
+      ownship_prediction_parameters.transition_ias,
+      ownship_prediction_parameters.transition_mach,
+      ownship_prediction_parameters.transition_altitude,
+      ownship_prediction_parameters.expected_cruise_altitude);
+   m_ownship_kinematic_trajectory_predictor.CalculateWaypoints(m_ownship_aircraft_intent, weather_prediction);
+
+   // Initialize these objects with an estimated horizontal path. The horizontal paths will be updated to a more precise
+   // calculation during initial trajectory prediction.
    if (im_clearance.GetClearanceType() == IMClearance::MAINTAIN
        || im_clearance.GetClearanceType() == IMClearance::CAPTURE) {
       m_im_ownship_distance_calculator = AlongPathDistanceCalculator::CreateForCaptureClearance(
-            ownship_kinetic_trajectory_predictor.GetHorizontalPath());
+         m_ownship_kinematic_trajectory_predictor.EstimateHorizontalTrajectory(weather_prediction));
    } else {
       m_im_ownship_distance_calculator = AlongPathDistanceCalculator(
-            ownship_kinetic_trajectory_predictor.GetHorizontalPath(),
+         m_ownship_kinematic_trajectory_predictor.EstimateHorizontalTrajectory(weather_prediction),
             TrajectoryIndexProgressionDirection::UNDEFINED);
    }
    m_ownship_distance_calculator = AlongPathDistanceCalculator(
-         ownship_kinetic_trajectory_predictor.GetHorizontalPath(),
-         TrajectoryIndexProgressionDirection::DECREMENTING);
+      m_ownship_kinematic_trajectory_predictor.EstimateHorizontalTrajectory(weather_prediction),
+         TrajectoryIndexProgressionDirection::UNDEFINED);
 
-   m_target_distance_calculator = AlongPathDistanceCalculator(target_kinetic_trajectory_predictor.GetHorizontalPath(),
+   // --- Prepare Target objects -------------
+   m_target_kinematic_trajectory_predictor = KinematicTrajectoryPredictor(
+      aircraft_performance_calculator,
+      ownship_prediction_parameters.maximum_allowable_bank_angle,
+      ownship_prediction_parameters.transition_ias,
+      ownship_prediction_parameters.transition_mach,
+      ownship_prediction_parameters.transition_altitude,
+      ownship_prediction_parameters.expected_cruise_altitude);
+   m_target_kinematic_trajectory_predictor.CalculateWaypoints(m_target_aircraft_intent, weather_prediction);
+   m_target_distance_calculator = AlongPathDistanceCalculator(m_target_kinematic_trajectory_predictor.EstimateHorizontalTrajectory(weather_prediction),
                                                               TrajectoryIndexProgressionDirection::DECREMENTING);
-   m_ownship_kinetic_distance_calculator = AlongPathDistanceCalculator(
-         ownship_kinetic_trajectory_predictor.GetHorizontalPath(),
+
+   // If has access to kinetic (fms) predictors, enable special output objects
+   if (HasKineticPredictors()) {
+      m_ownship_kinetic_distance_calculator = Wgs84AlongPathDistanceCalculator(
+         GetOwnshipKineticTrajectoryPredictor()->GetHorizontalPath(),
          TrajectoryIndexProgressionDirection::DECREMENTING);
+   }
+
 }
 
 void IMKinematicAchieve::ResetDefaults() {
@@ -228,15 +252,27 @@ bool IMKinematicAchieve::load(DecodedStream *input) {
    return m_loaded;
 }
 
-Guidance IMKinematicAchieve::Update(const Guidance &prevguidance,
-                                    const DynamicsState &dynamicsstate,
-                                    const AircraftState &owntruthstate,
-                                    const AircraftState &targetsyncstate,
-                                    const vector<AircraftState> &targethistory) {
-   Guidance guidance_out =
+aaesim::open_source::Guidance IMKinematicAchieve::Update(const aaesim::open_source::Guidance &prevguidance,
+                                    const aaesim::open_source::DynamicsState &dynamicsstate,
+                                    const interval_management::AircraftState &owntruthstate,
+                                    const interval_management::AircraftState &targetsyncstate,
+                                    const vector<interval_management::AircraftState> &targethistory) {
+   aaesim::open_source::Guidance guidance_out =
          IMAchieve::Update(prevguidance, dynamicsstate, owntruthstate, targetsyncstate, targethistory);
 
-   m_target_aircraft_exists = targetsyncstate.m_id != IMUtils::UNINITIALIZED_AIRCRAFT_ID;
+   if (HasKineticPredictors()) {
+      EarthModel::GeodeticPosition geo_position;
+      EarthModel::LocalPositionEnu local_position;
+      local_position.x = owntruthstate.GetPositionX();
+      local_position.y = owntruthstate.GetPositionY();
+      local_position.z = Units::ZERO_LENGTH;
+      m_tangent_plane_sequence->convertLocalToGeodetic(local_position, geo_position);
+      m_ownship_kinetic_distance_calculator.CalculateAlongPathDistanceFromPosition(
+         LatitudeLongitudePoint(geo_position.latitude, geo_position.longitude),
+         m_ownship_kinetic_dtg_to_ptp);
+   }
+
+   m_target_aircraft_exists = targetsyncstate.GetId() != IMUtils::UNINITIALIZED_AIRCRAFT_ID;
    m_target_history_exists = !targethistory.empty();
 
    m_ownship_track_angle_history.push_back(
@@ -299,20 +335,19 @@ Guidance IMKinematicAchieve::Update(const Guidance &prevguidance,
    return guidance_out;
 }
 
-void IMKinematicAchieve::HandleTrajectoryPrediction(const AircraftState &owntruthstate,
-                                                    const AircraftState &targetsyncstate,
-                                                    const vector<AircraftState> &target_adsb_history) {
+void IMKinematicAchieve::HandleTrajectoryPrediction(const interval_management::AircraftState &owntruthstate,
+                                                    const interval_management::AircraftState &targetsyncstate,
+                                                    const vector<interval_management::AircraftState> &target_adsb_history) {
    m_new_trajectory_prediction_available =
          m_compute_ownship_kinematic_trajectory || m_compute_target_kinematic_trajectory;
 
    if (m_compute_ownship_kinematic_trajectory) {
-      LOG4CPLUS_TRACE(logger, "compute ownship kinematic trajectory: " << owntruthstate.m_id);
+      LOG4CPLUS_DEBUG(logger, "compute ownship kinematic trajectory: " << owntruthstate.GetId());
       Units::RadiansAngle dummy_course = Units::RadiansAngle(0);
       std::vector<HorizontalPath>::size_type dummy_index = 0;
 
       Units::MetersLength ownship_distance_to_go = Units::MetersLength(Units::infinity());
       std::vector<HorizontalPath> ownship_horizontal_path = m_ownship_kinematic_trajectory_predictor.GetHorizontalPath();
-      m_ownship_kinematic_trajectory_predictor.SetMembers(*m_ownship_kinetic_trajectory_predictor);
       m_ownship_kinematic_trajectory_predictor.CalculateWaypoints(m_ownship_aircraft_intent, m_weather_prediction);
 
        if (ownship_horizontal_path.empty()) {
@@ -331,7 +366,7 @@ void IMKinematicAchieve::HandleTrajectoryPrediction(const AircraftState &owntrut
                                                                          Units::FeetLength(owntruthstate.m_z),
                                                                          ownship_distance_to_go);
       m_has_rf_leg = CalculateRFLegPhase();
-      m_ownship_kinematic_achieve_by_calcs = AchievePointCalcs(m_achieve_by_point,
+      m_ownship_kinematic_achieve_by_calcs = interval_management::AchievePointCalcs(m_achieve_by_point,
                                                                m_ownship_aircraft_intent,
                                                                m_ownship_kinematic_trajectory_predictor.GetKinematicDescent4dPredictor()->GetVerticalPath(),
                                                                m_ownship_kinematic_trajectory_predictor.GetHorizontalPath());
@@ -341,12 +376,6 @@ void IMKinematicAchieve::HandleTrajectoryPrediction(const AircraftState &owntrut
       m_im_ownship_distance_calculator.UpdateHorizontalTrajectory(
             m_ownship_kinematic_trajectory_predictor.GetHorizontalPath());
 
-      if (!m_ownship_kinematic_trajectory_dumped) {
-         InternalObserver::getInstance()->dumpOwnKinTraj(owntruthstate.m_id,
-                                                         m_ownship_kinematic_trajectory_predictor.GetKinematicDescent4dPredictor()->GetVerticalPath());
-         m_ownship_kinematic_trajectory_dumped = true;
-      }
-
       m_compute_ownship_kinematic_trajectory = false;
    }
 
@@ -355,12 +384,12 @@ void IMKinematicAchieve::HandleTrajectoryPrediction(const AircraftState &owntrut
 
    if (m_target_aircraft_exists && m_target_history_exists && m_compute_target_kinematic_trajectory) {
       if (!InAchieveStage()) {
-         LOG4CPLUS_TRACE(logger, "Skipping target prediction for ac " << owntruthstate.m_id);
+         LOG4CPLUS_DEBUG(logger, "Skipping target prediction for ac " << owntruthstate.GetId());
          // but we still want to set m_compute_target_kinematic_trajectory = false at the end
       }
       else {
-         LOG4CPLUS_TRACE(logger,
-               "ac " << owntruthstate.m_id << " compute target kinematic trajectory: " << targetsyncstate.m_id);
+         LOG4CPLUS_DEBUG(logger,
+               "ac " << owntruthstate.GetId() << " compute target kinematic trajectory: " << targetsyncstate.GetId());
          const Units::Speed targetgroundspeed = Units::FeetPerSecondSpeed(
                sqrt(pow(targetsyncstate.m_xd, 2) + pow(targetsyncstate.m_yd, 2)));
          const Units::Angle targetgroundtrack = Units::RadiansAngle(atan2(targetsyncstate.m_yd, targetsyncstate.m_xd));
@@ -411,8 +440,6 @@ void IMKinematicAchieve::HandleTrajectoryPrediction(const AircraftState &owntrut
             target_transition_altitude = Units::Length(Units::negInfinity());
          }
 
-         m_target_kinematic_trajectory_predictor.SetMembers(*m_ownship_kinetic_trajectory_predictor);
-
          if (m_im_clearance.GetClearanceType() == IMClearance::ClearanceType::FAS) {
             m_target_kinematic_trajectory_predictor.GetKinematicDescent4dPredictor()->SetMembers(
                   estimated_cruise_mach, target_descent_cas, estimated_cruise_altitude,
@@ -450,7 +477,7 @@ void IMKinematicAchieve::HandleTrajectoryPrediction(const AircraftState &owntrut
             // calculate TRP
             Units::MetersLength x, y;
             size_t index;
-            AchievePointCalcs::ComputeDefaultTRP(
+            interval_management::AchievePointCalcs::ComputeDefaultTRP(
                   m_ownship_kinematic_achieve_by_calcs,
                   m_ownship_aircraft_intent,
                   m_target_aircraft_intent,
@@ -472,7 +499,7 @@ void IMKinematicAchieve::HandleTrajectoryPrediction(const AircraftState &owntrut
          m_target_kinematic_trajectory_predictor.CalculateWaypoints(m_target_aircraft_intent, m_weather_prediction);
          m_target_kinematic_trajectory_predictor.BuildTrajectoryPrediction(m_weather_prediction, target_start_altitude_msl,
                target_distance_to_go);
-         m_target_kinematic_traffic_reference_point_calcs = AchievePointCalcs(
+         m_target_kinematic_traffic_reference_point_calcs = interval_management::AchievePointCalcs(
                m_im_clearance.GetTrafficReferencePoint(),
                m_target_aircraft_intent,
                m_target_kinematic_trajectory_predictor.GetKinematicDescent4dPredictor()->GetVerticalPath(),
@@ -482,11 +509,6 @@ void IMKinematicAchieve::HandleTrajectoryPrediction(const AircraftState &owntrut
          m_target_distance_calculator.UpdateHorizontalTrajectory(
                m_target_kinematic_trajectory_predictor.GetHorizontalPath());
 
-         if (!m_target_kinematic_trajectory_dumped) {
-            InternalObserver::getInstance()->dumpTargetKinTraj(targetsyncstate.m_id,
-                  m_target_kinematic_trajectory_predictor.GetKinematicDescent4dPredictor()->GetVerticalPath());
-            m_target_kinematic_trajectory_dumped = true;
-         }
       }
       m_compute_target_kinematic_trajectory = false;
    }
@@ -498,8 +520,8 @@ void IMKinematicAchieve::HandleTrajectoryPrediction(const AircraftState &owntrut
  * trajectories if needed.
  */
 void IMKinematicAchieve::CheckPredictionAccuracy(
-      const AircraftState &owntruthstate,
-      const AircraftState &targettruthstate) {
+      const interval_management::AircraftState &owntruthstate,
+      const interval_management::AircraftState &targettruthstate) {
 
    if (IsBlendWind() && !m_compute_ownship_kinematic_trajectory) {
 
@@ -536,32 +558,29 @@ void IMKinematicAchieve::CheckPredictionAccuracy(
       }
 
       std::shared_ptr<Atmosphere> sensed_atmosphere(
-            StandardAtmosphere::MakeInstance(owntruthstate.m_sensed_temperature, Units::FeetLength(owntruthstate.m_z)));
-
+            StandardAtmosphere::MakeInstance(owntruthstate.GetSensedTemperature(), Units::FeetLength(owntruthstate.m_z)));
+      
       if (!m_predicted_wind_evaluator->ArePredictedWindsAccurate(
-            owntruthstate, m_weather_prediction, m_ownship_reference_cas,
+            IMUtils::ConvertToAaesimAircraftState(owntruthstate), m_weather_prediction, m_ownship_reference_cas,
             m_ownship_reference_altitude, sensed_atmosphere.get())) {
 
-         if (logger.isEnabledFor(log4cplus::DEBUG_LOG_LEVEL)) {
-            LOG4CPLUS_TRACE(logger, "Poor wind prediction at t=" << owntruthstate.m_time <<
-                                                                ", target ac exists=" << m_target_aircraft_exists <<
-                                                                ", ref_cas=" << m_ownship_reference_cas <<
-                                                                ", ref_alt="
-                                                                << Units::FeetLength(m_ownship_reference_altitude) <<
-                                                                ", true_alt=" << Units::FeetLength(owntruthstate.m_z) <<
-                                                                ", recalc=" << "true");
-            LOG4CPLUS_DEBUG(logger, "Before wind blending...:");
-            m_weather_prediction.Dump();
-         }
-         Wind::UpdatePredictedWindsAtAltitudeFromSensedWind(owntruthstate, m_weather_prediction);
-         if (logger.isEnabledFor(log4cplus::DEBUG_LOG_LEVEL)) {
-            LOG4CPLUS_DEBUG(logger, "After wind blending...:");
-            owntruthstate.DumpParms("owntruthstate");
-            m_weather_prediction.Dump();
-         }
+//         bool recalc = true;
+
+//         if (recalc) {
+         Wind::UpdatePredictedWindsAtAltitudeFromSensedWind(IMUtils::ConvertToAaesimAircraftState(owntruthstate), m_weather_prediction);
          m_compute_ownship_kinematic_trajectory = true;
          // propagate sensed atmosphere
          m_weather_prediction.SetAtmosphere(sensed_atmosphere);
+         //m_ownship_kinetic_trajectory_predictor->SetAtmosphere(sensed_atmosphere);
+         //m_ownship_kinematic_trajectory_predictor->SetAtmosphere(IMsensed_atmosphere);
+//         }
+         LOG4CPLUS_DEBUG(logger, "Bad wind prediction at t=" << owntruthstate.GetTimeStamp().value() <<
+                                                             ", target ac exists=" << m_target_aircraft_exists <<
+                                                             ", ref_cas=" << m_ownship_reference_cas <<
+                                                             ", ref_alt="
+                                                             << Units::FeetLength(m_ownship_reference_altitude) <<
+                                                             ", true_alt=" << Units::FeetLength(owntruthstate.m_z) <<
+                                                             ", recalc=" << "true");
 
       }
    }
@@ -601,11 +620,11 @@ void IMKinematicAchieve::CheckPredictionAccuracy(
          if (++m_target_altitude_failure_count >= 2) {
             m_compute_target_kinematic_trajectory = true;
          }
-         LOG4CPLUS_TRACE(logger, "Target altitude ref=" <<
+         LOG4CPLUS_DEBUG(logger, "Target altitude ref=" <<
                                                         Units::FeetLength(m_target_reference_altitude) <<
                                                         ", true=" << Units::FeetLength(targettruthstate.m_z) <<
                                                         ", " << m_target_altitude_failure_count <<
-                                                        " iterations at t=" << targettruthstate.m_time);
+                                                        " iterations at t=" << targettruthstate.GetTimeStamp().value());
       } else {
          m_target_altitude_failure_count = 0;
       }
@@ -613,21 +632,15 @@ void IMKinematicAchieve::CheckPredictionAccuracy(
 }
 
 
-void IMKinematicAchieve::CalculateOwnshipDtgToPlannedTerminationPoint(const AircraftState &current_ownship_state) {
+void IMKinematicAchieve::CalculateOwnshipDtgToPlannedTerminationPoint(const interval_management::AircraftState &current_ownship_state) {
 
    m_ownship_distance_calculator.CalculateAlongPathDistanceFromPosition(Units::FeetLength(current_ownship_state.m_x),
                                                                         Units::FeetLength(current_ownship_state.m_y),
                                                                         m_ownship_kinematic_dtg_to_ptp);
-   LOG4CPLUS_TRACE(logger, "ownship kinematic distance to go (m): " << Units::MetersLength(m_ownship_kinematic_dtg_to_ptp));
-   m_ownship_kinetic_distance_calculator.CalculateAlongPathDistanceFromPosition(
-         Units::FeetLength(current_ownship_state.m_x),
-         Units::FeetLength(current_ownship_state.m_y),
-         m_ownship_kinetic_dtg_to_ptp);
-
 
 }
 
-void IMKinematicAchieve::CalculateTargetDtgToImPoints(const AircraftState &current_lead_state) {
+void IMKinematicAchieve::CalculateTargetDtgToImPoints(const interval_management::AircraftState &current_lead_state) {
    if (m_target_aircraft_exists) {
       if (!IsTargetPassedLastWaypoint()) {
          m_target_distance_calculator.CalculateAlongPathDistanceFromPosition(Units::FeetLength(current_lead_state.m_x),
@@ -693,12 +706,12 @@ bool IMKinematicAchieve::CalculateRFLegPhase() {
          if (last_leg_phase == NON_RF_LEG) {
             m_rfleg_limits.push_back(
                   std::pair<Units::Length, Units::Speed>(Units::MetersLength(last_distance), Units::zero()));
-            restricted_speed = waypoints[i].m_precalc_constraints.constraint_speedHi;
+            restricted_speed = Units::MetersPerSecondSpeed(waypoints[i].m_precalc_constraints.constraint_speedHi).value();
             m_rfleg_limits.push_back(std::pair<Units::Length, Units::Speed>(Units::MetersLength(last_distance),
                                                                             Units::MetersPerSecondSpeed(
                                                                                   restricted_speed)));
             last_leg_phase = ON_RF_LEG;
-            last_distance = waypoints[i].m_precalc_constraints.constraint_dist;
+            last_distance = Units::MetersLength(waypoints[i].m_precalc_constraints.constraint_along_path_distance).value();
          } else if (last_leg_phase == PRE_RF_LEG) {
             // continue with previous deceleration line until it reaches constraint speed
             if (!upper_limit_message_written) {
@@ -709,25 +722,25 @@ bool IMKinematicAchieve::CalculateRFLegPhase() {
                      << ") is less than constraint speed at precalc waypoint "
                      << i << " at distance " << last_distance << ".");
             }
-            double delta_speed = waypoints[i].m_precalc_constraints.constraint_speedHi - base_ias;
+            double delta_speed = Units::MetersPerSecondSpeed(waypoints[i].m_precalc_constraints.constraint_speedHi).value() - base_ias;
             double delta_distance = Units::MetersLength(Units::MetersPerSecondSpeed(delta_speed)
                                                         / (delta_speed_factor)).value();
-            if (delta_distance > (waypoints[i].m_precalc_constraints.constraint_dist - base_distance)) {
+            if (delta_distance > (Units::MetersLength(waypoints[i].m_precalc_constraints.constraint_along_path_distance).value() - base_distance)) {
                last_leg_phase = PRE_RF_LEG;
             } else {
-               restricted_speed = waypoints[i + 1].m_precalc_constraints.constraint_speedHi;
+               restricted_speed = Units::MetersPerSecondSpeed(waypoints[i + 1].m_precalc_constraints.constraint_speedHi).value();
                m_rfleg_limits.push_back(
                      std::pair<Units::Length, Units::Speed>(Units::MetersLength(base_distance + delta_distance),
                                                             Units::MetersPerSecondSpeed(restricted_speed)));
                last_leg_phase = ON_RF_LEG;
             }
-            last_distance = waypoints[i].m_precalc_constraints.constraint_dist;
+            last_distance = Units::MetersLength(waypoints[i].m_precalc_constraints.constraint_along_path_distance).value();
          } else { // last_leg_phase == ON_RF_LEG
             // start new deceleration line,
             // restriction is minimum of deceleration line and constraint speed
-            if (waypoints[i].m_precalc_constraints.constraint_speedHi - restricted_speed < 0.0001) {
+            if (Units::MetersPerSecondSpeed(waypoints[i].m_precalc_constraints.constraint_speedHi).value() - restricted_speed < 0.0001) {
                // continue with same restricted speed
-               last_distance = waypoints[i].m_precalc_constraints.constraint_dist;
+               last_distance = Units::MetersLength(waypoints[i].m_precalc_constraints.constraint_along_path_distance).value();
                continue;
             }
 
@@ -758,37 +771,37 @@ bool IMKinematicAchieve::CalculateRFLegPhase() {
             if (!dist_found) { // before beginning of route - should not happen
                LOG4CPLUS_WARN(logger,
                               "While attempting to create upper speed restriction for RF_leg, distance is more than route length");
-               last_distance = waypoints[i].m_precalc_constraints.constraint_dist;
+               last_distance = Units::MetersLength(waypoints[i].m_precalc_constraints.constraint_along_path_distance).value();
                continue;
             }
 
-            double delta_speed = waypoints[i].m_precalc_constraints.constraint_speedHi - base_ias;
+            double delta_speed = Units::MetersPerSecondSpeed(waypoints[i].m_precalc_constraints.constraint_speedHi).value() - base_ias;
             double delta_distance = Units::MetersLength(Units::MetersPerSecondSpeed(delta_speed)
                                                         / (delta_speed_factor)).value();
-            if (delta_distance > (waypoints[i].m_precalc_constraints.constraint_dist - last_distance)) {
+            if (delta_distance > Units::MetersLength(waypoints[i].m_precalc_constraints.constraint_along_path_distance).value() - last_distance) {
                last_leg_phase = PRE_RF_LEG;
             } else {
-               restricted_speed = waypoints[i].m_precalc_constraints.constraint_speedHi;
+               restricted_speed = Units::MetersPerSecondSpeed(waypoints[i].m_precalc_constraints.constraint_speedHi).value();
                m_rfleg_limits.push_back(
                      std::pair<Units::Length, Units::Speed>(Units::MetersLength(last_distance + delta_distance),
                                                             Units::MetersPerSecondSpeed(restricted_speed)));
                last_leg_phase = ON_RF_LEG;
             }
-            last_distance = waypoints[i].m_precalc_constraints.constraint_dist;
+            last_distance = Units::MetersLength(waypoints[i].m_precalc_constraints.constraint_along_path_distance).value();
          }
       } else { // NON_RF_LEG
          if (last_distance == 0) {
             m_rfleg_limits.push_back(std::pair<Units::Length, Units::Speed>(Units::zero(), Units::zero()));
-            last_distance = waypoints[i].m_precalc_constraints.constraint_dist;
+            last_distance = Units::MetersLength(waypoints[i].m_precalc_constraints.constraint_along_path_distance).value();
          } else if (last_leg_phase == NON_RF_LEG) {
-            last_distance = waypoints[i].m_precalc_constraints.constraint_dist;
+            last_distance = Units::MetersLength(waypoints[i].m_precalc_constraints.constraint_along_path_distance).value();
          } else if (last_leg_phase == ON_RF_LEG) {
             m_rfleg_limits.push_back(std::pair<Units::Length, Units::Speed>(Units::MetersLength(last_distance),
                                                                             Units::MetersPerSecondSpeed(
                                                                                   restricted_speed)));
             // start deceleration line..
             // restriction is minumum of deceleration line and nominal + HIGH_LIMIT
-            double segment_end = waypoints[i].m_precalc_constraints.constraint_dist;
+            double segment_end = Units::MetersLength(waypoints[i].m_precalc_constraints.constraint_along_path_distance).value();
             for (int j = last_index; j < vp.along_path_distance_m.size(); j++) {
                if (last_distance < vp.along_path_distance_m[j]) {
                   last_index = j;
@@ -819,7 +832,7 @@ bool IMKinematicAchieve::CalculateRFLegPhase() {
             if (!dist_found) { // before beginning of route - should not happen
                LOG4CPLUS_WARN(logger,
                               "While attempting to create upper speed restriction for RF_leg, distance is more than route length");
-               last_distance = waypoints[i].m_precalc_constraints.constraint_dist;
+               last_distance = Units::MetersLength(waypoints[i].m_precalc_constraints.constraint_along_path_distance).value();
                continue;
             }
             // find nominal speed and compare deceleration line
@@ -859,7 +872,7 @@ bool IMKinematicAchieve::CalculateRFLegPhase() {
             }
          } else if (last_leg_phase == PRE_RF_LEG) {
             // deceleration line is less than constraint speed
-            double segment_end = waypoints[i].m_precalc_constraints.constraint_dist;
+            double segment_end = Units::MetersLength(waypoints[i].m_precalc_constraints.constraint_along_path_distance).value();
             for (; last_index < vp.along_path_distance_m.size(); last_index++) {
                if (vp.along_path_distance_m[last_index] > segment_end) {
                   break;
@@ -899,13 +912,13 @@ bool IMKinematicAchieve::CalculateRFLegPhase() {
 }
 
 void IMKinematicAchieve::ComputeFASTrajectories(
-      const AircraftState &owntruthstate,
-      const AircraftState &targettruthstate) {
+      const interval_management::AircraftState &owntruthstate,
+      const interval_management::AircraftState &targettruthstate) {
 
    using namespace std;
 
-   LOG4CPLUS_TRACE(logger, "Calculating FAS trajectories on AC " <<
-                                                                 owntruthstate.m_id << " at " << owntruthstate.m_time);
+   LOG4CPLUS_DEBUG(logger, "Calculating FAS trajectories on AC " <<
+                                                                 owntruthstate.GetId() << " at " << owntruthstate.GetTimeStamp().value());
 
    // find merge point
    Units::MetersLength x1, y1, x2, y2, x3, y3;  // point parameters
@@ -916,7 +929,7 @@ void IMKinematicAchieve::ComputeFASTrajectories(
    size_t target_end_waypoint_ix = m_target_aircraft_intent.GetNumberOfWaypoints() - 1;
    Waypoint target_end_waypoint(m_target_aircraft_intent.GetWaypoint(target_end_waypoint_ix));
 
-   LOG4CPLUS_TRACE(logger, "Achieve by = " << achieve_by_waypoint_name);
+   LOG4CPLUS_DEBUG(logger, "Achieve by = " << achieve_by_waypoint_name);
 
    // use CalculateTrackAngle to find merge angle
    Units::Angle merge_angle_mean;
@@ -941,7 +954,7 @@ void IMKinematicAchieve::ComputeFASTrajectories(
             Units::FeetLength(owntruthstate.m_y) - m_ownship_aircraft_intent.GetWaypointY(achieve_by_waypoint_index);
    }
    Units::DegreesAngle reverse_final_approach_angle = Units::arctan2(delta_y.value(), delta_x.value());
-   LOG4CPLUS_TRACE(logger, reverse_final_approach_angle);
+   LOG4CPLUS_DEBUG(logger, reverse_final_approach_angle);
    x1 = x2 + Units::NauticalMilesLength(50) * Units::cos(reverse_final_approach_angle);
    y1 = y2 + Units::NauticalMilesLength(50) * Units::sin(reverse_final_approach_angle);
 
@@ -950,7 +963,7 @@ void IMKinematicAchieve::ComputeFASTrajectories(
    Units::Angle merge_angle = Scenario::m_rand.GaussianSample(
          merge_angle_mean, merge_angle_std);
    Units::DegreesAngle final_approach_angle = reverse_final_approach_angle + Units::PI_RADIANS_ANGLE;
-   LOG4CPLUS_TRACE(logger, "Average track angle = " <<
+   LOG4CPLUS_DEBUG(logger, "Average track angle = " <<
                                                     Units::DegreesAngle(merge_angle_mean) <<
                                                     ", randomized merge angle = " <<
                                                     Units::DegreesAngle(merge_angle) <<
@@ -961,7 +974,7 @@ void IMKinematicAchieve::ComputeFASTrajectories(
    IMUtils::CalculateMergePoint(x1, y1, x2, y2, x3, y3,
                                 xMerge, yMerge, merge_angle);
 
-   LOG4CPLUS_TRACE(logger, "Merge point is (" << xMerge << "," << yMerge << ")");
+   LOG4CPLUS_DEBUG(logger, "Merge point is (" << xMerge << "," << yMerge << ")");
 
    // construct intents
    // final AC:  current_pos last_wp
@@ -986,23 +999,25 @@ void IMKinematicAchieve::ComputeFASTrajectories(
    Units::MetersLength current_to_merge_distance =
          CoreUtils::CalculateEuclideanDistance(current_coords, merge_coords);
 
-   LOG4CPLUS_TRACE(logger, "current = (" <<
+   LOG4CPLUS_DEBUG(logger, "current = (" <<
                                          Units::MetersLength(current_coords.first) << "," <<
                                          Units::MetersLength(current_coords.second) << ")");
-   LOG4CPLUS_TRACE(logger, "merge = (" <<
+   LOG4CPLUS_DEBUG(logger, "merge = (" <<
                                        Units::MetersLength(merge_coords.first) << "," <<
                                        Units::MetersLength(merge_coords.second) << ")");
-   LOG4CPLUS_TRACE(logger, "last wpt = (" <<
+   LOG4CPLUS_DEBUG(logger, "last wpt = (" <<
                                           Units::MetersLength(final_wpt_coords.first) << "," <<
                                           Units::MetersLength(final_wpt_coords.second) << ")");
-   LOG4CPLUS_TRACE(logger, "Current to merge = " << current_to_merge_distance);
-   LOG4CPLUS_TRACE(logger, "Current to lastwpt = " << current_to_lastwpt_distance);
-   LOG4CPLUS_TRACE(logger, "Merge to lastwpt = " << merge_to_lastwpt_distance);
+   LOG4CPLUS_DEBUG(logger, "Current to merge = " << current_to_merge_distance);
+   LOG4CPLUS_DEBUG(logger, "Current to lastwpt = " << current_to_lastwpt_distance);
+   LOG4CPLUS_DEBUG(logger, "Merge to lastwpt = " << merge_to_lastwpt_distance);
 
    // convert states to waypoints, using ownship's sensed winds
    own_intent.InsertWaypointAtIndex(
-         MakeWaypointFromState(owntruthstate, Units::MetersPerSecondSpeed(owntruthstate.m_Vwx),
-                               Units::MetersPerSecondSpeed(owntruthstate.m_Vwy)), 0);
+         MakeWaypointFromState(owntruthstate, 
+                               owntruthstate.GetSensedWindEastComponent(),
+                               owntruthstate.GetSensedWindNorthComponent()), 
+                               0);
 
    // Get predicted winds at target aircraft's current altitude & create waypoint
    Units::MetersPerSecondSpeed target_wind_x, target_wind_y;
@@ -1044,7 +1059,7 @@ void IMKinematicAchieve::ComputeFASTrajectories(
    m_fas_intent_valid = true;
 }
 
-Waypoint IMKinematicAchieve::MakeWaypointFromState(const AircraftState aircraft_state,
+Waypoint IMKinematicAchieve::MakeWaypointFromState(const interval_management::AircraftState aircraft_state,
                                                    Units::Speed wind_x,
                                                    Units::Speed wind_y) const {
    // calculate fields needed for a Waypoint object
@@ -1079,9 +1094,9 @@ Waypoint IMKinematicAchieve::MakeWaypointFromState(const AircraftState aircraft_
 }
 
 const Units::SignedAngle
-IMKinematicAchieve::CalculateTargetTrackAngle(const vector<AircraftState> &target_adsb_history) {
-   vector<AircraftState>::const_reverse_iterator critr = target_adsb_history.rbegin();
-   double current_time = (*critr).m_time;
+IMKinematicAchieve::CalculateTargetTrackAngle(const vector<interval_management::AircraftState> &target_adsb_history) {
+   vector<interval_management::AircraftState>::const_reverse_iterator critr = target_adsb_history.rbegin();
+   double current_time = (*critr).GetTimeStamp().value();
    double lower = current_time - (Units::SecondsTime(TRACK_ANGLE_TAU)).value();
 
    // Use RadiansAngle here so that circular wrapping does not happen while summing below
@@ -1094,7 +1109,7 @@ IMKinematicAchieve::CalculateTargetTrackAngle(const vector<AircraftState> &targe
 
    unsigned long cnt = 1;
    for (++critr; critr != target_adsb_history.rend(); ++critr) {
-      if ((*critr).m_time < lower) {
+      if ((*critr).GetTimeStamp().value() < lower) {
          break;
       } else {
          cnt++;
@@ -1111,17 +1126,12 @@ IMKinematicAchieve::CalculateTargetTrackAngle(const vector<AircraftState> &targe
 }
 
 void IMKinematicAchieve::SetTrafficReferencePointConstraints(
-      const AircraftState& owntruthstate,
-      const AircraftState& targetsyncstate) {
+      const interval_management::AircraftState& owntruthstate,
+      const interval_management::AircraftState& targetsyncstate) {
 
    // adjust TRP speed and altitude constraints
 
    LOG4CPLUS_DEBUG(logger, "Old TRP constraints:  " << m_traffic_reference_point);
-   if (logger.isEnabledFor(log4cplus::DEBUG_LOG_LEVEL)) {
-      owntruthstate.DumpParms("Incoming ownship state");
-      targetsyncstate.DumpParms("Incoming target state");
-   }
-
    Units::KnotsSpeed target_trp_speed;
    Units::FeetLength target_trp_altitude;
 
@@ -1175,10 +1185,8 @@ void IMKinematicAchieve::SetTrafficReferencePointConstraints(
       }
 
       // calculate ownship CAS
-      Units::MetersPerSecondSpeed ownship_tas_x = owntruthstate.GetSpeedXd()
-            - Units::MetersPerSecondSpeed(owntruthstate.m_Vwx);
-      Units::MetersPerSecondSpeed ownship_tas_y = owntruthstate.GetSpeedYd()
-            - Units::MetersPerSecondSpeed(owntruthstate.m_Vwy);
+      Units::MetersPerSecondSpeed ownship_tas_x = owntruthstate.GetSpeedXd() - owntruthstate.GetSensedWindEastComponent();
+      Units::MetersPerSecondSpeed ownship_tas_y = owntruthstate.GetSpeedYd() - owntruthstate.GetSensedWindNorthComponent();
       Units::MetersPerSecondSpeed ownship_tas(hypot(ownship_tas_x.value(), ownship_tas_y.value()));
       Units::KnotsSpeed ownship_current_cas;
       ownship_current_cas = m_weather_prediction.TAS2CAS(ownship_tas, owntruthstate.GetPositionZ());
@@ -1196,30 +1204,39 @@ void IMKinematicAchieve::SetTrafficReferencePointConstraints(
                                                                                        estimated_wind_speed_y,
                                                                                        estimated_wind_gradient_y);
 
-         AircraftState target_copy_state(targetsyncstate);
-         target_copy_state.m_Vwx = Units::MetersPerSecondSpeed(estimated_wind_speed_x).value();
-         target_copy_state.m_Vwy = Units::MetersPerSecondSpeed(estimated_wind_speed_y).value();
+         interval_management::AircraftState target_copy_state;
+         target_copy_state.Create(
+            targetsyncstate.GetId(),
+            targetsyncstate.GetTimeStamp(),
+            targetsyncstate.GetPosition(),
+            targetsyncstate.GetSpeedXd(),
+            targetsyncstate.GetSpeedYd(),
+            targetsyncstate.GetSpeedZd(),
+            targetsyncstate.GetGamma(),
+            Units::MetersPerSecondSpeed(estimated_wind_speed_x),
+            Units::MetersPerSecondSpeed(estimated_wind_speed_y),
+            targetsyncstate.GetSensedWindParallelComponent(),
+            targetsyncstate.GetSensedWindPerpendicularComponent(),
+            targetsyncstate.GetSensedTemperature(),
+            targetsyncstate.GetPsi()
+         );
          Units::Speed target_tas(target_copy_state.GetTrueAirspeed());
          Units::Speed target_cas = m_weather_prediction.TAS2CAS(target_tas, targetsyncstate.GetPositionZ());
          target_trp_speed = target_cas;
-         LOG4CPLUS_TRACE(logger, "Speed case 1a, target_cas: " << Units::KnotsSpeed(target_cas));
       }
       else {
          // Speed case 1b
          target_trp_speed = ownship_cas_at_abp;
-         LOG4CPLUS_TRACE(logger, "Speed case 1b, ownship_cas_at_abp: " << Units::KnotsSpeed(ownship_cas_at_abp));
       }
 
       const Units::FeetLength constant_altitude_tolerance(500.0);
       if (Units::abs(ownship_altitude_at_abp - owntruthstate.GetPositionZ()) < constant_altitude_tolerance) {
          // assume altitude is "constant" in the intervening range:  Altitude case 2a
          target_trp_altitude = targetsyncstate.GetPositionZ();
-         LOG4CPLUS_TRACE(logger, "Altitude case 2a, targetsyncstate altitude: " << Units::FeetLength(targetsyncstate.GetPositionZ()));
       }
       else {
          // Altitude case 2b
          target_trp_altitude = ownship_altitude_at_abp;
-         LOG4CPLUS_TRACE(logger, "Altitude case 2b, ownship_altitude_at_abp: " << Units::FeetLength(ownship_altitude_at_abp));
       }
    } // end Speed case 1 / Altitude case 2
 
@@ -1233,7 +1250,7 @@ void IMKinematicAchieve::SetTrafficReferencePointConstraints(
    }
    m_traffic_reference_point.SetMach(0);
 
-   LOG4CPLUS_TRACE(logger, "New TRP constraints:  " << m_traffic_reference_point);
+   LOG4CPLUS_DEBUG(logger, "New TRP constraints:  " << m_traffic_reference_point);
    m_target_aircraft_intent.UpdateWaypoint(m_traffic_reference_point);
 
 }

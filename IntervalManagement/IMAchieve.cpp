@@ -1,18 +1,20 @@
 // ****************************************************************************
 // NOTICE
 //
-// This is the copyright work of The MITRE Corporation, and was produced
-// for the U. S. Government under Contract Number DTFAWA-10-C-00080, and
-// is subject to Federal Aviation Administration Acquisition Management
-// System Clause 3.5-13, Rights In Data-General, Alt. III and Alt. IV
-// (Oct. 1996).  No other use other than that granted to the U. S.
-// Government, or to those acting on behalf of the U. S. Government,
-// under that Clause is authorized without the express written
-// permission of The MITRE Corporation. For further information, please
-// contact The MITRE Corporation, Contracts Office, 7515 Colshire Drive,
-// McLean, VA  22102-7539, (703) 983-6000. 
+// This work was produced for the U.S. Government under Contract 693KA8-22-C-00001 
+// and is subject to Federal Aviation Administration Acquisition Management System 
+// Clause 3.5-13, Rights In Data-General, Alt. III and Alt. IV (Oct. 1996).
 //
-// Copyright 2020 The MITRE Corporation. All Rights Reserved.
+// The contents of this document reflect the views of the author and The MITRE 
+// Corporation and do not necessarily reflect the views of the Federal Aviation 
+// Administration (FAA) or the Department of Transportation (DOT). Neither the FAA 
+// nor the DOT makes any warranty or guarantee, expressed or implied, concerning 
+// the content or accuracy of these views.
+//
+// For further information, please contact The MITRE Corporation, Contracts Management 
+// Office, 7515 Colshire Drive, McLean, VA 22102-7539, (703) 983-6000.
+//
+// 2022 The MITRE Corporation. All Rights Reserved.
 // ****************************************************************************
 
 #include "imalgs/IMAchieve.h"
@@ -46,16 +48,13 @@ IMAchieve::IMAchieve() {
    m_threshold_flag = THRESHOLD_FLAG_DEFAULT;
    m_time_threshold = TIME_THRESHOLD_DEFAULT;
    m_transitioned_to_maintain = false;
-
+   m_achieve_by_point.assign("");
    m_within_error_threshold = false;
    IterClearIMAch();
 }
 
 IMAchieve::IMAchieve(const IMAchieve &obj) {
    Copy(obj);
-}
-
-IMAchieve::~IMAchieve() {
 }
 
 void IMAchieve::ResetDefaults() {
@@ -84,6 +83,7 @@ void IMAchieve::ResetDefaults() {
 
 void IMAchieve::IterClearIMAch() {
    m_transitioned_to_maintain = false;
+   m_achieve_by_point.assign("");
 }
 
 void IMAchieve::Copy(const IMAchieve &obj) {
@@ -95,6 +95,7 @@ void IMAchieve::Copy(const IMAchieve &obj) {
    m_time_threshold = obj.m_time_threshold;
    m_received_one_valid_target_state = obj.m_received_one_valid_target_state;
    m_within_error_threshold = obj.m_within_error_threshold;
+   m_achieve_by_point = obj.m_achieve_by_point;
 }
 
 const bool IMAchieve::WithinErrorThreshold(const Units::Length distance_to_go,
@@ -125,13 +126,18 @@ void IMAchieve::IterationReset() {
    IterClearIMAch();
 }
 
-Guidance IMAchieve::Update(const Guidance &prevguidance,
-                           const DynamicsState &dynamicsstate,
-                           const AircraftState &owntruthstate,
-                           const AircraftState &targettruthstate,
-                           const vector<AircraftState> &targethistory) {
+aaesim::open_source::Guidance IMAchieve::Update(const aaesim::open_source::Guidance &prevguidance,
+                           const aaesim::open_source::DynamicsState &dynamicsstate,
+                           const interval_management::AircraftState &owntruthstate,
+                           const interval_management::AircraftState &targettruthstate,
+                           const vector<interval_management::AircraftState> &targethistory) {
+   IMAlgorithm::Update(prevguidance,
+                       dynamicsstate,
+                       owntruthstate,
+                       targettruthstate,
+                       targethistory);
    if (!m_received_one_valid_target_state) {
-      m_received_one_valid_target_state = targettruthstate.m_id != IMUtils::UNINITIALIZED_AIRCRAFT_ID;
+      m_received_one_valid_target_state = targettruthstate.GetId() != IMUtils::UNINITIALIZED_AIRCRAFT_ID;
    }
 
    return prevguidance;
@@ -151,6 +157,8 @@ void IMAchieve::DumpParameters(const string &parameters_to_print) {
    LOG4CPLUS_DEBUG(IMAchieve::m_logger, "mBlendWind " << IsBlendWind() << endl);
    LOG4CPLUS_DEBUG(IMAchieve::m_logger, "threshold flag " << m_threshold_flag << endl);
    LOG4CPLUS_DEBUG(IMAchieve::m_logger, "time threshold " << Units::SecondsTime(m_time_threshold).value() << endl);
+   LOG4CPLUS_DEBUG(IMAchieve::m_logger,
+                   "ownship kinetic achieve waypoint " << m_achieve_by_point.c_str() << std::endl);
    LOG4CPLUS_DEBUG(IMAchieve::m_logger, "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" << endl);
 }
 
@@ -164,4 +172,22 @@ void IMAchieve::SetTimeThreshold(Units::Time time_threshold) {
 
 const bool IMAchieve::GetThresholdFlag() const {
    return m_threshold_flag;
+}
+
+void IMAchieve::Initialize(std::shared_ptr<const aaesim::BadaPerformanceCalculator> aircraft_performance_calculator,
+                           OwnshipPredictionParameters ownship_prediction_parameters,
+                           const AircraftIntent &ownship_aircraft_intent,
+                           const AircraftIntent &target_aircraft_intent,
+                           const IMClearance &im_clearance,
+                           WeatherPrediction &weather_prediction) {
+
+   IMAlgorithm::Initialize(aircraft_performance_calculator,
+                           ownship_prediction_parameters,
+                           ownship_aircraft_intent,
+                           target_aircraft_intent,
+                           im_clearance,
+                           weather_prediction);
+
+   m_achieve_by_point.assign(im_clearance.GetAchieveByPoint());
+
 }

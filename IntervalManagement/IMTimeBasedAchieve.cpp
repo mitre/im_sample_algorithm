@@ -1,18 +1,20 @@
 // ****************************************************************************
 // NOTICE
 //
-// This is the copyright work of The MITRE Corporation, and was produced
-// for the U. S. Government under Contract Number DTFAWA-10-C-00080, and
-// is subject to Federal Aviation Administration Acquisition Management
-// System Clause 3.5-13, Rights In Data-General, Alt. III and Alt. IV
-// (Oct. 1996).  No other use other than that granted to the U. S.
-// Government, or to those acting on behalf of the U. S. Government,
-// under that Clause is authorized without the express written
-// permission of The MITRE Corporation. For further information, please
-// contact The MITRE Corporation, Contracts Office, 7515 Colshire Drive,
-// McLean, VA  22102-7539, (703) 983-6000. 
+// This work was produced for the U.S. Government under Contract 693KA8-22-C-00001 
+// and is subject to Federal Aviation Administration Acquisition Management System 
+// Clause 3.5-13, Rights In Data-General, Alt. III and Alt. IV (Oct. 1996).
 //
-// Copyright 2020 The MITRE Corporation. All Rights Reserved.
+// The contents of this document reflect the views of the author and The MITRE 
+// Corporation and do not necessarily reflect the views of the Federal Aviation 
+// Administration (FAA) or the Department of Transportation (DOT). Neither the FAA 
+// nor the DOT makes any warranty or guarantee, expressed or implied, concerning 
+// the content or accuracy of these views.
+//
+// For further information, please contact The MITRE Corporation, Contracts Management 
+// Office, 7515 Colshire Drive, McLean, VA 22102-7539, (703) 983-6000.
+//
+// 2022 The MITRE Corporation. All Rights Reserved.
 // ****************************************************************************
 
 #include <stdexcept>
@@ -24,6 +26,7 @@
 #include "imalgs/IMAircraft.h"
 
 using namespace std;
+using namespace aaesim::open_source;
 
 log4cplus::Logger IMTimeBasedAchieve::m_logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("IMTimeBasedAchieve"));
 
@@ -76,8 +79,8 @@ void IMTimeBasedAchieve::Copy(const IMTimeBasedAchieve &obj) {
 void IMTimeBasedAchieve::IterationReset() {
    IMKinematicAchieve::IterationReset();
 
-   m_target_state_at_traffic_alignment.Clear();
-   m_target_state_at_cdti_initiate_signal_receipt.Clear();
+   m_target_state_at_traffic_alignment = interval_management::AircraftState();
+   m_target_state_at_cdti_initiate_signal_receipt = interval_management::AircraftState();
 
    m_target_dtg_at_traffic_alignment = Units::Infinity();
    m_time_since_traffic_alignment = Units::zero();
@@ -86,7 +89,7 @@ void IMTimeBasedAchieve::IterationReset() {
    m_measured_spacing_interval = Units::NegInfinity();
    m_cdti_initiate_signal_receipt_time = Units::Infinity();
 
-   m_target_state_projected_asg_adjusted = AircraftState();
+   m_target_state_projected_asg_adjusted = interval_management::AircraftState();
 
    if (m_im_kinematic_time_based_maintain == nullptr) {
       m_im_kinematic_time_based_maintain = std::make_shared<IMKinematicTimeBasedMaintain>();
@@ -107,17 +110,17 @@ bool IMTimeBasedAchieve::load(DecodedStream *input) {
    return loaded;
 }
 
-Guidance IMTimeBasedAchieve::Update(const Guidance &previous_im_guidance,
-                                    const DynamicsState &three_dof_dynamics_state,
-                                    const AircraftState &current_ownship_state,
-                                    const AircraftState &current_target_state,
-                                    const vector<AircraftState> &target_adsb_history) {
-   Guidance guidance_out = IMKinematicAchieve::Update(previous_im_guidance, three_dof_dynamics_state,
+aaesim::open_source::Guidance IMTimeBasedAchieve::Update(const aaesim::open_source::Guidance &previous_im_guidance,
+                                    const aaesim::open_source::DynamicsState &three_dof_dynamics_state,
+                                    const interval_management::AircraftState &current_ownship_state,
+                                    const interval_management::AircraftState &current_target_state,
+                                    const vector<interval_management::AircraftState> &target_adsb_history) {
+   aaesim::open_source::Guidance guidance_out = IMKinematicAchieve::Update(previous_im_guidance, three_dof_dynamics_state,
                                                       current_ownship_state, current_target_state, target_adsb_history);
 
    if (m_im_clearance.GetClearanceType() == IMClearance::MAINTAIN) {
       if (m_cdti_initiate_signal_receipt_time == Units::Infinity() && !target_adsb_history.empty()) {
-         m_cdti_initiate_signal_receipt_time = Units::SecondsTime(current_ownship_state.m_time);
+         m_cdti_initiate_signal_receipt_time = Units::SecondsTime(current_ownship_state.GetTimeStamp().value());
          m_target_state_at_cdti_initiate_signal_receipt = target_adsb_history.back();
 
          m_im_ownship_distance_calculator.CalculateAlongPathDistanceFromPosition(
@@ -188,11 +191,11 @@ Guidance IMTimeBasedAchieve::Update(const Guidance &previous_im_guidance,
 }
 
 
-Guidance IMTimeBasedAchieve::HandleAchieveStage(const AircraftState &current_ownship_state,
-                                                const AircraftState &current_target_state,
-                                                const vector<AircraftState> &target_adsb_history,
-                                                const DynamicsState &three_dof_dynamics_state,
-                                                Guidance &guidance_out) {
+aaesim::open_source::Guidance IMTimeBasedAchieve::HandleAchieveStage(const interval_management::AircraftState &current_ownship_state,
+                                                const interval_management::AircraftState &current_target_state,
+                                                const vector<interval_management::AircraftState> &target_adsb_history,
+                                                const aaesim::open_source::DynamicsState &three_dof_dynamics_state,
+                                                aaesim::open_source::Guidance &guidance_out) {
    m_stage_of_im_operation = ACHIEVE;
 
    Units::Time reference_ttg = Units::zero();
@@ -201,10 +204,10 @@ Guidance IMTimeBasedAchieve::HandleAchieveStage(const AircraftState &current_own
    Units::Length reference_distance;
 
 
-   InternalObserver::getInstance()->updateFinalGS(current_target_state.m_id, Units::MetersPerSecondSpeed(
-         AircraftCalculations::GsAtACS(target_adsb_history.back())).value());
-   InternalObserver::getInstance()->updateFinalGS(current_ownship_state.m_id, Units::MetersPerSecondSpeed(
-         AircraftCalculations::GsAtACS(current_ownship_state)).value());
+   InternalObserver::getInstance()->updateFinalGS(current_target_state.GetId(), 
+      Units::MetersPerSecondSpeed(target_adsb_history.back().GetGroundSpeed()).value());
+   InternalObserver::getInstance()->updateFinalGS(current_ownship_state.GetId(), 
+      Units::MetersPerSecondSpeed(current_ownship_state.GetGroundSpeed()).value());
 
    bool is_crossing_time_valid = false;
 
@@ -257,9 +260,9 @@ Guidance IMTimeBasedAchieve::HandleAchieveStage(const AircraftState &current_own
             m_target_trp_crossing_time);
       if (!is_crossing_time_valid) {
          LOG4CPLUS_WARN(IMTimeBasedAchieve::m_logger,
-                        "IMTimeBasedAchieve::update ac " << current_ownship_state.m_id
+                        "IMTimeBasedAchieve::update ac " << current_ownship_state.GetId()
                                                          << "  time "
-                                                         << current_ownship_state.m_time
+                                                         << current_ownship_state.GetTimeStamp().value()
                                                          << endl
                                                          << "Non calculation of targettrpcrossingtime in GetCrossingTime;"
                                                          << endl
@@ -268,7 +271,7 @@ Guidance IMTimeBasedAchieve::HandleAchieveStage(const AircraftState &current_own
       }
       reference_ttg =
             m_target_trp_crossing_time + m_assigned_spacing_goal -
-            Units::SecondsTime(current_ownship_state.m_time);
+            Units::SecondsTime(current_ownship_state.GetTimeStamp().value());
 
       m_target_ttg_to_trp = Units::zero();
    }
@@ -315,7 +318,7 @@ Guidance IMTimeBasedAchieve::HandleAchieveStage(const AircraftState &current_own
 
    LOG4CPLUS_TRACE(m_logger, "Ownship TTG to ABP: " << Units::SecondsTime(m_ownship_ttg_to_abp).value());
    if (is_crossing_time_valid) {
-      Units::Time tmp1 = Units::SecondsTime(current_ownship_state.m_time) + m_ownship_ttg_to_abp;
+      Units::Time tmp1 = Units::SecondsTime(current_ownship_state.GetTimeStamp().value()) + m_ownship_ttg_to_abp;
       m_predicted_spacing_interval = tmp1 - m_target_trp_crossing_time;
    } else {
       m_predicted_spacing_interval = m_ownship_ttg_to_abp - m_target_ttg_to_trp;
@@ -460,8 +463,8 @@ Guidance IMTimeBasedAchieve::HandleAchieveStage(const AircraftState &current_own
    return guidance_out;
 }
 
-void IMTimeBasedAchieve::TestForTrafficAlignment(const AircraftState &current_ownship_state,
-                                                 const std::vector<AircraftState> &target_adsb_history) {
+void IMTimeBasedAchieve::TestForTrafficAlignment(const interval_management::AircraftState &current_ownship_state,
+                                                 const std::vector<interval_management::AircraftState> &target_adsb_history) {
    Units::SignedRadiansAngle target_track_angle = CalculateTargetTrackAngle(target_adsb_history);
    Units::UnsignedRadiansAngle pt_to_pt_course;
    Units::Length tgt_distance;
@@ -476,35 +479,35 @@ void IMTimeBasedAchieve::TestForTrafficAlignment(const AircraftState &current_ow
 
    Units::UnsignedRadiansAngle track_difference = abs(own_planned_course - target_track_angle);
    if (track_difference < Units::DegreesAngle(15.0)) {
-      SaveTargetStateAtTrafficAlignment(Units::SecondsTime(current_ownship_state.m_time),
+      SaveTargetStateAtTrafficAlignment(Units::SecondsTime(current_ownship_state.GetTimeStamp().value()),
                                         target_adsb_history.back(),
                                         tgt_distance);
-      //LOG4CPLUS_DEBUG(m_logger,"Alignment captured at adsb history time: " << target_adsb_history.back().m_time
+      //LOG4CPLUS_DEBUG(m_logger,"Alignment captured at adsb history time: " << target_adsb_history.back().GetTimeStamp().value()
       //<< " target track: " << Units::UnsignedDegreesAngle(target_track_angle) << " own planned course: " << Units::UnsignedDegreesAngle(own_planned_course));
    } else {
       track_difference = abs(pt_to_pt_course - target_track_angle);
       if (track_difference < Units::DegreesAngle(15.0)) {
-         SaveTargetStateAtTrafficAlignment(Units::SecondsTime(current_ownship_state.m_time),
+         SaveTargetStateAtTrafficAlignment(Units::SecondsTime(current_ownship_state.GetTimeStamp().value()),
                                            target_adsb_history.back(),
                                            tgt_distance);
-         //LOG4CPLUS_DEBUG(m_logger,"Alignment captured at adsb history time: " << target_adsb_history.back().m_time
+         //LOG4CPLUS_DEBUG(m_logger,"Alignment captured at adsb history time: " << target_adsb_history.back().GetTimeStamp().value()
          //<< " target track: " << Units::UnsignedDegreesAngle(target_track_angle) << " pt-pt-course: " << Units::UnsignedDegreesAngle(pt_to_pt_course));
       }
    }
 }
 
 
-Guidance IMTimeBasedAchieve::HandleMaintainStage(const AircraftState &current_ownship_state,
-                                                 const AircraftState &current_target_state,
-                                                 const vector<AircraftState> &target_adsb_history,
-                                                 const DynamicsState &three_dof_dynamics_state,
-                                                 const Guidance &previous_im_guidance,
-                                                 Guidance &guidance_out) {
+aaesim::open_source::Guidance IMTimeBasedAchieve::HandleMaintainStage(const interval_management::AircraftState &current_ownship_state,
+                                                 const interval_management::AircraftState &current_target_state,
+                                                 const vector<interval_management::AircraftState> &target_adsb_history,
+                                                 const aaesim::open_source::DynamicsState &three_dof_dynamics_state,
+                                                 const aaesim::open_source::Guidance &previous_im_guidance,
+                                                 aaesim::open_source::Guidance &guidance_out) {
    m_ownship_ttg_to_abp = Units::zero();
    m_ownship_kinematic_dtg_to_abp = Units::zero();
    m_predicted_spacing_interval = Units::NegInfinity();
 
-   Units::Time target_time = Units::SecondsTime(current_ownship_state.m_time) - m_assigned_spacing_goal;
+   Units::Time target_time = Units::SecondsTime(current_ownship_state.GetTimeStamp().value()) - m_assigned_spacing_goal;
 
    bool built;
    m_target_state_projected_asg_adjusted =
@@ -522,7 +525,6 @@ Guidance IMTimeBasedAchieve::HandleMaintainStage(const AircraftState &current_ow
          m_im_kinematic_time_based_maintain->Prepare(m_previous_reference_im_speed_command_tas,
                                                      m_previous_im_speed_command_ias,
                                                      m_previous_reference_im_speed_command_mach,
-                                                     m_tangent_plane_sequence,
                                                      m_ownship_kinematic_trajectory_predictor,
                                                      m_im_ownship_distance_calculator,
                                                      target_adsb_history,
@@ -584,7 +586,7 @@ Guidance IMTimeBasedAchieve::HandleMaintainStage(const AircraftState &current_ow
 
 const Units::Time
 IMTimeBasedAchieve::CalculateMeasuredSpacingInterval(
-      const AircraftState &current_ownship_state, const AircraftState &current_target_state) {
+      const interval_management::AircraftState &current_ownship_state, const interval_management::AircraftState &current_target_state) {
 
    if (m_target_kinematic_traffic_reference_point_calcs.IsWaypointSet() &&
          GetTargetKinematicDtgToTrp() > Units::zero()) {
@@ -593,7 +595,7 @@ IMTimeBasedAchieve::CalculateMeasuredSpacingInterval(
       Units::Length target_dtg_trp = m_target_kinematic_traffic_reference_point_calcs.ComputeDistanceToWaypoint(current_target_state);
       Units::SecondsTime target_ttg_trp = target_dtg_trp / current_target_state.GetGroundSpeed();
 
-      Units::SecondsTime time_since_abp = Units::SecondsTime(current_ownship_state.m_time) -
+      Units::SecondsTime time_since_abp = Units::SecondsTime(current_ownship_state.GetTimeStamp().value()) -
             m_ownship_kinematic_achieve_by_calcs.GetCrossingTime();
       Units::SecondsTime result = -(target_ttg_trp + time_since_abp);
       LOG4CPLUS_DEBUG(m_logger, "Special MSI calculation:  target TTG to TRP = " <<
@@ -605,14 +607,14 @@ IMTimeBasedAchieve::CalculateMeasuredSpacingInterval(
    if (m_im_clearance.GetClearanceType() == IMClearance::CAPTURE) {
       if (!HasOwnshipReachedTargetAlongPathPositionAtAlignment()) {
          m_time_since_traffic_alignment =
-               Units::SecondsTime(current_ownship_state.m_time) - m_time_at_traffic_alignment;
+               Units::SecondsTime(current_ownship_state.GetTimeStamp().value()) - m_time_at_traffic_alignment;
 
          return m_time_since_traffic_alignment + ((m_ownship_kinematic_dtg_to_ptp - m_target_dtg_at_traffic_alignment) /
                                                   m_target_state_at_traffic_alignment.GetGroundSpeed());
       }
    } else if (m_im_clearance.GetClearanceType() == IMClearance::MAINTAIN) {
       if (!HasOwnshipReachedTargetAlongPathPositionAtCdtiInitiation()) {
-         const Units::Time time_since_cdti_initiate_signal_receipt = Units::SecondsTime(current_ownship_state.m_time) -
+         const Units::Time time_since_cdti_initiate_signal_receipt = Units::SecondsTime(current_ownship_state.GetTimeStamp().value()) -
                                                                      m_cdti_initiate_signal_receipt_time;
          return time_since_cdti_initiate_signal_receipt +
                 ((m_ownship_kinematic_dtg_to_ptp - m_target_dtg_at_cdti_initiate_signal_receipt) /
@@ -624,7 +626,7 @@ IMTimeBasedAchieve::CalculateMeasuredSpacingInterval(
 }
 
 void IMTimeBasedAchieve::SaveTargetStateAtTrafficAlignment(Units::Time ownship_current_time,
-                                                           const AircraftState &target_state_at_traffic_alignment,
+                                                           const interval_management::AircraftState &target_state_at_traffic_alignment,
                                                            const Units::Length target_dtg_at_alignment) {
    m_is_target_aligned = true;
    m_time_at_traffic_alignment = ownship_current_time;
@@ -633,8 +635,8 @@ void IMTimeBasedAchieve::SaveTargetStateAtTrafficAlignment(Units::Time ownship_c
 }
 
 void IMTimeBasedAchieve::CalculateIas(const Units::Length current_ownship_altitude,
-                                      const DynamicsState &three_dof_dynamics_state) {
-   BadaWithCalc &bada_calculator =
+                                      const aaesim::open_source::DynamicsState &three_dof_dynamics_state) {
+   std::shared_ptr<const aaesim::BadaPerformanceCalculator> bada_calculator =
          m_ownship_kinematic_trajectory_predictor.GetKinematicDescent4dPredictor()->m_bada_calculator;
 
    Units::Speed rf_leg_limit_speed = Units::zero();
@@ -648,7 +650,7 @@ void IMTimeBasedAchieve::CalculateIas(const Units::Length current_ownship_altitu
                                    (m_ownship_reference_lookup_index),
                              m_ownship_kinematic_dtg_to_abp, bada_calculator,
                              current_ownship_altitude,
-                             three_dof_dynamics_state.m_flap_configuration,
+                             three_dof_dynamics_state.flap_configuration,
                              rf_leg_limit_speed);
 
    if (m_im_speed_command_ias != m_previous_im_speed_command_ias) {
@@ -665,7 +667,7 @@ void IMTimeBasedAchieve::CalculateIas(const Units::Length current_ownship_altitu
 
 void IMTimeBasedAchieve::CalculateMach(const Units::Time reference_ttg,
                                        const Units::Length current_ownship_altitude) {
-   BadaWithCalc &bada_calculator =
+   std::shared_ptr<const aaesim::BadaPerformanceCalculator> bada_calculator =
          m_ownship_kinematic_trajectory_predictor.GetKinematicDescent4dPredictor()->m_bada_calculator;
 
    Units::Speed temptrue =
@@ -702,17 +704,17 @@ void IMTimeBasedAchieve::CalculateMach(const Units::Time reference_ttg,
    m_im_speed_command_ias = m_weather_prediction.getAtmosphere()->MachToIAS(estimated_mach, current_ownship_altitude);
 }
 
-void IMTimeBasedAchieve::RecordInternalObserverMetrics(const AircraftState &current_ownship_state,
-                                                       const AircraftState &current_target_state,
-                                                       const DynamicsState &dynamics_state,
+void IMTimeBasedAchieve::RecordInternalObserverMetrics(const interval_management::AircraftState &current_ownship_state,
+                                                       const interval_management::AircraftState &current_target_state,
+                                                       const aaesim::open_source::DynamicsState &dynamics_state,
                                                        const Units::Speed unmodified_ias,
                                                        const Units::Speed tas_command,
                                                        const Units::Speed reference_velocity,
                                                        const Units::Length reference_distance,
-                                                       const Guidance &guidance) {
+                                                       const aaesim::open_source::Guidance &guidance) {
    if (InternalObserver::getInstance()->GetScenarioIter() >= 0) {
-      InternalObserver::getInstance()->IM_command_output(current_ownship_state.m_id,
-                                                         current_ownship_state.m_time,
+      InternalObserver::getInstance()->IM_command_output(current_ownship_state.GetId(),
+                                                         current_ownship_state.GetTimeStamp().value(),
                                                          current_ownship_state.m_z,
                                                          Units::MetersPerSecondSpeed(
                                                                dynamics_state.v_true_airspeed).value(),
@@ -731,7 +733,7 @@ void IMTimeBasedAchieve::RecordInternalObserverMetrics(const AircraftState &curr
 
 
    if (InternalObserver::getInstance()->outputNM()) {
-      NMObserver &nm_observer = InternalObserver::getInstance()->GetNMObserver(current_ownship_state.m_id);
+      NMObserver &nm_observer = InternalObserver::getInstance()->GetNMObserver(current_ownship_state.GetId());
 
       if (nm_observer.curr_NM == -2 &&
           guidance.IsValid()) {
@@ -761,7 +763,7 @@ void IMTimeBasedAchieve::RecordInternalObserverMetrics(const AircraftState &curr
 
          nm_observer.output_NM_values(
                Units::MetersLength(m_ownship_kinematic_dtg_to_ptp).value(),
-               Units::MetersLength(m_ownship_kinetic_dtg_to_ptp).value(), current_ownship_state.m_time,
+               Units::MetersLength(m_ownship_kinetic_dtg_to_ptp).value(), current_ownship_state.GetTimeStamp().value(),
                Units::MetersPerSecondSpeed(m_im_speed_command_ias).value(),
                Units::MetersPerSecondSpeed(current_ownship_state.GetGroundSpeed()).value(),
                Units::MetersPerSecondSpeed(current_target_state.GetGroundSpeed()).value(),
@@ -769,8 +771,8 @@ void IMTimeBasedAchieve::RecordInternalObserverMetrics(const AircraftState &curr
       }
    }
 
-   InternalObserver::getInstance()->addAchieveRcd(static_cast<size_t>(current_ownship_state.m_id),
-                                                  current_ownship_state.m_time,
+   InternalObserver::getInstance()->addAchieveRcd(static_cast<size_t>(current_ownship_state.GetId()),
+                                                  current_ownship_state.GetTimeStamp().value(),
                                                   Units::SecondsTime(m_target_ttg_to_trp).value(),
                                                   Units::SecondsTime(m_ownship_ttg_to_abp).value(),
                                                   Units::MetersLength(-m_ownship_kinematic_dtg_to_ptp).value(),

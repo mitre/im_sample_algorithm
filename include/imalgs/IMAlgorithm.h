@@ -1,34 +1,36 @@
 // ****************************************************************************
 // NOTICE
 //
-// This is the copyright work of The MITRE Corporation, and was produced
-// for the U. S. Government under Contract Number DTFAWA-10-C-00080, and
-// is subject to Federal Aviation Administration Acquisition Management
-// System Clause 3.5-13, Rights In Data-General, Alt. III and Alt. IV
-// (Oct. 1996).  No other use other than that granted to the U. S.
-// Government, or to those acting on behalf of the U. S. Government,
-// under that Clause is authorized without the express written
-// permission of The MITRE Corporation. For further information, please
-// contact The MITRE Corporation, Contracts Office, 7515 Colshire Drive,
-// McLean, VA  22102-7539, (703) 983-6000. 
+// This work was produced for the U.S. Government under Contract 693KA8-22-C-00001 
+// and is subject to Federal Aviation Administration Acquisition Management System 
+// Clause 3.5-13, Rights In Data-General, Alt. III and Alt. IV (Oct. 1996).
 //
-// Copyright 2020 The MITRE Corporation. All Rights Reserved.
+// The contents of this document reflect the views of the author and The MITRE 
+// Corporation and do not necessarily reflect the views of the Federal Aviation 
+// Administration (FAA) or the Department of Transportation (DOT). Neither the FAA 
+// nor the DOT makes any warranty or guarantee, expressed or implied, concerning 
+// the content or accuracy of these views.
+//
+// For further information, please contact The MITRE Corporation, Contracts Management 
+// Office, 7515 Colshire Drive, McLean, VA 22102-7539, (703) 983-6000.
+//
+// 2022 The MITRE Corporation. All Rights Reserved.
 // ****************************************************************************
 
 #pragma once
 
 #include "public/Guidance.h"
 #include "public/AircraftIntent.h"
-#include "public/AircraftState.h"
+#include "imalgs/AircraftState.h"
 #include "utility/Logging.h"
 #include "public/PilotDelay.h"
-#include "aaesim/KineticTrajectoryPredictor.h"
+#include "aaesim/Wgs84KineticDescentPredictor.h"
 #include "public/ThreeDOFDynamics.h"
 #include "public/TangentPlaneSequence.h"
-#include <Time.h>
-#include <Speed.h>
-#include <Length.h>
-#include <Frequency.h>
+#include <scalar/Time.h>
+#include <scalar/Speed.h>
+#include <scalar/Length.h>
+#include <scalar/Frequency.h>
 #include "imalgs/IMClearance.h"
 
 class IMAlgorithm
@@ -56,6 +58,14 @@ public:
       MAINTAIN = 2
    };
 
+   struct OwnshipPredictionParameters {
+      Units::Angle maximum_allowable_bank_angle;
+      Units::Speed transition_ias;
+      double transition_mach;
+      Units::Length transition_altitude;
+      Units::Length expected_cruise_altitude;
+   };
+
    IMAlgorithm();
 
    IMAlgorithm(const IMAlgorithm &obj);
@@ -64,12 +74,11 @@ public:
 
    IMAlgorithm &operator=(const IMAlgorithm &obj);
 
-   virtual void Initialize(const KineticTrajectoryPredictor &ownship_kinetic_trajectory_predictor,
-                           const KineticTrajectoryPredictor &target_kinetic_trajectory_predictor,
-                           std::shared_ptr<TangentPlaneSequence> tangent_plane_sequence,
-                           AircraftIntent &target_aircraft_intent,
+   virtual void Initialize(std::shared_ptr<const aaesim::BadaPerformanceCalculator> aircraft_performance_calculator,
+                           OwnshipPredictionParameters ownship_prediction_parameters,
+                           const AircraftIntent &ownship_aircraft_intent,
+                           const AircraftIntent &target_aircraft_intent,
                            const IMClearance &im_clearance,
-                           const std::string &achieve_by_point,
                            WeatherPrediction &weather_prediction);
 
    // Called during initialization whenever the clearance type is not CUSTOM.
@@ -77,11 +86,11 @@ public:
 
    virtual void IterationReset();
 
-   virtual Guidance Update(const Guidance &prevguidance,
-                           const DynamicsState &dynamicsstate,
-                           const AircraftState &owntruthstate,
-                           const AircraftState &targettruthstate,
-                           const vector<AircraftState> &targethistory);
+   virtual aaesim::open_source::Guidance Update(const aaesim::open_source::Guidance &prevguidance,
+                           const aaesim::open_source::DynamicsState &dynamicsstate,
+                           const interval_management::AircraftState &owntruthstate,
+                           const interval_management::AircraftState &targettruthstate,
+                           const vector<interval_management::AircraftState> &targethistory);
 
    virtual const double GetSpacingError() const = 0;  // Returned value has units stripped off.
 
@@ -89,8 +98,8 @@ public:
 
    virtual const bool IsOwnshipPassedPtp() const;
 
-   void UpdatePositionMetrics(const AircraftState &ownship_aircraft_state,
-                              const AircraftState &target_aircraft_state);
+   void UpdatePositionMetrics(const interval_management::AircraftState &ownship_aircraft_state,
+                              const interval_management::AircraftState &target_aircraft_state);
 
    void SetPilotDelay(const bool pilot_delay_on,
                       const Units::Time pilot_delay_mean,
@@ -170,7 +179,7 @@ public:
 
    virtual bool IsBlendWind() const;
 
-   virtual void SetBlendWind(bool wind_blending_enabled);
+   virtual void SetBlendWind(bool wind_blending_enabled) = 0;
 
    Units::Length GetMiddleToFinalQuantizationTransitionDistance() const;
 
@@ -194,15 +203,24 @@ public:
 
    const Units::Length GetTargetKinematicDtgToTrp() const;
 
-   const KineticTrajectoryPredictor *m_target_kinetic_trajectory_predictor;
-   const KineticTrajectoryPredictor *m_ownship_kinetic_trajectory_predictor;
+   const Wgs84KineticDescentPredictor *GetOwnshipKineticTrajectoryPredictor() const;
+
+   const Wgs84KineticDescentPredictor *GetTargetKineticTrajectoryPredictor() const;
+
+   virtual void InitializeFmsPredictors(const Wgs84KineticDescentPredictor &ownship_kinetic_trajectory_predictor,
+                                        const Wgs84KineticDescentPredictor &target_kinetic_trajectory_predictor);
 
    // Values used in speed command limiting calculations.
    // Added and subtracted to 1 to compute the low and high
    // speed command limits.
    static const double DEFAULT_SPEED_DEVIATION_PERCENTAGE;
 
-protected:
+ protected:
+   const Wgs84KineticDescentPredictor *m_target_kinetic_trajectory_predictor;
+   const Wgs84KineticDescentPredictor *m_ownship_kinetic_trajectory_predictor;
+
+   bool HasKineticPredictors() const;
+
    void Copy(const IMAlgorithm &obj);
 
    double MachHysteresis(double newmach,
@@ -219,11 +237,6 @@ protected:
 
    void SetWeatherPrediction(const WeatherPrediction &weather_prediction);
 
-   void SetKineticTrajectoryPredictors(const KineticTrajectoryPredictor &ownship_kinetic_trajectory_predictor,
-                                       const KineticTrajectoryPredictor &target_kinetic_trajectory_predictor);
-
-   void SetTangentPlaneSequence(std::shared_ptr<TangentPlaneSequence> tangent_plane_sequence);
-
    // If limiting in effect, this method will limit the command speed based on high and low limit.  The high and low
    // limits are computed from a trajectory speed and a fixed limiting factor.
    // Changes to these flags should be reflected also online:
@@ -231,19 +244,19 @@ protected:
    Units::Speed LimitImSpeedCommand(const Units::Speed im_speed_command_ias,
                                     const double reference_velocity_mps,
                                     const Units::Length distance_to_go_to_abp,
-                                    const BadaWithCalc &bada_with_calc,
+                                    std::shared_ptr<const aaesim::BadaPerformanceCalculator> bada_with_calc,
                                     const Units::Length ownship_altitude,
-                                    const int flap_configuration,
+                                    const aaesim::open_source::bada_utils::FlapConfiguration flap_configuration,
                                     const Units::Speed rf_upper_limit);
 
    double LimitImMachCommand(
          double estimated_mach,
          const double nominal_mach,
-         const BadaWithCalc &bada_calculator,
+         std::shared_ptr<const aaesim::BadaPerformanceCalculator> bada_calculator,
          const Units::Length current_ownship_altitude);
 
 
-   void SetMaxSpeedDeviationPercentage(const double max_speed_deviation_factor);
+   virtual void SetMaxSpeedDeviationPercentage(const double max_speed_deviation_factor);
 
    template<class X>
    const X LowLimit(const X val) {
@@ -263,7 +276,6 @@ protected:
 
    std::vector<std::pair<Units::Length, Units::Speed>> m_rfleg_limits; // (dist_to_go, upper_ias_limit)
 
-   std::shared_ptr<TangentPlaneSequence> m_tangent_plane_sequence;
 
    AircraftIntent m_target_aircraft_intent;
    FlightStage m_stage_of_im_operation;
@@ -323,8 +335,6 @@ protected:
 
    unsigned long int m_active_filter_flag;
 
-   std::string m_achieve_by_point;
-
    bool m_loaded;
    bool m_limit_flag;
    bool m_quantize_flag;
@@ -335,7 +345,7 @@ protected:
 private:
    double m_low_speed_coef;
    double m_high_speed_coef;
-
+   bool m_has_kinetic_predictors;
    void IterClearIMAlg();
 
    static log4cplus::Logger m_logger;
@@ -467,15 +477,8 @@ inline const bool IMAlgorithm::IsLoaded() const {
    return m_loaded;
 }
 
-inline void IMAlgorithm::SetTangentPlaneSequence(std::shared_ptr<TangentPlaneSequence> tangent_plane_sequence) {
-   m_tangent_plane_sequence = tangent_plane_sequence;
-}
-
 inline bool IMAlgorithm::IsBlendWind() const {
    return false;
-}
-
-inline void IMAlgorithm::SetBlendWind(bool wind_blending_enabled) {
 }
 
 inline double IMAlgorithm::MachHysteresis(double newmach,
@@ -484,13 +487,6 @@ inline double IMAlgorithm::MachHysteresis(double newmach,
       return oldmach;
    }
    return newmach;
-}
-
-inline void IMAlgorithm::
-SetKineticTrajectoryPredictors(const KineticTrajectoryPredictor &ownship_kinetic_trajectory_predictor,
-                               const KineticTrajectoryPredictor &target_kinetic_trajectory_predictor) {
-   m_ownship_kinetic_trajectory_predictor = &ownship_kinetic_trajectory_predictor;
-   m_target_kinetic_trajectory_predictor = &target_kinetic_trajectory_predictor;
 }
 
 inline void IMAlgorithm::SetWeatherPrediction(const WeatherPrediction &weather_prediction) {
@@ -572,4 +568,16 @@ inline const Units::Length IMAlgorithm::GetTargetReferenceAltitude() const {
 
 inline const Units::Length IMAlgorithm::GetTargetKinematicDtgToTrp() const {
    return m_target_kinematic_dtg_to_trp;
+}
+
+inline const Wgs84KineticDescentPredictor *IMAlgorithm::GetTargetKineticTrajectoryPredictor() const {
+   return m_target_kinetic_trajectory_predictor;
+}
+
+inline const Wgs84KineticDescentPredictor *IMAlgorithm::GetOwnshipKineticTrajectoryPredictor() const {
+   return m_ownship_kinetic_trajectory_predictor;
+}
+
+inline bool IMAlgorithm::HasKineticPredictors() const {
+   return m_has_kinetic_predictors;
 }

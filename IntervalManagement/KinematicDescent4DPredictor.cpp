@@ -1,21 +1,23 @@
 // ****************************************************************************
 // NOTICE
 //
-// This is the copyright work of The MITRE Corporation, and was produced
-// for the U. S. Government under Contract Number DTFAWA-10-C-00080, and
-// is subject to Federal Aviation Administration Acquisition Management
-// System Clause 3.5-13, Rights In Data-General, Alt. III and Alt. IV
-// (Oct. 1996).  No other use other than that granted to the U. S.
-// Government, or to those acting on behalf of the U. S. Government,
-// under that Clause is authorized without the express written
-// permission of The MITRE Corporation. For further information, please
-// contact The MITRE Corporation, Contracts Office, 7515 Colshire Drive,
-// McLean, VA  22102-7539, (703) 983-6000. 
+// This work was produced for the U.S. Government under Contract 693KA8-22-C-00001 
+// and is subject to Federal Aviation Administration Acquisition Management System 
+// Clause 3.5-13, Rights In Data-General, Alt. III and Alt. IV (Oct. 1996).
 //
-// Copyright 2020 The MITRE Corporation. All Rights Reserved.
+// The contents of this document reflect the views of the author and The MITRE 
+// Corporation and do not necessarily reflect the views of the Federal Aviation 
+// Administration (FAA) or the Department of Transportation (DOT). Neither the FAA 
+// nor the DOT makes any warranty or guarantee, expressed or implied, concerning 
+// the content or accuracy of these views.
+//
+// For further information, please contact The MITRE Corporation, Contracts Management 
+// Office, 7515 Colshire Drive, McLean, VA 22102-7539, (703) 983-6000.
+//
+// 2022 The MITRE Corporation. All Rights Reserved.
 // ****************************************************************************
 
-#include <public/Waypoint.h>
+#include "public/Waypoint.h"
 #include "imalgs/KinematicDescent4DPredictor.h"
 #include <cmath>
 
@@ -42,13 +44,6 @@ KinematicDescent4DPredictor::KinematicDescent4DPredictor()
 
 KinematicDescent4DPredictor::~KinematicDescent4DPredictor() = default;
 
-void KinematicDescent4DPredictor::SetMembers(const KineticDescent4DPredictor &kinetic_descent_4d_predictor) {
-   VerticalPredictor::SetMembers(kinetic_descent_4d_predictor);
-
-   m_kinematic_descent_type = KinematicDescent4DPredictor::KinematicDescentType::CONSTRAINED;
-   LOG4CPLUS_TRACE(m_logger, "kinematic descent type to set to constrained" << std::endl);
-}
-
 void KinematicDescent4DPredictor::SetMembers(const double &mach_descent,
                                              const Units::Speed ias_descent,
                                              const Units::Length cruise_altitude,
@@ -57,7 +52,7 @@ void KinematicDescent4DPredictor::SetMembers(const double &mach_descent,
    m_transition_ias = ias_descent;
    m_cruise_altitude_msl = cruise_altitude;
 
-   if (IsTransitionMachValid()) {
+   if (IsCruiseMachValid()) {
       m_transition_altitude_msl = transition_altitude;
    } else {
       m_transition_altitude_msl = Units::Infinity();
@@ -73,7 +68,7 @@ void KinematicDescent4DPredictor::BuildVerticalPrediction(vector<HorizontalPath>
    m_prediction_too_low = false;
    m_prediction_too_high = false;
    HorizontalPath start_pos(horizontal_path.back());
-   LOG4CPLUS_TRACE(m_logger, "Building vertical prediction from ("
+   LOG4CPLUS_DEBUG(m_logger, "Building vertical prediction from ("
          <<
          start_pos.GetXPositionMeters()
          << ","
@@ -113,6 +108,7 @@ void KinematicDescent4DPredictor::ConstrainedVerticalPath(vector<HorizontalPath>
    trajTemp.true_airspeed.push_back(Units::ZERO_SPEED);
    trajTemp.tas_rate_mps.push_back(0);
    trajTemp.theta_radians.push_back(0);
+   trajTemp.flap_setting.push_back(aaesim::open_source::bada_utils::FlapConfiguration::UNDEFINED);
 
    Units::Speed vwpara;
    Units::Speed vwperp;
@@ -120,22 +116,11 @@ void KinematicDescent4DPredictor::ConstrainedVerticalPath(vector<HorizontalPath>
    Units::UnsignedAngle course = m_course_calculator.GetCourseAtPathEnd();
    ComputeWindCoefficients(m_altitude_at_end_of_route, Units::RadiansAngle(course), weather_prediction, vwpara, vwperp,
                            Vwx, Vwy);
-   LOG4CPLUS_TRACE(m_logger,
-                   "Initial wind components (mps): Vwx " << Units::MetersPerSecondSpeed(Vwx) << ", Vwy "
-                                                         << Units::MetersPerSecondSpeed(Vwy));
-   LOG4CPLUS_TRACE(m_logger, "wind_velocity_parallel_to_track (mps): " << Units::MetersPerSecondSpeed(vwpara));
-   LOG4CPLUS_TRACE(m_logger, "wind_velocity_perpendicular_to_track (mps): " << Units::MetersPerSecondSpeed(vwperp));
-   LOG4CPLUS_TRACE(m_logger, "m_ias_at_end_of_route (mps): " << Units::MetersPerSecondSpeed(m_ias_at_end_of_route));
 
    Units::Speed initialgs =
-      sqrt(Units::sqr(
-         weather_prediction.getAtmosphere()->CAS2TAS(m_ias_at_end_of_route, m_altitude_at_end_of_route)) -
-         Units::sqr(vwperp)) + vwpara;
-   LOG4CPLUS_TRACE(m_logger, "initial_ground_speed (mps): " << Units::MetersPerSecondSpeed(initialgs));
-   if (m_logger.isEnabledFor(log4cplus::TRACE_LOG_LEVEL)) {
-      LOG4CPLUS_TRACE(m_logger, "weather_prediction.dump()");
-      weather_prediction.Dump();
-   }
+         sqrt(Units::sqr(
+               weather_prediction.getAtmosphere()->CAS2TAS(m_ias_at_end_of_route, m_altitude_at_end_of_route)) -
+              Units::sqr(vwperp)) + vwpara;
 
    trajTemp.gs_mps.push_back(Units::MetersPerSecondSpeed(initialgs).value());
    trajTemp.wind_velocity_east.push_back(Vwx);
@@ -147,7 +132,7 @@ void KinematicDescent4DPredictor::ConstrainedVerticalPath(vector<HorizontalPath>
 
    VerticalPath last_state = m_vertical_path;
    VerticalPath last_waypoint_state = m_vertical_path;
-   VerticalPath low_tolerance_state; // earliest waypoint in prediction that can do FPA to current aircraft position
+   VerticalPath low_tolerance_state; // earliesr waypoint in prediction that can do FPA to current aircraft position
    bool low_tolerance_state_found = false;
 
    double FPA;
@@ -158,8 +143,7 @@ void KinematicDescent4DPredictor::ConstrainedVerticalPath(vector<HorizontalPath>
       LOG4CPLUS_WARN(m_logger,
                      "Attempting to perform constrained vertical path with less than 1 nautical mile to go.  Calculating level path, instead.");
       m_vertical_path = LevelVerticalPath(m_vertical_path,
-                                          precalc_waypoints[precalc_waypoints.size() -
-                                                            1].m_precalc_constraints.constraint_dist,
+                                          Units::MetersLength(precalc_waypoints[precalc_waypoints.size() - 1].m_precalc_constraints.constraint_along_path_distance).value(),
                                           horizontal_path, weather_prediction, aircraft_distance_to_go);
       return;
    }
@@ -172,9 +156,11 @@ void KinematicDescent4DPredictor::ConstrainedVerticalPath(vector<HorizontalPath>
    // Start altitude can cause a switch in type of descent part way along a segment.
    // The test for start altitude is placed after the segment is complete: see AAES-756.
    while (m_vertical_path.altitude_m.back() < alt1) {
-      LOG4CPLUS_TRACE(m_logger, " before constantCASVerticalPath, x/h/v is: "
-              << m_vertical_path.along_path_distance_m.back() << "/" << m_vertical_path.altitude_m.back() << "/"
-              << m_vertical_path.cas_mps.back());
+      LOG4CPLUS_TRACE(m_logger, " before constantCASVerticalPath, x,h,cas,gs is: "
+              << m_vertical_path.along_path_distance_m.back() << ","
+              << m_vertical_path.altitude_m.back() << ","
+              << m_vertical_path.cas_mps.back() << ","
+              << m_vertical_path.gs_mps.back());
       if (m_vertical_path.along_path_distance_m.back() > horizontal_path.back().m_path_length_cumulative_meters) {
          LOG4CPLUS_WARN(m_logger,
                         "KinematicDescent4DPredictor cannot create a trajectory that reaches "
@@ -195,7 +181,7 @@ void KinematicDescent4DPredictor::ConstrainedVerticalPath(vector<HorizontalPath>
             << static_cast<int>(m_precalculated_constraints.active_flag));
       // special case if on first segment
       if (Units::MetersLength(aircraft_distance_to_go).value() <=
-          precalc_waypoints[0].m_precalc_constraints.constraint_dist) {
+          Units::MetersLength(precalc_waypoints[0].m_precalc_constraints.constraint_along_path_distance).value()) {
          low_tolerance_state = last_waypoint_state;
          low_tolerance_state_found = true;
       }
@@ -206,11 +192,11 @@ void KinematicDescent4DPredictor::ConstrainedVerticalPath(vector<HorizontalPath>
 
       if (m_precalculated_constraints.violation_flag) {
          if (m_precalculated_constraints.active_flag == ActiveFlagType::SEG_END_LOW_ALT) {
-            FPA = atan2((m_precalculated_constraints.constraint_altLow - last_waypoint_state.altitude_m.back()),
-                        (m_precalculated_constraints.constraint_dist - last_waypoint_state.along_path_distance_m.back()));
+            FPA = atan2((Units::MetersLength(m_precalculated_constraints.constraint_altLow).value() - last_waypoint_state.altitude_m.back()),
+                        (Units::MetersLength(m_precalculated_constraints.constraint_along_path_distance).value() - last_waypoint_state.along_path_distance_m.back()));
             m_vertical_path = ConstantFpaDecelerationVerticalPath(last_waypoint_state,
-                                                                  m_precalculated_constraints.constraint_altLow,
-                                                                  m_precalculated_constraints.constraint_speedHi, FPA,
+                                                                  Units::MetersLength(m_precalculated_constraints.constraint_altLow).value(),
+                                                                  Units::MetersPerSecondSpeed(m_precalculated_constraints.constraint_speedHi).value(), FPA,
                                                                   horizontal_path,
                                                                   precalc_waypoints,
                                                                   weather_prediction,
@@ -225,7 +211,7 @@ void KinematicDescent4DPredictor::ConstrainedVerticalPath(vector<HorizontalPath>
             }
 
             m_vertical_path = ConstantGeometricFpaVerticalPath(m_vertical_path,
-                                                               m_precalculated_constraints.constraint_altLow,
+                                                               Units::MetersLength(m_precalculated_constraints.constraint_altLow).value(),
                                                                FPA, horizontal_path, precalc_waypoints,
                                                                weather_prediction,
                                                                aircraft_distance_to_go);
@@ -236,12 +222,12 @@ void KinematicDescent4DPredictor::ConstrainedVerticalPath(vector<HorizontalPath>
 
 
          } else if (m_precalculated_constraints.active_flag == ActiveFlagType::AT_ALT_ON_SPEED) {
-            FPA = atan2(m_precalculated_constraints.constraint_altHi - last_state.altitude_m.back(),
-                        m_precalculated_constraints.constraint_dist - last_state.along_path_distance_m.back());
+            FPA = atan2(Units::MetersLength(m_precalculated_constraints.constraint_altHi).value() - last_state.altitude_m.back(),
+                        Units::MetersLength(m_precalculated_constraints.constraint_along_path_distance).value() - last_state.along_path_distance_m.back());
 
             if (FPA > 0.10 * PI / 180.0) {
                m_vertical_path = ConstantGeometricFpaVerticalPath(last_state,
-                                                                  m_precalculated_constraints.constraint_altHi, FPA,
+                                                                  Units::MetersLength(m_precalculated_constraints.constraint_altHi).value(), FPA,
                                                                   horizontal_path,
                                                                   precalc_waypoints, weather_prediction,
                                                                   aircraft_distance_to_go);
@@ -255,7 +241,7 @@ void KinematicDescent4DPredictor::ConstrainedVerticalPath(vector<HorizontalPath>
             }
 
             m_vertical_path = LevelVerticalPath(m_vertical_path,
-                                                m_precalculated_constraints.constraint_dist, horizontal_path,
+                                                Units::MetersLength(m_precalculated_constraints.constraint_along_path_distance).value(), horizontal_path,
                                                 weather_prediction,
                                                 aircraft_distance_to_go);
             LOG4CPLUS_TRACE(m_logger, "   after levelVerticalPath, x/h/v is: "
@@ -266,12 +252,10 @@ void KinematicDescent4DPredictor::ConstrainedVerticalPath(vector<HorizontalPath>
 
             if (m_precalculated_constraints.index < precalc_waypoints.size()) {
                m_vertical_path = ConstantDecelerationVerticalPath(m_vertical_path,
-                                                                  Units::MetersLength(
-                                                                        m_precalculated_constraints.constraint_dist),
-                                                                  Units::MetersLength(
-                                                                        m_precalculated_constraints.constraint_altHi),
+                                                                        m_precalculated_constraints.constraint_along_path_distance,
+                                                                        m_precalculated_constraints.constraint_altHi,
                                                                   deceleration,
-                                                                  m_precalculated_constraints.constraint_speedHi,
+                                                                  Units::MetersPerSecondSpeed(m_precalculated_constraints.constraint_speedHi).value(),
                                                                   horizontal_path, weather_prediction,
                                                                   aircraft_distance_to_go);
                LOG4CPLUS_TRACE(m_logger, "   after constantDecelVerticalPath, x/h/v is: "
@@ -283,20 +267,20 @@ void KinematicDescent4DPredictor::ConstrainedVerticalPath(vector<HorizontalPath>
                break;
             }
 
-            if ((m_vertical_path.along_path_distance_m.back() > m_precalculated_constraints.constraint_dist) &&
-                (m_vertical_path.altitude_m.back() < m_precalculated_constraints.constraint_altLow)) {
+            if ((m_vertical_path.along_path_distance_m.back() > Units::MetersLength(m_precalculated_constraints.constraint_along_path_distance).value()) &&
+                (m_vertical_path.altitude_m.back() < Units::MetersLength(m_precalculated_constraints.constraint_altLow).value())) {
                // If idle-descent acceleration is below low altitude constraint-
                // redo with with a constant FPA deceleration trajectory.
-               FPA = atan2((m_precalculated_constraints.constraint_altLow - last_state.altitude_m.back()),
-                           (m_precalculated_constraints.constraint_dist - last_state.along_path_distance_m.back()));
+               FPA = atan2((Units::MetersLength(m_precalculated_constraints.constraint_altLow).value() - last_state.altitude_m.back()),
+                           (Units::MetersLength(m_precalculated_constraints.constraint_along_path_distance).value() - last_state.along_path_distance_m.back()));
                Units::DegreesAngle uFPA = Units::RadiansAngle(FPA);
                if (FPA > Units::RadiansAngle(m_descent_angle_max).value())
                   LOG4CPLUS_WARN(m_logger, "prediction FPA is " << uFPA.value() << " which is greater than "
                                                                 << m_descent_angle_warning.value());
                if (uFPA < m_descent_angle_max) {
                   m_vertical_path = ConstantFpaDecelerationVerticalPath(last_state,
-                                                                        m_precalculated_constraints.constraint_altLow,
-                                                                        m_precalculated_constraints.constraint_speedHi,
+                                                                        Units::MetersLength(m_precalculated_constraints.constraint_altLow).value(),
+                                                                        Units::MetersPerSecondSpeed(m_precalculated_constraints.constraint_speedHi).value(),
                                                                         FPA, horizontal_path, precalc_waypoints,
                                                                         weather_prediction,
                                                                         aircraft_distance_to_go);
@@ -308,10 +292,9 @@ void KinematicDescent4DPredictor::ConstrainedVerticalPath(vector<HorizontalPath>
          } else if (m_precalculated_constraints.active_flag == ActiveFlagType::AT_ALT_SLOW) {
             if (m_precalculated_constraints.index < precalc_waypoints.size()) {
                m_vertical_path = LevelDecelerationVerticalPath(m_vertical_path,
-                                                               Units::MetersLength(
-                                                                     m_precalculated_constraints.constraint_dist),
+                                                               m_precalculated_constraints.constraint_along_path_distance,
                                                                m_deceleration_level_mps,
-                                                               m_precalculated_constraints.constraint_speedHi,
+                                                               Units::MetersPerSecondSpeed(m_precalculated_constraints.constraint_speedHi).value(),
                                                                horizontal_path,
                                                                weather_prediction,
                                                                aircraft_distance_to_go);
@@ -338,7 +321,7 @@ void KinematicDescent4DPredictor::ConstrainedVerticalPath(vector<HorizontalPath>
             low_tolerance_state = last_waypoint_state;
          }
       }
-      if (m_vertical_path.along_path_distance_m.back() > m_precalculated_constraints.constraint_dist) {
+      if (m_vertical_path.along_path_distance_m.back() > Units::MetersLength(m_precalculated_constraints.constraint_along_path_distance).value()) {
          if (last_waypoint_state == m_vertical_path) {
             LOG4CPLUS_ERROR(m_logger, "Infinite loop detected");
             return;
@@ -357,22 +340,22 @@ void KinematicDescent4DPredictor::ConstrainedVerticalPath(vector<HorizontalPath>
                                      / distance_to_current_position;
                for (unsigned int loop = m_precalculated_constraints.index; loop < precalc_waypoints.size(); loop++) {
                   // end of prediction should be on next segment
-                  if (m_vertical_path.along_path_distance_m.back() > precalc_waypoints[loop].m_precalc_constraints.constraint_dist) {
+                  if (m_vertical_path.along_path_distance_m.back() > Units::MetersLength(m_precalculated_constraints.constraint_along_path_distance).value()) {
                      continue;
                   }
-                  if (precalc_waypoints[loop].m_precalc_constraints.constraint_dist >
-                      Units::MetersLength(aircraft_distance_to_go).value()) {
+                  if (precalc_waypoints[loop].m_precalc_constraints.constraint_along_path_distance >
+                      aircraft_distance_to_go) {
                      low_tolerance_state_found = true;
                      low_tolerance_state = m_vertical_path;
                      break;
                   }
 
                   double x_dist =
-                        precalc_waypoints[loop].m_precalc_constraints.constraint_dist - m_vertical_path.along_path_distance_m.back();
+                        Units::MetersLength(precalc_waypoints[loop].m_precalc_constraints.constraint_along_path_distance).value() - m_vertical_path.along_path_distance_m.back();
                   double y_alt = m_vertical_path.altitude_m.back() + alt_per_dist * x_dist;
 
-                  if (y_alt > (precalc_waypoints[loop].m_precalc_constraints.constraint_altHi + 10)
-                      || y_alt < (precalc_waypoints[loop].m_precalc_constraints.constraint_altLow - 10)) {
+                  if (y_alt > (Units::MetersLength(precalc_waypoints[loop].m_precalc_constraints.constraint_altHi).value() + 10)
+                      || y_alt < (Units::MetersLength(precalc_waypoints[loop].m_precalc_constraints.constraint_altLow).value() - 10)) {
                      break;
                   }
                }
@@ -386,7 +369,7 @@ void KinematicDescent4DPredictor::ConstrainedVerticalPath(vector<HorizontalPath>
          if (m_vertical_path.altitude_m.back() > m_start_altitude_msl.value()) {
             break;
          }
-      } // END if x < constraint_dist
+      } // END if x < constraint_along_path_distance
 
 
    } // END while h < alt1
@@ -424,8 +407,8 @@ void KinematicDescent4DPredictor::ConstrainedVerticalPath(vector<HorizontalPath>
 
       if (m_precalculated_constraints.violation_flag) {
          if (m_precalculated_constraints.active_flag == ActiveFlagType::SEG_END_LOW_ALT) {
-            FPA = atan2(m_precalculated_constraints.constraint_altLow - last_state.altitude_m.back(),
-                        m_precalculated_constraints.constraint_dist - last_state.along_path_distance_m.back());
+            FPA = atan2(Units::MetersLength(m_precalculated_constraints.constraint_altLow).value() - last_state.altitude_m.back(),
+                        Units::MetersLength(m_precalculated_constraints.constraint_along_path_distance).value() - last_state.along_path_distance_m.back());
 
             // if unable to reach low altitude constraint due to excessive FPA, then continue constantMachVerticalPath
             if (FPA > 10 * PI / 180.0) {
@@ -433,12 +416,12 @@ void KinematicDescent4DPredictor::ConstrainedVerticalPath(vector<HorizontalPath>
                               "constrainedVerticalPath prediction in mach segment cannot reach low altitude constraint");
             } else if (FPA > 0.10 * PI / 180.0) {
                m_vertical_path = ConstantGeometricFpaVerticalPath(last_state,
-                                                                  m_precalculated_constraints.constraint_altLow, FPA,
+                                                                  Units::MetersLength(m_precalculated_constraints.constraint_altLow).value(), FPA,
                                                                   horizontal_path,
                                                                   precalc_waypoints, weather_prediction,
                                                                   aircraft_distance_to_go);
             } else {
-               m_vertical_path = LevelVerticalPath(last_state, m_precalculated_constraints.constraint_dist,
+               m_vertical_path = LevelVerticalPath(last_state, Units::MetersLength(m_precalculated_constraints.constraint_along_path_distance).value(),
                                                    horizontal_path, weather_prediction,
                                                    aircraft_distance_to_go);
             }
@@ -447,25 +430,25 @@ void KinematicDescent4DPredictor::ConstrainedVerticalPath(vector<HorizontalPath>
                break;
             }
 
-            m_vertical_path = LevelVerticalPath(m_vertical_path, m_precalculated_constraints.constraint_dist,
+            m_vertical_path = LevelVerticalPath(m_vertical_path, Units::MetersLength(m_precalculated_constraints.constraint_along_path_distance).value(),
                                                 horizontal_path, weather_prediction,
                                                 aircraft_distance_to_go);
          } else if (m_precalculated_constraints.active_flag == ActiveFlagType::AT_ALT_ON_SPEED) {
-            FPA = atan2(m_precalculated_constraints.constraint_altHi - last_state.altitude_m.back(),
-                        m_precalculated_constraints.constraint_dist - last_state.along_path_distance_m.back());
+            FPA = atan2(Units::MetersLength(m_precalculated_constraints.constraint_altHi).value() - last_state.altitude_m.back(),
+                        Units::MetersLength(m_precalculated_constraints.constraint_along_path_distance).value() - last_state.along_path_distance_m.back());
 
             if (FPA > 0.10 * PI / 180.0) {
                m_vertical_path = ConstantGeometricFpaVerticalPath(last_state,
-                                                                  m_precalculated_constraints.constraint_altHi, FPA,
+                                                                  Units::MetersLength(m_precalculated_constraints.constraint_altHi).value(), FPA,
                                                                   horizontal_path,
                                                                   precalc_waypoints, weather_prediction,
                                                                   aircraft_distance_to_go);
             } else {
-               m_vertical_path = LevelVerticalPath(last_state, m_precalculated_constraints.constraint_dist,
+               m_vertical_path = LevelVerticalPath(last_state, Units::MetersLength(m_precalculated_constraints.constraint_along_path_distance).value(),
                                                    horizontal_path, weather_prediction,
                                                    aircraft_distance_to_go);
             }
-            m_vertical_path = LevelVerticalPath(m_vertical_path, m_precalculated_constraints.constraint_dist,
+            m_vertical_path = LevelVerticalPath(m_vertical_path, Units::MetersLength(m_precalculated_constraints.constraint_along_path_distance).value(),
                                                 horizontal_path, weather_prediction,
                                                 aircraft_distance_to_go);
          }
@@ -504,7 +487,7 @@ void KinematicDescent4DPredictor::ConstrainedVerticalPath(vector<HorizontalPath>
               m_precalculated_constraints.active_flag == ActiveFlagType::AT_ALT_SLOW)) {
             m_vertical_path = LevelDecelerationVerticalPath(m_vertical_path,
                                                             m_deceleration_level_mps,
-                                                            m_precalculated_constraints.constraint_speedHi,
+                                                            Units::MetersPerSecondSpeed(m_precalculated_constraints.constraint_speedHi).value(),
                                                             horizontal_path,
                                                             weather_prediction,
                                                             aircraft_distance_to_go);
@@ -607,7 +590,8 @@ VerticalPath KinematicDescent4DPredictor::ConstantCasVerticalPath(VerticalPath v
       result.algorithm_type.push_back(VerticalPath::PredictionAlgorithmType::CONSTANT_CAS);
       result.mass_kg.push_back(-1.0);
       curr_time = result.time_to_go_sec.back();
-      result.time_to_go_sec.push_back(curr_time + fabs(delta_t)); // adds last time +0.5 to the end since fabs(delta_t) is 0.5
+      result.time_to_go_sec.push_back(curr_time + fabs(delta_t));
+      result.flap_setting.push_back(aaesim::open_source::bada_utils::FlapConfiguration::UNDEFINED);
 
       if (!bracket_found && dist_new > Units::MetersLength(aircraft_distance_to_go).value()) {
          bracket_found = true;
@@ -739,6 +723,7 @@ VerticalPath KinematicDescent4DPredictor::ConstantMachVerticalPath(VerticalPath 
       result.wind_velocity_north.push_back(Vwy);
       result.algorithm_type.push_back(VerticalPath::PredictionAlgorithmType::CONSTANT_MACH);
       result.mass_kg.push_back(-1.0);
+      result.flap_setting.push_back(aaesim::open_source::bada_utils::FlapConfiguration::UNDEFINED);
 
       curr_time = result.time_to_go_sec.back();
 
@@ -886,6 +871,7 @@ VerticalPath KinematicDescent4DPredictor::ConstantGeometricFpaVerticalPath(Verti
       result.wind_velocity_north.push_back(Vwy);
       result.algorithm_type.push_back(VerticalPath::PredictionAlgorithmType::FPA);
       result.mass_kg.push_back(-1.0);
+      result.flap_setting.push_back(aaesim::open_source::bada_utils::FlapConfiguration::UNDEFINED);
 
       curr_time = result.time_to_go_sec.back();
       result.time_to_go_sec.push_back(curr_time + fabs(delta_t)); // adds last time +0.5 to the end since fabs(delta_t) is 0.5
@@ -1011,6 +997,7 @@ VerticalPath KinematicDescent4DPredictor::ConstantFpaDecelerationVerticalPath(Ve
       result.wind_velocity_east.push_back(Vwx);
       result.wind_velocity_north.push_back(Vwy);
       result.algorithm_type.push_back(VerticalPath::PredictionAlgorithmType::FPA_DECEL);
+      result.flap_setting.push_back(aaesim::open_source::bada_utils::FlapConfiguration::UNDEFINED);
       curr_time = result.time_to_go_sec.back();
       result.time_to_go_sec.push_back(curr_time + fabs(delta_t)); // adds last time +0.5 to the end since fabs(delta_t) is 0.5
 
@@ -1121,6 +1108,7 @@ VerticalPath KinematicDescent4DPredictor::LevelDecelerationVerticalPath(
       result.wind_velocity_east.push_back(Vwx);
       result.wind_velocity_north.push_back(Vwy);
       result.algorithm_type.push_back(VerticalPath::PredictionAlgorithmType::LEVEL_DECEL1);
+      result.flap_setting.push_back(aaesim::open_source::bada_utils::FlapConfiguration::UNDEFINED);
 
       curr_time = result.time_to_go_sec.back();
       result.time_to_go_sec.push_back(curr_time + fabs(delta_t)); // adds last time +0.5 to the end since fabs(delta_t) is 0.5
@@ -1213,6 +1201,7 @@ VerticalPath KinematicDescent4DPredictor::LevelDecelerationVerticalPath(
       result.wind_velocity_east.push_back(Vwx);
       result.wind_velocity_north.push_back(Vwy);
       result.algorithm_type.push_back(VerticalPath::PredictionAlgorithmType::LEVEL_DECEL2);
+      result.flap_setting.push_back(aaesim::open_source::bada_utils::FlapConfiguration::UNDEFINED);
 
       curr_time = result.time_to_go_sec.back();
       result.time_to_go_sec.push_back(curr_time + fabs(delta_t)); // adds last time +0.5 to the end since fabs(delta_t) is 0.5
@@ -1304,7 +1293,7 @@ VerticalPath KinematicDescent4DPredictor::LevelVerticalPath(VerticalPath vertica
       result.wind_velocity_east.push_back(Vwx);
       result.wind_velocity_north.push_back(Vwy);
       result.algorithm_type.push_back(VerticalPath::PredictionAlgorithmType::LEVEL);
-
+      result.flap_setting.push_back(aaesim::open_source::bada_utils::FlapConfiguration::UNDEFINED);
       result.mass_kg.push_back(-1.0);
 
       curr_time = result.time_to_go_sec.back();
@@ -1330,6 +1319,7 @@ VerticalPath KinematicDescent4DPredictor::LevelVerticalPath(VerticalPath vertica
    return result;
 }
 
+// TODO: change velocity_cas_end to Units
 VerticalPath KinematicDescent4DPredictor::ConstantDecelerationVerticalPath(VerticalPath vertical_path,
                                                                            Units::Length distance_to_go,
                                                                            Units::Length altitude_high,
@@ -1404,7 +1394,7 @@ VerticalPath KinematicDescent4DPredictor::ConstantDecelerationVerticalPath(Verti
       result.wind_velocity_east.push_back(Vwx);
       result.wind_velocity_north.push_back(Vwy);
       result.algorithm_type.push_back(VerticalPath::PredictionAlgorithmType::CONSTANT_DECEL);
-
+      result.flap_setting.push_back(aaesim::open_source::bada_utils::FlapConfiguration::UNDEFINED);
       result.mass_kg.push_back(-1.0);
 
       curr_time = result.time_to_go_sec.back();
@@ -1484,7 +1474,7 @@ VerticalPath KinematicDescent4DPredictor::ConstantFpaToCurrentPositionVerticalPa
    while (dist < Units::MetersLength(aircraft_distance_to_go).value()
           && h < Units::MetersLength(m_transition_altitude_msl).value()) {
       constraints = FindActiveConstraint(dist, precalc_waypoints);
-      double distance_left = constraints.constraint_dist;
+      double distance_left = Units::MetersLength(constraints.constraint_along_path_distance).value();
       if (distance_left > Units::MetersLength(aircraft_distance_to_go).value()) {
          distance_left = Units::MetersLength(aircraft_distance_to_go).value();
       }
@@ -1504,10 +1494,10 @@ VerticalPath KinematicDescent4DPredictor::ConstantFpaToCurrentPositionVerticalPa
          dist = result.along_path_distance_m.back();
       }
 
-      while (dist < constraints.constraint_dist && h < altitude_at_end) {
-         if (v_cas < constraints.constraint_speedHi) {
+      while (dist < Units::MetersLength(constraints.constraint_along_path_distance).value() && h < altitude_at_end) {
+         if (v_cas < Units::MetersPerSecondSpeed(constraints.constraint_speedHi).value()) {
             result = ConstantFpaDecelerationVerticalPath(result, altitude_at_end,
-                                                         constraints.constraint_speedHi, fpa, horizontal_path,
+                                                         Units::MetersPerSecondSpeed(constraints.constraint_speedHi).value(), fpa, horizontal_path,
                                                          precalc_waypoints, weather_prediction,
                                                          Units::Length(Units::infinity()));
          }
@@ -1521,9 +1511,12 @@ VerticalPath KinematicDescent4DPredictor::ConstantFpaToCurrentPositionVerticalPa
             break;
          }
       }
-      if (h > altitude_at_end && dist < constraints.constraint_dist) {
-         result = LevelVerticalPath(result, constraints.constraint_dist, horizontal_path, weather_prediction,
+      if (h > altitude_at_end && dist < Units::MetersLength(constraints.constraint_along_path_distance).value()) {
+         result = LevelVerticalPath(result, Units::MetersLength(constraints.constraint_along_path_distance).value(), horizontal_path, weather_prediction,
                                     Units::Length(Units::infinity()));
+         dist = result.along_path_distance_m.back();
+         v_cas = result.cas_mps.back();
+         h = result.altitude_m.back();
       }
    }
 
@@ -1534,7 +1527,7 @@ VerticalPath KinematicDescent4DPredictor::ConstantFpaToCurrentPositionVerticalPa
                                         Units::Length(Units::infinity()));
    }
 
-   double prediction_dist = precalc_waypoints[precalc_waypoints.size() - 1].m_precalc_constraints.constraint_dist;
+   double prediction_dist = Units::MetersLength(precalc_waypoints[precalc_waypoints.size() - 1].m_precalc_constraints.constraint_along_path_distance).value();
    result = LevelVerticalPath(result, prediction_dist,
                               horizontal_path, weather_prediction, Units::Length(Units::infinity()));
    return result;
@@ -1548,6 +1541,7 @@ void KinematicDescent4DPredictor::ComputeWindCoefficients(Units::Length altitude
                                                           Units::Speed &wind_velocity_x,
                                                           Units::Speed &wind_velocity_y) {
    Units::HertzFrequency dVwx_dh, dVwy_dh;
+
    m_wind_calculator.ComputeWindGradients(altitude, weather_prediction, wind_velocity_x, wind_velocity_y, dVwx_dh,
                                           dVwy_dh);
 

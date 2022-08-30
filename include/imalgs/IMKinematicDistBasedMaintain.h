@@ -1,18 +1,20 @@
 // ****************************************************************************
 // NOTICE
 //
-// This is the copyright work of The MITRE Corporation, and was produced
-// for the U. S. Government under Contract Number DTFAWA-10-C-00080, and
-// is subject to Federal Aviation Administration Acquisition Management
-// System Clause 3.5-13, Rights In Data-General, Alt. III and Alt. IV
-// (Oct. 1996).  No other use other than that granted to the U. S.
-// Government, or to those acting on behalf of the U. S. Government,
-// under that Clause is authorized without the express written
-// permission of The MITRE Corporation. For further information, please
-// contact The MITRE Corporation, Contracts Office, 7515 Colshire Drive,
-// McLean, VA  22102-7539, (703) 983-6000. 
+// This work was produced for the U.S. Government under Contract 693KA8-22-C-00001 
+// and is subject to Federal Aviation Administration Acquisition Management System 
+// Clause 3.5-13, Rights In Data-General, Alt. III and Alt. IV (Oct. 1996).
 //
-// Copyright 2020 The MITRE Corporation. All Rights Reserved.
+// The contents of this document reflect the views of the author and The MITRE 
+// Corporation and do not necessarily reflect the views of the Federal Aviation 
+// Administration (FAA) or the Department of Transportation (DOT). Neither the FAA 
+// nor the DOT makes any warranty or guarantee, expressed or implied, concerning 
+// the content or accuracy of these views.
+//
+// For further information, please contact The MITRE Corporation, Contracts Management 
+// Office, 7515 Colshire Drive, McLean, VA 22102-7539, (703) 983-6000.
+//
+// 2022 The MITRE Corporation. All Rights Reserved.
 // ****************************************************************************
 
 #pragma once
@@ -33,16 +35,16 @@ public:
    virtual void IterationReset();
 
    // Does NOT inherit from IMAlgorithm::Update()
-   Guidance Update(const DynamicsState &dynamics_state,
-                   const AircraftState &ownship_aircraft_state,
-                   const AircraftState &target_state_projected_on_ownships_path_at_adjusted_distance,
+   aaesim::open_source::Guidance Update(const aaesim::open_source::DynamicsState &dynamics_state,
+                   const interval_management::AircraftState &ownship_aircraft_state,
+                   const interval_management::AircraftState &target_state_projected_on_ownships_path_at_adjusted_distance,
                    const Units::Length target_dtg_along_ownships_path_at_adjusted_distance,
                    const Units::Length target_dtg_along_ownships_path,
                    const KinematicTrajectoryPredictor &ownship_kinematic_trajectory_predictor,
-                   const Guidance &guidance_in,
-                   const vector<AircraftState> &target_aircraft_state_history,
-                   const AchievePointCalcs &ownship_achieve_point_calcs,
-                   const AchievePointCalcs &traffic_reference_point_calcs,
+                   const aaesim::open_source::Guidance &guidance_in,
+                   const vector<interval_management::AircraftState> &target_aircraft_state_history,
+                   const interval_management::AchievePointCalcs &ownship_achieve_point_calcs,
+                   const interval_management::AchievePointCalcs &traffic_reference_point_calcs,
                    PilotDelay &pilot_delay);
 
    virtual const double GetMsi() const;
@@ -54,7 +56,7 @@ public:
 private:
    void CalculateIas(const Units::Length current_ownship_altitude,
                      const Units::Length target_kinematic_dtg_to_end_of_route,
-                     const DynamicsState &dynamics_state,
+                     const aaesim::open_source::DynamicsState &dynamics_state,
                      const KinematicTrajectoryPredictor &ownship_kinematic_trajectory_predictor,
                      PilotDelay &pilot_delay);
 
@@ -64,13 +66,13 @@ private:
                       const KinematicTrajectoryPredictor &ownship_kinematic_trajectory_predictor,
                       PilotDelay &pilot_delay);
 
-   void RecordInternalObserverData(const AircraftState &ownship_aircraft_state,
-                                   const AircraftState &target_aircraft_state,
-                                   const DynamicsState &dynamics_state,
+   void RecordInternalObserverData(const interval_management::AircraftState &ownship_aircraft_state,
+                                   const interval_management::AircraftState &target_aircraft_state,
+                                   const aaesim::open_source::DynamicsState &dynamics_state,
                                    const Units::Speed true_airspeed_command,
                                    const Units::Length target_true_dtg,
                                    const Units::Length ownship_true_dtg,
-                                   const std::vector<AircraftState> &target_aircraft_state_history,
+                                   const std::vector<interval_management::AircraftState> &target_aircraft_state_history,
                                    const KinematicTrajectoryPredictor &ownship_kinematic_trajectory_predictor);
 
    const bool IsOwnshipBelowTransitionAltitude(Units::Length current_ownship_altitude,
@@ -78,8 +80,7 @@ private:
 
    Units::Length m_measured_spacing_interval;
 
-   //FIXME aaes-820 m_logger shadows name in IMAlgorithm
-   static log4cplus::Logger logger;
+   static log4cplus::Logger m_logger;
 };
 
 inline const bool IMKinematicDistBasedMaintain::IsOwnshipBelowTransitionAltitude(Units::Length current_ownship_altitude,

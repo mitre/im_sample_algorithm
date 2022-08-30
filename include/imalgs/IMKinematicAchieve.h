@@ -1,18 +1,20 @@
 // ****************************************************************************
 // NOTICE
 //
-// This is the copyright work of The MITRE Corporation, and was produced
-// for the U. S. Government under Contract Number DTFAWA-10-C-00080, and
-// is subject to Federal Aviation Administration Acquisition Management
-// System Clause 3.5-13, Rights In Data-General, Alt. III and Alt. IV
-// (Oct. 1996).  No other use other than that granted to the U. S.
-// Government, or to those acting on behalf of the U. S. Government,
-// under that Clause is authorized without the express written
-// permission of The MITRE Corporation. For further information, please
-// contact The MITRE Corporation, Contracts Office, 7515 Colshire Drive,
-// McLean, VA  22102-7539, (703) 983-6000. 
+// This work was produced for the U.S. Government under Contract 693KA8-22-C-00001 
+// and is subject to Federal Aviation Administration Acquisition Management System 
+// Clause 3.5-13, Rights In Data-General, Alt. III and Alt. IV (Oct. 1996).
 //
-// Copyright 2020 The MITRE Corporation. All Rights Reserved.
+// The contents of this document reflect the views of the author and The MITRE 
+// Corporation and do not necessarily reflect the views of the Federal Aviation 
+// Administration (FAA) or the Department of Transportation (DOT). Neither the FAA 
+// nor the DOT makes any warranty or guarantee, expressed or implied, concerning 
+// the content or accuracy of these views.
+//
+// For further information, please contact The MITRE Corporation, Contracts Management 
+// Office, 7515 Colshire Drive, McLean, VA 22102-7539, (703) 983-6000.
+//
+// 2022 The MITRE Corporation. All Rights Reserved.
 // ****************************************************************************
 
 #pragma once
@@ -39,37 +41,34 @@ public:
 
    IMKinematicAchieve();
 
-   virtual ~IMKinematicAchieve();
+   virtual ~IMKinematicAchieve() = default;
 
-   virtual void IterationReset();
+   void IterationReset() override;
 
-   virtual void Initialize(const KineticTrajectoryPredictor& ownship_kinetic_trajectory_predictor,
-                           const KineticTrajectoryPredictor& target_kinetic_trajectory_predictor,
-                           std::shared_ptr<TangentPlaneSequence> tangent_plane_sequence,
-                           AircraftIntent& target_aircraft_intent,
-                           const IMClearance& im_clearance,
-                           const std::string& achieve_by_point,
-                           WeatherPrediction& weather_prediction);
+   void Initialize(std::shared_ptr<const aaesim::BadaPerformanceCalculator> aircraft_performance_calculator,
+                  OwnshipPredictionParameters ownship_prediction_parameters,
+                  const AircraftIntent &ownship_aircraft_intent,
+                  const AircraftIntent& target_aircraft_intent,
+                  const IMClearance& im_clearance,
+                  WeatherPrediction& weather_prediction) override;
 
-   virtual Guidance Update(const Guidance& prevguidance,
-                           const DynamicsState& dynamicsstate,
-                           const AircraftState& owntruthstate,
-                           const AircraftState& targettruthstate,
-                           const vector<AircraftState>& targethistory);
+   aaesim::open_source::Guidance Update(const aaesim::open_source::Guidance& prevguidance,
+                  const aaesim::open_source::DynamicsState& dynamicsstate,
+                  const interval_management::AircraftState& owntruthstate,
+                  const interval_management::AircraftState& targettruthstate,
+                  const vector<interval_management::AircraftState>& targethistory) override;
 
-   virtual void ResetDefaults();
+   void ResetDefaults() override;
 
-   virtual const bool IsOwnshipPassedPtp() const;
+   const bool IsOwnshipPassedPtp() const override;
 
-   virtual const Units::Length GetTargetDtgToLastWaypoint() const;
+   const Units::Length GetTargetDtgToLastWaypoint() const override;
 
-   virtual const AircraftState GetTargetStateProjectedAsgAdjusted() const = 0;
+   virtual const interval_management::AircraftState GetTargetStateProjectedAsgAdjusted() const = 0;
 
-   //FIXME aaes-820 shadows name in IMAlgorithm, but is not virtual
-   virtual bool IsBlendWind() const;
+   bool IsBlendWind() const override;
 
-   //FIXME aaes-820 shadows name in IMAlgorithm, but is not virtual
-   void SetBlendWind(bool wind_blending_enabled);
+   void SetBlendWind(bool wind_blending_enabled) override;
 
    /*
     * API
@@ -108,42 +107,43 @@ public:
 
    const bool IsTargetAligned() const;
 
-   const Units::SignedAngle CalculateTargetTrackAngle(const vector<AircraftState> &target_adsb_history);
+   const Units::SignedAngle CalculateTargetTrackAngle(const vector<interval_management::AircraftState> &target_adsb_history);
    const Waypoint& GetTrafficReferencePoint() const;
 
 protected:
 
    virtual const bool IsOwnshipBelowTransitionAltitude(Units::Length current_ownship_altitude);
 
-   Waypoint MakeWaypointFromState(const AircraftState aircraft_state,
+   Waypoint MakeWaypointFromState(const interval_management::AircraftState aircraft_state,
                                   Units::Speed wind_x,
                                   Units::Speed wind_y) const;
 
    bool CalculateRFLegPhase(); // Returns true if there is an RF Leg on this route
 
    void ComputeFASTrajectories(
-         const AircraftState& owntruthstate,
-         const AircraftState& targettruthstate);
+         const interval_management::AircraftState& owntruthstate,
+         const interval_management::AircraftState& targettruthstate);
 
    void CheckPredictionAccuracy(
-         const AircraftState& owntruthstate,
-         const AircraftState& targettruthstate);
+         const interval_management::AircraftState& owntruthstate,
+         const interval_management::AircraftState& targettruthstate);
 
    void SetTrafficReferencePointConstraints(
-         const AircraftState& owntruthstate,
-         const AircraftState& targetsyncstate);
+         const interval_management::AircraftState& owntruthstate,
+         const interval_management::AircraftState& targetsyncstate);
 
    KinematicTrajectoryPredictor m_ownship_kinematic_trajectory_predictor;
    KinematicTrajectoryPredictor m_target_kinematic_trajectory_predictor;
 
-   AchievePointCalcs m_ownship_kinematic_achieve_by_calcs;
+   interval_management::AchievePointCalcs m_ownship_kinematic_achieve_by_calcs;
    Waypoint m_traffic_reference_point;    // can be specified or generated
-   AchievePointCalcs m_target_kinematic_traffic_reference_point_calcs;
+   interval_management::AchievePointCalcs m_target_kinematic_traffic_reference_point_calcs;
 
    AircraftIntent m_ownship_aircraft_intent;
 
-   AlongPathDistanceCalculator m_ownship_distance_calculator, m_target_distance_calculator,
-                               m_ownship_kinetic_distance_calculator, m_im_ownship_distance_calculator;
+   AlongPathDistanceCalculator m_ownship_distance_calculator,
+                               m_target_distance_calculator,
+                               m_im_ownship_distance_calculator;
 
    std::list<Units::Angle> m_ownship_track_angle_history;
    std::list<Units::Angle> m_target_track_angle_history;
@@ -155,35 +155,38 @@ protected:
    bool m_fas_intent_valid;
    bool m_compute_ownship_kinematic_trajectory;
    bool m_compute_target_kinematic_trajectory;
-   bool m_ownship_kinematic_trajectory_dumped;
-   bool m_target_kinematic_trajectory_dumped;
    bool m_target_aircraft_exists;
    bool m_target_history_exists;
    bool m_is_target_aligned;
-
+   bool m_new_trajectory_prediction_available;
 
    static const Units::FeetLength TARGET_ALTITUDE_TOLERANCE;
 
 private:
    void IterClearIMKinAch();
 
-   void HandleTrajectoryPrediction(const AircraftState& owntruthstate,
-                                   const AircraftState& targetsyncstate,
-                                   const vector<AircraftState>& target_adsb_history);
+   void HandleTrajectoryPrediction(const interval_management::AircraftState& owntruthstate,
+                                   const interval_management::AircraftState& targetsyncstate,
+                                   const vector<interval_management::AircraftState>& target_adsb_history);
 
-   void CalculateOwnshipDtgToPlannedTerminationPoint(const AircraftState& current_ownship_state);
+   void CalculateOwnshipDtgToPlannedTerminationPoint(const interval_management::AircraftState& current_ownship_state);
 
    void CalculateOwnshipDtgToAchieveByPoint();
 
-   void CalculateTargetDtgToImPoints(const AircraftState& current_lead_state);
+   void CalculateTargetDtgToImPoints(const interval_management::AircraftState& current_lead_state);
 
    void TrimAircraftIntentAfterWaypoint(AircraftIntent& aircraft_intent,
                                         const std::string& waypoint_name);
 
+   void SetTangentPlaneSequence(std::shared_ptr<TangentPlaneSequence> tangent_plane_sequence);
+
    static log4cplus::Logger logger;
 
    bool m_blend_wind;
-   bool m_new_trajectory_prediction_available;
+   Wgs84AlongPathDistanceCalculator m_ownship_kinetic_distance_calculator;
+
+   std::shared_ptr<TangentPlaneSequence> m_tangent_plane_sequence;
+
 };
 
 inline bool IMKinematicAchieve::IsNewTrajectoryPredictionAvailable() const {
@@ -252,4 +255,8 @@ inline const bool IMKinematicAchieve::IsOwnshipBelowTransitionAltitude(Units::Le
 
 inline const bool IMKinematicAchieve::IsTargetAligned() const {
    return m_is_target_aligned;
+}
+
+inline void IMKinematicAchieve::SetTangentPlaneSequence(std::shared_ptr<TangentPlaneSequence> tangent_plane_sequence) {
+   m_tangent_plane_sequence = tangent_plane_sequence;
 }

@@ -1,25 +1,30 @@
 // ****************************************************************************
 // NOTICE
 //
-// This is the copyright work of The MITRE Corporation, and was produced
-// for the U. S. Government under Contract Number DTFAWA-10-C-00080, and
-// is subject to Federal Aviation Administration Acquisition Management
-// System Clause 3.5-13, Rights In Data-General, Alt. III and Alt. IV
-// (Oct. 1996).  No other use other than that granted to the U. S.
-// Government, or to those acting on behalf of the U. S. Government,
-// under that Clause is authorized without the express written
-// permission of The MITRE Corporation. For further information, please
-// contact The MITRE Corporation, Contracts Office, 7515 Colshire Drive,
-// McLean, VA  22102-7539, (703) 983-6000. 
+// This work was produced for the U.S. Government under Contract 693KA8-22-C-00001 
+// and is subject to Federal Aviation Administration Acquisition Management System 
+// Clause 3.5-13, Rights In Data-General, Alt. III and Alt. IV (Oct. 1996).
 //
-// Copyright 2020 The MITRE Corporation. All Rights Reserved.
+// The contents of this document reflect the views of the author and The MITRE 
+// Corporation and do not necessarily reflect the views of the Federal Aviation 
+// Administration (FAA) or the Department of Transportation (DOT). Neither the FAA 
+// nor the DOT makes any warranty or guarantee, expressed or implied, concerning 
+// the content or accuracy of these views.
+//
+// For further information, please contact The MITRE Corporation, Contracts Management 
+// Office, 7515 Colshire Drive, McLean, VA 22102-7539, (703) 983-6000.
+//
+// 2022 The MITRE Corporation. All Rights Reserved.
 // ****************************************************************************
 
 #include <iomanip>
 #include <utility>
+#include <public/CoreUtils.h>
 #include "imalgs/IMAlgorithm.h"
 #include "math/CustomMath.h"
 #include "public/AircraftCalculations.h"
+
+using namespace aaesim::open_source;
 
 log4cplus::Logger IMAlgorithm::m_logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("IMAlgorithm"));
 
@@ -60,18 +65,15 @@ IMAlgorithm::IMAlgorithm()
    m_quantize_flag = QUANTIZE_FLAG_DEFAULT;
 
    m_loaded = false;
-
+   m_has_kinetic_predictors = false;
    m_ownship_kinematic_dtg_to_ptp = Units::Infinity();
    m_ownship_kinetic_dtg_to_ptp = Units::Infinity();
-
    SetMaxSpeedDeviationPercentage(DEFAULT_SPEED_DEVIATION_PERCENTAGE);
    IterClearIMAlg();
 }
 
 IMAlgorithm::IMAlgorithm(const IMAlgorithm &obj)
       : m_initiate_signal_receipt_time(Units::Infinity()) {
-   m_target_kinetic_trajectory_predictor = NULL;
-   m_ownship_kinetic_trajectory_predictor = NULL;
    m_total_number_of_im_speed_changes = 0;
    m_limit_flag = false;
    m_quantize_flag = false;
@@ -102,7 +104,6 @@ void IMAlgorithm::Copy(const IMAlgorithm &obj) {
    m_total_number_of_im_speed_changes = obj.m_total_number_of_im_speed_changes;
 
    m_pilot_delay = obj.m_pilot_delay;
-   m_tangent_plane_sequence = obj.m_tangent_plane_sequence;
 
    m_middle_to_final_quantize_transition_distance = obj.m_middle_to_final_quantize_transition_distance;
    m_first_to_middle_quantize_transition_distance = obj.m_first_to_middle_quantize_transition_distance;
@@ -129,7 +130,6 @@ void IMAlgorithm::Copy(const IMAlgorithm &obj) {
    m_target_kinetic_trajectory_predictor = obj.m_target_kinetic_trajectory_predictor;
 
    m_target_aircraft_intent = obj.m_target_aircraft_intent;
-   m_achieve_by_point = obj.m_achieve_by_point;
    m_weather_prediction = obj.m_weather_prediction;
    m_stage_of_im_operation = obj.m_stage_of_im_operation;
    m_initiate_signal_receipt_time = obj.m_initiate_signal_receipt_time;
@@ -159,7 +159,7 @@ void IMAlgorithm::Copy(const IMAlgorithm &obj) {
    m_ownship_kinetic_dtg_to_abp = obj.m_ownship_kinetic_dtg_to_abp;
    m_ownship_kinetic_dtg_to_ptp = obj.m_ownship_kinetic_dtg_to_ptp;
    m_ownship_kinematic_dtg_to_ptp = obj.m_ownship_kinematic_dtg_to_ptp;
-
+   m_has_kinetic_predictors = obj.m_has_kinetic_predictors;
    m_high_speed_coef = obj.m_high_speed_coef;
    m_low_speed_coef = obj.m_low_speed_coef;
 
@@ -168,12 +168,11 @@ void IMAlgorithm::Copy(const IMAlgorithm &obj) {
    m_target_reference_gs = obj.m_target_reference_gs;
 }
 
-void IMAlgorithm::Initialize(const KineticTrajectoryPredictor &ownship_kinetic_trajectory_predictor,
-                             const KineticTrajectoryPredictor &target_kinetic_trajectory_predictor,
-                             std::shared_ptr<TangentPlaneSequence> tangent_plane_sequence,
-                             AircraftIntent &target_aircraft_intent,
+void IMAlgorithm::Initialize(std::shared_ptr<const aaesim::BadaPerformanceCalculator> aircraft_performance_calculator,
+                             OwnshipPredictionParameters ownship_prediction_parameters,
+                             const AircraftIntent &ownship_aircraft_intent,
+                             const AircraftIntent &target_aircraft_intent,
                              const IMClearance &im_clearance,
-                             const std::string &achieve_by_point,
                              WeatherPrediction &weather_prediction) {
    m_im_operation_is_complete = false;
    m_ownship_kinematic_dtg_to_ptp = Units::Infinity();
@@ -181,9 +180,6 @@ void IMAlgorithm::Initialize(const KineticTrajectoryPredictor &ownship_kinetic_t
    SetAssignedSpacingGoal(im_clearance);
    m_im_clearance = im_clearance;
    m_target_aircraft_intent = target_aircraft_intent;
-   m_achieve_by_point.assign(achieve_by_point);
-   SetKineticTrajectoryPredictors(ownship_kinetic_trajectory_predictor, target_kinetic_trajectory_predictor);
-   SetTangentPlaneSequence(std::move(tangent_plane_sequence));
    SetWeatherPrediction(weather_prediction);
 
    if (im_clearance.GetClearanceType() != IMClearance::CUSTOM) {
@@ -253,12 +249,11 @@ void IMAlgorithm::ResetDefaults() {
    }
 }
 
-Guidance IMAlgorithm::Update(const Guidance &prevguidance,
-                             const DynamicsState &dynamicsstate,
-                             const AircraftState &owntruthstate,
-                             const AircraftState &targettruthstate,
-                             const vector<AircraftState> &targethistory) {
-   throw std::runtime_error("Implementation error. You should not be here!");
+aaesim::open_source::Guidance IMAlgorithm::Update(const aaesim::open_source::Guidance &prevguidance,
+                             const aaesim::open_source::DynamicsState &dynamicsstate,
+                             const interval_management::AircraftState &owntruthstate,
+                             const interval_management::AircraftState &targettruthstate,
+                             const vector<interval_management::AircraftState> &targethistory) {
 
    return prevguidance;
 }
@@ -303,7 +298,6 @@ void IMAlgorithm::IterClearIMAlg() {
    m_target_kinetic_dtg_to_last_waypoint = Units::Infinity();
    m_target_kinetic_dtg_to_trp = Units::Infinity();
    m_target_reference_altitude = Units::zero();
-
    m_unmodified_im_speed_command_ias = Units::MetersPerSecondSpeed(-1.0);
    m_im_speed_command_ias = Units::MetersPerSecondSpeed(-1.0);
    m_im_speed_command_with_pilot_delay = Units::MetersPerSecondSpeed(-1.0);
@@ -311,6 +305,9 @@ void IMAlgorithm::IterClearIMAlg() {
    m_target_reference_gs = Units::negInfinity();
    m_target_reference_ias = Units::negInfinity();
    m_ownship_reference_gs = Units::negInfinity();
+   m_has_kinetic_predictors = false;
+   m_target_kinetic_trajectory_predictor = nullptr;
+   m_ownship_kinetic_trajectory_predictor = nullptr;
 
    m_im_clearance = IMClearance();
 }
@@ -319,17 +316,17 @@ void IMAlgorithm::IterationReset() {
    IterClearIMAlg();
 }
 
-void IMAlgorithm::UpdatePositionMetrics(const AircraftState &ownship_aircraft_state,
-                                        const AircraftState &target_aircraft_state) {
-   if (target_aircraft_state.m_id != IMUtils::UNINITIALIZED_AIRCRAFT_ID) {
+void IMAlgorithm::UpdatePositionMetrics(const interval_management::AircraftState &ownship_aircraft_state,
+                                        const interval_management::AircraftState &target_aircraft_state) {
+   if (target_aircraft_state.GetId() != IMUtils::UNINITIALIZED_AIRCRAFT_ID) {
       MergePointMetric &merge_point_metric =
-            InternalObserver::getInstance()->GetMergePointMetric(ownship_aircraft_state.m_id);
+            InternalObserver::getInstance()->GetMergePointMetric(ownship_aircraft_state.GetId());
       if (merge_point_metric.mergePointFound()) {
          merge_point_metric.update(
                ownship_aircraft_state.m_x, ownship_aircraft_state.m_y, target_aircraft_state.m_x,
                target_aircraft_state.m_y);
       }
-      InternalObserver::getInstance()->GetClosestPointMetric(ownship_aircraft_state.m_id).update(
+      InternalObserver::getInstance()->GetClosestPointMetric(ownship_aircraft_state.GetId()).update(
             ownship_aircraft_state.m_x, ownship_aircraft_state.m_y, target_aircraft_state.m_x,
             target_aircraft_state.m_y);
    }
@@ -397,9 +394,9 @@ Units::Speed IMAlgorithm::QuantizeThreshold(const Units::Length dtg_to_abp_in,
 Units::Speed IMAlgorithm::LimitImSpeedCommand(const Units::Speed im_speed_command_ias,
                                               const double reference_velocity_mps,
                                               const Units::Length distance_to_go_to_abp,
-                                              const BadaWithCalc &bada_with_calc,
+                                              std::shared_ptr<const aaesim::BadaPerformanceCalculator> bada_with_calc,
                                               const Units::Length ownship_altitude,
-                                              const int flap_configuration,
+                                              const aaesim::open_source::bada_utils::FlapConfiguration flap_configuration,
                                               const Units::Speed rf_upper_limit) {
    Units::Speed limitedspeed = im_speed_command_ias;
    Units::Speed quantspeed;
@@ -462,8 +459,8 @@ Units::Speed IMAlgorithm::LimitImSpeedCommand(const Units::Speed im_speed_comman
       limitedspeed = quantspeed;
    }
 
-   if (limitedspeed > bada_with_calc.flight_envelope.V_mo) {
-      limitedspeed = bada_with_calc.flight_envelope.V_mo;
+   if (limitedspeed > bada_with_calc->GetFlightEnvelopeInformation().V_mo) {
+      limitedspeed = bada_with_calc->GetFlightEnvelopeInformation().V_mo;
       if (m_quantize_flag) {
          int ilimitspeed = Units::KnotsSpeed(limitedspeed).value();
          int iqthreshold = Units::KnotsSpeed(qThreshold).value();
@@ -494,15 +491,15 @@ Units::Speed IMAlgorithm::LimitImSpeedCommand(const Units::Speed im_speed_comman
       m_active_filter_flag |= 256;
    }
 
-   if (flap_configuration > 0) {
-      if (flap_configuration == 1 && limitedspeed > bada_with_calc.mFlapSpeeds.VappMax) {
-         limitedspeed = bada_with_calc.mFlapSpeeds.VappMax;
+   if (flap_configuration > aaesim::open_source::bada_utils::FlapConfiguration::CRUISE) {
+      if (flap_configuration == aaesim::open_source::bada_utils::FlapConfiguration::APPROACH && limitedspeed > bada_with_calc->GetFlapSpeeds().cas_approach_maximum) {
+         limitedspeed = bada_with_calc->GetFlapSpeeds().cas_approach_maximum;
          m_active_filter_flag |= 512;
-      } else if (flap_configuration == 2 && limitedspeed > bada_with_calc.mFlapSpeeds.VlndMax) {
-         limitedspeed = bada_with_calc.mFlapSpeeds.VlndMax;
+      } else if (flap_configuration == aaesim::open_source::bada_utils::FlapConfiguration::LANDING && limitedspeed > bada_with_calc->GetFlapSpeeds().cas_landing_maximum) {
+         limitedspeed = bada_with_calc->GetFlapSpeeds().cas_landing_maximum;
          m_active_filter_flag |= 512;
-      } else if (flap_configuration == 3 && limitedspeed > bada_with_calc.mFlapSpeeds.VgearMax) {
-         limitedspeed = bada_with_calc.mFlapSpeeds.VgearMax;
+      } else if (flap_configuration == aaesim::open_source::bada_utils::FlapConfiguration::GEAR_DOWN && limitedspeed > bada_with_calc->GetFlapSpeeds().cas_gear_out_maximum) {
+         limitedspeed = bada_with_calc->GetFlapSpeeds().cas_gear_out_maximum;
          m_active_filter_flag |= 512;
       }
 
@@ -527,18 +524,18 @@ Units::Speed IMAlgorithm::LimitImSpeedCommand(const Units::Speed im_speed_comman
 
 double IMAlgorithm::LimitImMachCommand(double estimated_mach,
                                        const double nominal_mach,
-                                       const BadaWithCalc &bada_calculator,
+                                       std::shared_ptr<const aaesim::BadaPerformanceCalculator> bada_calculator,
                                        const Units::Length current_ownship_altitude) {
 
    m_active_filter_flag = 0L;
 
-   if (estimated_mach > bada_calculator.flight_envelope.M_mo) {
-      estimated_mach = bada_calculator.flight_envelope.M_mo;
+   if (estimated_mach > bada_calculator->GetFlightEnvelopeInformation().M_mo) {
+      estimated_mach = bada_calculator->GetFlightEnvelopeInformation().M_mo;
       m_active_filter_flag |= 64;
    }
 
-   const double massterm = bada_calculator.mAircraftMass / bada_calculator.mass.m_ref;
-   const Units::Speed casmin = 1.3 * bada_calculator.aerodynamics.cruise.V_stall * sqrt(massterm);
+   const double massterm = bada_calculator->GetAircraftMass() / bada_calculator->GetAircraftMassInformation().m_ref;
+   const Units::Speed casmin = 1.3 * bada_calculator->GetAerodynamicsInformation().cruise.V_stall * sqrt(massterm);
    const Units::Speed tasmin =
          m_weather_prediction.getAtmosphere()->CAS2TAS(casmin, current_ownship_altitude);
    const double minimum_mach = Units::MetersPerSecondSpeed(tasmin).value() /
@@ -617,9 +614,6 @@ void IMAlgorithm::DumpParameters(const std::string &parameters_to_print) {
    LOG4CPLUS_DEBUG(IMAlgorithm::m_logger,
                    "error distance " << Units::NauticalMilesLength(m_error_distance).value() << std::endl);
 
-   LOG4CPLUS_DEBUG(IMAlgorithm::m_logger,
-                   "ownship kinetic achieve waypoint " << m_achieve_by_point.c_str() << std::endl);
-
    m_ownship_kinetic_trajectory_predictor->GetAircraftIntent().DumpParms("mOwnIntent");
    m_target_kinetic_trajectory_predictor->GetAircraftIntent().DumpParms("mTargetIntent");
 
@@ -632,4 +626,11 @@ void IMAlgorithm::DumpParameters(const std::string &parameters_to_print) {
 void IMAlgorithm::SetMaxSpeedDeviationPercentage(const double max_speed_deviation_percentage) {
    m_low_speed_coef = 1 - max_speed_deviation_percentage * .01;
    m_high_speed_coef = 1 + max_speed_deviation_percentage * .01;
+}
+
+void IMAlgorithm::InitializeFmsPredictors(const Wgs84KineticDescentPredictor &ownship_kinetic_trajectory_predictor,
+                                          const Wgs84KineticDescentPredictor &target_kinetic_trajectory_predictor) {
+   m_ownship_kinetic_trajectory_predictor = &ownship_kinetic_trajectory_predictor;
+   m_target_kinetic_trajectory_predictor = &target_kinetic_trajectory_predictor;
+   m_has_kinetic_predictors = true;
 }

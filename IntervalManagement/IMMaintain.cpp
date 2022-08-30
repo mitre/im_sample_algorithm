@@ -1,23 +1,25 @@
 // ****************************************************************************
 // NOTICE
 //
-// This is the copyright work of The MITRE Corporation, and was produced
-// for the U. S. Government under Contract Number DTFAWA-10-C-00080, and
-// is subject to Federal Aviation Administration Acquisition Management
-// System Clause 3.5-13, Rights In Data-General, Alt. III and Alt. IV
-// (Oct. 1996).  No other use other than that granted to the U. S.
-// Government, or to those acting on behalf of the U. S. Government,
-// under that Clause is authorized without the express written
-// permission of The MITRE Corporation. For further information, please
-// contact The MITRE Corporation, Contracts Office, 7515 Colshire Drive,
-// McLean, VA  22102-7539, (703) 983-6000. 
+// This work was produced for the U.S. Government under Contract 693KA8-22-C-00001 
+// and is subject to Federal Aviation Administration Acquisition Management System 
+// Clause 3.5-13, Rights In Data-General, Alt. III and Alt. IV (Oct. 1996).
 //
-// Copyright 2020 The MITRE Corporation. All Rights Reserved.
+// The contents of this document reflect the views of the author and The MITRE 
+// Corporation and do not necessarily reflect the views of the Federal Aviation 
+// Administration (FAA) or the Department of Transportation (DOT). Neither the FAA 
+// nor the DOT makes any warranty or guarantee, expressed or implied, concerning 
+// the content or accuracy of these views.
+//
+// For further information, please contact The MITRE Corporation, Contracts Management 
+// Office, 7515 Colshire Drive, McLean, VA 22102-7539, (703) 983-6000.
+//
+// 2022 The MITRE Corporation. All Rights Reserved.
 // ****************************************************************************
 
 #include "imalgs/IMMaintain.h"
 
-log4cplus::Logger IMMaintain::logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("IMMaintain"));
+log4cplus::Logger IMMaintain::m_logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("IMMaintain"));
 
 // Do not change this default value without discussing with IM research team
 const Units::HertzFrequency IMMaintain::MAINTAIN_CONTROL_GAIN_DEFAULT(.008);
@@ -30,14 +32,11 @@ IMMaintain::IMMaintain(const IMMaintain &obj) {
    Copy(obj);
 }
 
-IMMaintain::~IMMaintain() {
-}
-
 void IMMaintain::ResetDefaults() {
    IMAlgorithm::ResetDefaults();
 
    if (m_maintain_control_gain != MAINTAIN_CONTROL_GAIN_DEFAULT) {
-      LOG4CPLUS_WARN(logger, "mMaintainControlGain reset to " << MAINTAIN_CONTROL_GAIN_DEFAULT << RESET_MSG);
+      LOG4CPLUS_WARN(m_logger, "mMaintainControlGain reset to " << MAINTAIN_CONTROL_GAIN_DEFAULT << RESET_MSG);
       m_maintain_control_gain = MAINTAIN_CONTROL_GAIN_DEFAULT;
    }
 
@@ -76,10 +75,9 @@ void IMMaintain::InitializeScenario(IMAchieve *obj,
 void IMMaintain::Prepare(Units::Speed previous_im_speed_command,
                          Units::Speed previous_ias_command,
                          double previous_mach_command,
-                         std::shared_ptr<TangentPlaneSequence> tangent_plane_sequence,
-                         const TrajectoryPredictor &ownship_trajectory_predictor,
+                         const EuclideanTrajectoryPredictor &ownship_trajectory_predictor,
                          const AlongPathDistanceCalculator &im_distance_calculator,
-                         const vector<AircraftState> &target_adsb_track_history,
+                         const vector<interval_management::AircraftState> &target_adsb_track_history,
                          const IMClearance &im_clearance,
                          const bool has_rf_leg,
                          const std::vector<std::pair<Units::Length, Units::Speed>> &rf_limits) {
@@ -87,7 +85,6 @@ void IMMaintain::Prepare(Units::Speed previous_im_speed_command,
    m_previous_reference_im_speed_command_tas = previous_im_speed_command;
    m_previous_im_speed_command_ias = previous_ias_command;
    m_previous_reference_im_speed_command_mach = previous_mach_command;
-   m_tangent_plane_sequence = tangent_plane_sequence;
    m_ownship_decrementing_distance_calculator = AlongPathDistanceCalculator(
          ownship_trajectory_predictor.GetHorizontalPath(),
          TrajectoryIndexProgressionDirection::DECREMENTING);
@@ -122,3 +119,4 @@ const double IMMaintain::GetSpacingError() const {
    // for all spacing error calculations.
    return -INFINITY;
 }
+

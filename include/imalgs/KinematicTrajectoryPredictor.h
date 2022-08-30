@@ -1,50 +1,55 @@
 // ****************************************************************************
 // NOTICE
 //
-// This is the copyright work of The MITRE Corporation, and was produced
-// for the U. S. Government under Contract Number DTFAWA-10-C-00080, and
-// is subject to Federal Aviation Administration Acquisition Management
-// System Clause 3.5-13, Rights In Data-General, Alt. III and Alt. IV
-// (Oct. 1996).  No other use other than that granted to the U. S.
-// Government, or to those acting on behalf of the U. S. Government,
-// under that Clause is authorized without the express written
-// permission of The MITRE Corporation. For further information, please
-// contact The MITRE Corporation, Contracts Office, 7515 Colshire Drive,
-// McLean, VA  22102-7539, (703) 983-6000. 
+// This work was produced for the U.S. Government under Contract 693KA8-22-C-00001 
+// and is subject to Federal Aviation Administration Acquisition Management System 
+// Clause 3.5-13, Rights In Data-General, Alt. III and Alt. IV (Oct. 1996).
 //
-// Copyright 2020 The MITRE Corporation. All Rights Reserved.
+// The contents of this document reflect the views of the author and The MITRE 
+// Corporation and do not necessarily reflect the views of the Federal Aviation 
+// Administration (FAA) or the Department of Transportation (DOT). Neither the FAA 
+// nor the DOT makes any warranty or guarantee, expressed or implied, concerning 
+// the content or accuracy of these views.
+//
+// For further information, please contact The MITRE Corporation, Contracts Management 
+// Office, 7515 Colshire Drive, McLean, VA 22102-7539, (703) 983-6000.
+//
+// 2022 The MITRE Corporation. All Rights Reserved.
 // ****************************************************************************
 
 #pragma once
 
+#include <vector>
+#include <scalar/Angle.h>
 #include "utility/Logging.h"
-#include "aaesim/TrajectoryPredictor.h"
-#include "aaesim/KineticTrajectoryPredictor.h"
+#include "aaesim/EuclideanTrajectoryPredictor.h"
 #include "imalgs/KinematicDescent4DPredictor.h"
 #include "public/PrecalcWaypoint.h"
 #include "public/HorizontalPath.h"
 #include "public/AircraftIntent.h"
 #include "public/Guidance.h"
-#include "public/AircraftState.h"
-#include <vector>
-#include <Angle.h>
+#include "imalgs/AircraftState.h"
 
 
-class KinematicTrajectoryPredictor : public TrajectoryPredictor
+class KinematicTrajectoryPredictor : public EuclideanTrajectoryPredictor
 {
 public:
 
    KinematicTrajectoryPredictor();
 
+   KinematicTrajectoryPredictor(
+      std::shared_ptr<const aaesim::BadaPerformanceCalculator> bada_calculator,
+      Units::Angle maximum_bank_angle,
+      Units::Speed transition_ias,
+      double transition_mach,
+      Units::Length transition_altitude_msl,
+      Units::Length cruise_altitude_msl);
+
    KinematicTrajectoryPredictor(const KinematicTrajectoryPredictor &obj);
 
-   virtual ~KinematicTrajectoryPredictor();
+   virtual ~KinematicTrajectoryPredictor() = default;
 
-   void CalculateWaypoints(const AircraftIntent &aircraft_intent) final;
-
-   void CalculateWaypoints(const AircraftIntent &aircraft_intent, const WeatherEstimate &weather_estimate);
-
-   void SetMembers(const KineticTrajectoryPredictor &kinetic_trajectory_predictor);
+   void CalculateWaypoints(const AircraftIntent &aircraft_intent, const WeatherPrediction &weather_prediction) override final;
 
    KinematicTrajectoryPredictor &operator=(const KinematicTrajectoryPredictor &obj);
 

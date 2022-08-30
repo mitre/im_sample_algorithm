@@ -1,23 +1,26 @@
 // ****************************************************************************
 // NOTICE
 //
-// This is the copyright work of The MITRE Corporation, and was produced
-// for the U. S. Government under Contract Number DTFAWA-10-C-00080, and
-// is subject to Federal Aviation Administration Acquisition Management
-// System Clause 3.5-13, Rights In Data-General, Alt. III and Alt. IV
-// (Oct. 1996).  No other use other than that granted to the U. S.
-// Government, or to those acting on behalf of the U. S. Government,
-// under that Clause is authorized without the express written
-// permission of The MITRE Corporation. For further information, please
-// contact The MITRE Corporation, Contracts Office, 7515 Colshire Drive,
-// McLean, VA  22102-7539, (703) 983-6000. 
+// This work was produced for the U.S. Government under Contract 693KA8-22-C-00001 
+// and is subject to Federal Aviation Administration Acquisition Management System 
+// Clause 3.5-13, Rights In Data-General, Alt. III and Alt. IV (Oct. 1996).
 //
-// Copyright 2020 The MITRE Corporation. All Rights Reserved.
+// The contents of this document reflect the views of the author and The MITRE 
+// Corporation and do not necessarily reflect the views of the Federal Aviation 
+// Administration (FAA) or the Department of Transportation (DOT). Neither the FAA 
+// nor the DOT makes any warranty or guarantee, expressed or implied, concerning 
+// the content or accuracy of these views.
+//
+// For further information, please contact The MITRE Corporation, Contracts Management 
+// Office, 7515 Colshire Drive, McLean, VA 22102-7539, (703) 983-6000.
+//
+// 2022 The MITRE Corporation. All Rights Reserved.
 // ****************************************************************************
 
 #include <public/ThreeDOFDynamics.h>
 #include <imalgs/TestVectorSpeedControl.h>
 #include <public/StandardAtmosphere.h>
+#include <imalgs/KinematicTrajectoryPredictor.h>
 
 unsigned int TestVectorSpeedControl::DEFAULT_DECELERATION_START_TIME_SEC = 60;
 unsigned int TestVectorSpeedControl::DEFAULT_ACCELERATION_START_TIME_SEC = 240;
@@ -41,27 +44,22 @@ TestVectorSpeedControl::TestVectorSpeedControl()
 
 TestVectorSpeedControl::~TestVectorSpeedControl() = default;
 
-void TestVectorSpeedControl::Initialize(const KineticTrajectoryPredictor &ownship_kinetic_trajectory_predictor,
-                                        const KineticTrajectoryPredictor &target_kinetic_trajectory_predictor,
-                                        std::shared_ptr<TangentPlaneSequence> tangent_plane_sequence,
-                                        AircraftIntent &target_aircraft_intent,
-                                        const IMClearance &im_clearance,
-                                        const std::string &achieve_by_point,
-                                        WeatherPrediction &weather_prediction) {
-   IMAlgorithm::Initialize(ownship_kinetic_trajectory_predictor, target_kinetic_trajectory_predictor,
-                           tangent_plane_sequence, target_aircraft_intent, im_clearance, achieve_by_point,
-                           weather_prediction);
+void TestVectorSpeedControl::InitializeFmsPredictors(const Wgs84KineticDescentPredictor &ownship_kinetic_trajectory_predictor,
+                                                     const Wgs84KineticDescentPredictor &target_kinetic_trajectory_predictor) {
+   IMAlgorithm::InitializeFmsPredictors(ownship_kinetic_trajectory_predictor, target_kinetic_trajectory_predictor);
 
    if (!m_loaded) {
       ResetDefaults();
       m_loaded = true;
    }
 
-   m_distance_calculator = AlongPathDistanceCalculator(ownship_kinetic_trajectory_predictor.GetHorizontalPath(),
+   m_distance_calculator = Wgs84AlongPathDistanceCalculator(ownship_kinetic_trajectory_predictor.GetHorizontalPath(),
                                                        TrajectoryIndexProgressionDirection::DECREMENTING);
 
    const Units::Speed initial_speed = Units::MetersPerSecondSpeed(
-         ownship_kinetic_trajectory_predictor.GetVerticalPredictor()->GetVerticalPath().cas_mps.back());
+      ownship_kinetic_trajectory_predictor.GetVertPredictor()->GetVerticalPath().cas_mps.back());
+   // For developing Wgs84
+   //const Units::Speed initial_speed = Units::MetersPerSecondSpeed(170);
    m_deceleration_phase_target_ias = initial_speed - m_deceleration_phase_delta_ias;
    m_acceleration_phase_target_ias = m_deceleration_phase_target_ias + m_acceleration_phase_delta_ias;
    m_acceleration_phase_complete = false;
@@ -81,14 +79,14 @@ void TestVectorSpeedControl::Initialize(const KineticTrajectoryPredictor &ownshi
    }
 }
 
-Guidance TestVectorSpeedControl::Update(const Guidance &prevguidance,
-                                        const DynamicsState &dynamicsstate,
-                                        const AircraftState &owntruthstate,
-                                        const AircraftState &targettruthstate,
-                                        const vector<AircraftState> &targethistory) {
+aaesim::open_source::Guidance TestVectorSpeedControl::Update(const aaesim::open_source::Guidance &prevguidance,
+                                        const aaesim::open_source::DynamicsState &dynamicsstate,
+                                        const interval_management::AircraftState &owntruthstate,
+                                        const interval_management::AircraftState &targettruthstate,
+                                        const vector<interval_management::AircraftState> &targethistory) {
 
-   Guidance return_guidance = prevguidance;
-   const double current_time = owntruthstate.m_time;
+   aaesim::open_source::Guidance return_guidance = prevguidance;
+   const double current_time = owntruthstate.GetTimeStamp().value();
    Units::Speed new_ias_command = prevguidance.m_ias_command;
    Units::Speed new_delayed_ias_command = prevguidance.m_ias_command;
 
@@ -102,7 +100,7 @@ Guidance TestVectorSpeedControl::Update(const Guidance &prevguidance,
       if (!m_acceleration_target_achieved) {
          const Units::Speed tolerance = Units::KnotsSpeed(1.0);
          m_acceleration_target_achieved =
-               dynamicsstate.v_cas > (m_acceleration_phase_target_ias - tolerance);
+               dynamicsstate.v_indicated_airspeed > (m_acceleration_phase_target_ias - tolerance);
       }
       m_acceleration_phase_complete =
             m_acceleration_target_achieved && m_acceleration_phase_count > m_acceleration_phase_hold_duration;
@@ -133,8 +131,8 @@ Guidance TestVectorSpeedControl::Update(const Guidance &prevguidance,
          m_distance_calculator.CalculateAlongPathDistanceFromPosition(Units::FeetLength(owntruthstate.m_x),
                                                                       Units::FeetLength(owntruthstate.m_y),
                                                                       ownship_true_dtg);
-         InternalObserver::getInstance()->IM_command_output(owntruthstate.m_id,
-                                                            owntruthstate.m_time,
+         InternalObserver::getInstance()->IM_command_output(owntruthstate.GetId(),
+                                                            owntruthstate.GetTimeStamp().value(),
                                                             owntruthstate.m_z,
                                                             Units::MetersPerSecondSpeed(
                                                                   dynamicsstate.v_true_airspeed).value(),
