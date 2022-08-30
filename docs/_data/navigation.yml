@@ -1,0 +1,5 @@
+main:
+  - title: "Main"
+    url: /
+  - title: "Developer Talk"
+    url: /dev_talk.md
