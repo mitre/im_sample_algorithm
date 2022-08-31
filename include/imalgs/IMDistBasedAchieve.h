@@ -20,9 +20,8 @@
 #pragma once
 
 #include "imalgs/IMKinematicAchieve.h"
-#include "aaesim/TrueDistances.h"
-#include "loader/Loadable.h"
-#include "IMKinematicDistBasedMaintain.h"
+#include "imalgs/TrueDistances.h"
+#include "imalgs/IMKinematicDistBasedMaintain.h"
 
 class IMDistBasedAchieve : public IMKinematicAchieve
 {
