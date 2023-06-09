@@ -1,17 +1,17 @@
 // ****************************************************************************
 // NOTICE
 //
-// This work was produced for the U.S. Government under Contract 693KA8-22-C-00001 
-// and is subject to Federal Aviation Administration Acquisition Management System 
+// This work was produced for the U.S. Government under Contract 693KA8-22-C-00001
+// and is subject to Federal Aviation Administration Acquisition Management System
 // Clause 3.5-13, Rights In Data-General, Alt. III and Alt. IV (Oct. 1996).
 //
-// The contents of this document reflect the views of the author and The MITRE 
-// Corporation and do not necessarily reflect the views of the Federal Aviation 
-// Administration (FAA) or the Department of Transportation (DOT). Neither the FAA 
-// nor the DOT makes any warranty or guarantee, expressed or implied, concerning 
+// The contents of this document reflect the views of the author and The MITRE
+// Corporation and do not necessarily reflect the views of the Federal Aviation
+// Administration (FAA) or the Department of Transportation (DOT). Neither the FAA
+// nor the DOT makes any warranty or guarantee, expressed or implied, concerning
 // the content or accuracy of these views.
 //
-// For further information, please contact The MITRE Corporation, Contracts Management 
+// For further information, please contact The MITRE Corporation, Contracts Management
 // Office, 7515 Colshire Drive, McLean, VA 22102-7539, (703) 983-6000.
 //
 // 2022 The MITRE Corporation. All Rights Reserved.
@@ -27,50 +27,29 @@
 #include "public/AircraftIntent.h"
 #include "imalgs/IMUtils.h"
 
-class IMClearance
-{
-public:
+namespace interval_management {
+namespace open_source {
+class IMClearance {
+  public:
+   enum ClearanceType { NONE = -1, CUSTOM = 0, CAPTURE, MAINTAIN, ACHIEVE, FAS };
 
-   enum ClearanceType
-   {
-      NONE = -1,
-      CUSTOM = 0,
-      CAPTURE,
-      MAINTAIN,
-      ACHIEVE,
-      FAS
-   };
-
-   enum SpacingGoalType
-   {
-      TIME = 0,
-      DIST
-   };
+   enum SpacingGoalType { TIME = 0, DIST };
 
    IMClearance();
 
-   virtual ~IMClearance();
+   ~IMClearance() = default;
 
-   IMClearance(const ClearanceType &clearance_type,
-               const int target_id,
-               const std::string &traffic_reference_point,
-               const std::string &achieve_by_point,
-               const std::string &planned_termination_point,
-               const SpacingGoalType &assigned_spacing_goal_type,
-               const double assigned_spacing_goal,
-               const Units::Speed planned_final_approach_speed);
+   IMClearance(const ClearanceType &clearance_type, const int target_id, const std::string &traffic_reference_point,
+               const std::string &achieve_by_point, const std::string &planned_termination_point,
+               const SpacingGoalType &assigned_spacing_goal_type, const double assigned_spacing_goal,
+               const Units::Speed planned_final_approach_speed, const AircraftIntent &target_intent);
 
-   IMClearance(const ClearanceType &clearance_type,
-               const int target_id,
-               const std::string &traffic_reference_point,
-               const std::string &achieve_by_point,
-               const std::string &planned_termination_point,
-               const SpacingGoalType &assigned_spacing_goal_type,
-               const double assigned_spacing_goal,
-               const Units::Speed planned_final_approach_speed,
-               const Units::Angle final_approach_spacing_merge_angle,
-               const Units::Angle final_approach_spacing_merge_angle_std,
-               const bool fas_is_vector_aircraft);
+   IMClearance(const ClearanceType &clearance_type, const int target_id, const std::string &traffic_reference_point,
+               const std::string &achieve_by_point, const std::string &planned_termination_point,
+               const SpacingGoalType &assigned_spacing_goal_type, const double assigned_spacing_goal,
+               const Units::Speed planned_final_approach_speed, const Units::Angle final_approach_spacing_merge_angle,
+               const Units::Angle final_approach_spacing_merge_angle_std, const bool fas_is_vector_aircraft,
+               const AircraftIntent &target_intent);
 
    IMClearance(const IMClearance &obj);
 
@@ -78,9 +57,7 @@ public:
 
    bool operator!=(const IMClearance &obj);
 
-   bool Validate(const AircraftIntent &ownship_aircraft_intent,
-                 const AircraftIntent &target_aircraft_intent,
-                 const IMUtils::IMAlgorithmTypes im_algorithm_type);
+   bool Validate(const AircraftIntent &ownship_aircraft_intent, const IMUtils::IMAlgorithmTypes im_algorithm_type);
 
    bool IsValid() const;
 
@@ -112,34 +89,31 @@ public:
 
    void dump(std::string hdr) const;
    Units::Angle GetFinalApproachSpacingMergeAngleStd() const;
-   void SetFinalApproachSpacingMergeAngleStd(
-         Units::Angle final_approach_spacing_merge_angle_std);
+   void SetFinalApproachSpacingMergeAngleStd(Units::Angle final_approach_spacing_merge_angle_std);
 
-protected:
+   const AircraftIntent &GetTargetAircraftIntent() const { return m_target_aircraft_intent; }
 
+  protected:
    // Not const on purpose
    virtual bool ValidateTrafficReferencePoint(const AircraftIntent &ownship_aircraft_intent,
-                                              const AircraftIntent &target_aircraft_intent,
                                               const IMUtils::IMAlgorithmTypes im_algorithm_type);
 
    static log4cplus::Logger m_logger;
-private:
 
+  private:
    // Developers: try to keep these validate methods as const.
    bool ValidateFinalApproachSpacingClearance(const AircraftIntent &ownship_aircraft_intent,
-                                              const AircraftIntent &target_aircraft_intent,
                                               const IMUtils::IMAlgorithmTypes im_algorithm_type) const;
 
    bool ValidateBasicInputs(const AircraftIntent &ownship_aircraft_intent,
-                            const AircraftIntent &target_aircraft_intent,
                             const IMUtils::IMAlgorithmTypes im_algorithm_type) const;
 
    bool ValidatePlannedTerminationPoint(const AircraftIntent &ownship_aircraft_intent,
-                                        const AircraftIntent &target_aircraft_intent,
                                         const IMUtils::IMAlgorithmTypes im_algorithm_type) const;
 
    ClearanceType m_clearance_type;
    SpacingGoalType m_assigned_spacing_goal_type;
+   AircraftIntent m_target_aircraft_intent;
 
    Units::RadiansAngle m_final_approach_spacing_merge_angle_mean;
    Units::RadiansAngle m_final_approach_spacing_merge_angle_std;
@@ -160,3 +134,5 @@ private:
 inline const bool IMClearance::AbpAndPtpAreColocated() const {
    return m_achieve_by_point == m_planned_termination_point;
 }
+}  // namespace open_source
+}  // namespace interval_management

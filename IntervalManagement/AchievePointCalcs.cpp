@@ -1,17 +1,17 @@
 // ****************************************************************************
 // NOTICE
 //
-// This work was produced for the U.S. Government under Contract 693KA8-22-C-00001 
-// and is subject to Federal Aviation Administration Acquisition Management System 
+// This work was produced for the U.S. Government under Contract 693KA8-22-C-00001
+// and is subject to Federal Aviation Administration Acquisition Management System
 // Clause 3.5-13, Rights In Data-General, Alt. III and Alt. IV (Oct. 1996).
 //
-// The contents of this document reflect the views of the author and The MITRE 
-// Corporation and do not necessarily reflect the views of the Federal Aviation 
-// Administration (FAA) or the Department of Transportation (DOT). Neither the FAA 
-// nor the DOT makes any warranty or guarantee, expressed or implied, concerning 
+// The contents of this document reflect the views of the author and The MITRE
+// Corporation and do not necessarily reflect the views of the Federal Aviation
+// Administration (FAA) or the Department of Transportation (DOT). Neither the FAA
+// nor the DOT makes any warranty or guarantee, expressed or implied, concerning
 // the content or accuracy of these views.
 //
-// For further information, please contact The MITRE Corporation, Contracts Management 
+// For further information, please contact The MITRE Corporation, Contracts Management
 // Office, 7515 Colshire Drive, McLean, VA 22102-7539, (703) 983-6000.
 //
 // 2022 The MITRE Corporation. All Rights Reserved.
@@ -26,12 +26,13 @@
 
 using namespace std;
 using namespace aaesim::open_source;
-using namespace interval_management;
+using namespace interval_management::open_source;
 
-#define SQR(x) ({    \
-    typeof(x) y = (x);  \
-    y*y;                \
-})
+#define SQR(x)           \
+   ({                    \
+      typeof(x) y = (x); \
+      y *y;              \
+   })
 
 log4cplus::Logger AchievePointCalcs::m_logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("AchievePointCalcs"));
 
@@ -40,9 +41,7 @@ AchievePointCalcs::AchievePointCalcs() {
    m_waypoint_is_set = false;
 }
 
-AchievePointCalcs::AchievePointCalcs(const string &waypoint,
-                                     const AircraftIntent &intent,
-                                     const VerticalPath &vpath,
+AchievePointCalcs::AchievePointCalcs(const string &waypoint, const AircraftIntent &intent, const VerticalPath &vpath,
                                      const vector<HorizontalPath> &htraj) {
    Clear();
 
@@ -57,11 +56,8 @@ AchievePointCalcs::AchievePointCalcs(const string &waypoint,
    }
 }
 
-AchievePointCalcs::AchievePointCalcs(const string &waypoint,
-                                     const AircraftIntent &intent,
-                                     const VerticalPath &vpath,
-                                     const vector<HorizontalPath> &htraj,
-                                     const AchievePointCalcs &ownship_calcs,
+AchievePointCalcs::AchievePointCalcs(const string &waypoint, const AircraftIntent &intent, const VerticalPath &vpath,
+                                     const vector<HorizontalPath> &htraj, const AchievePointCalcs &ownship_calcs,
                                      const AircraftIntent &ownship_intent) {
    Clear();
 
@@ -73,8 +69,8 @@ AchievePointCalcs::AchievePointCalcs(const string &waypoint,
    if (m_waypoint_name == "CALCULATED_TRP") {
       Waypoint traffic_reference_point;
       size_t waypoint_index;
-      ComputeDefaultTRP(ownship_calcs, ownship_intent, intent, m_horizontal_path, traffic_reference_point,
-            m_waypoint_x, m_waypoint_y, waypoint_index);
+      ComputeDefaultTRP(ownship_calcs, ownship_intent, intent, m_horizontal_path, traffic_reference_point, m_waypoint_x,
+                        m_waypoint_y, waypoint_index);
       LOG4CPLUS_DEBUG(m_logger, "Calculated TRP = (" << m_waypoint_x << "," << m_waypoint_y << ")");
       // log the geographic coordinates
       EarthModel::LocalPositionEnu xy;
@@ -83,9 +79,8 @@ AchievePointCalcs::AchievePointCalcs(const string &waypoint,
       xy.z = Units::zero();
       EarthModel::GeodeticPosition geo;
       intent.GetTangentPlaneSequence()->convertLocalToGeodetic(xy, geo);
-      LOG4CPLUS_DEBUG(m_logger, "(lat,lon) = (" <<
-                                                std::setprecision(10) << Units::DegreesAngle(geo.latitude) <<
-                                                "," << Units::DegreesAngle(geo.longitude) << ")");
+      LOG4CPLUS_DEBUG(m_logger, "(lat,lon) = (" << std::setprecision(10) << Units::DegreesAngle(geo.latitude) << ","
+                                                << Units::DegreesAngle(geo.longitude) << ")");
    } else {
       ComputePositions(intent);
    }
@@ -93,7 +88,6 @@ AchievePointCalcs::AchievePointCalcs(const string &waypoint,
 }
 
 AchievePointCalcs::~AchievePointCalcs() = default;
-
 
 void AchievePointCalcs::Clear() {
 
@@ -111,17 +105,11 @@ void AchievePointCalcs::Clear() {
    m_distance_calculator = AlongPathDistanceCalculator();
 }
 
-
-void AchievePointCalcs::ComputeDefaultTRP(
-      const AchievePointCalcs &ownship_calcs,
-      const AircraftIntent &ownship_intent,
-      const AircraftIntent &target_intent,
-      const vector<HorizontalPath> &target_horizontal_path,
-      Waypoint &traffic_reference_point,
-      Units::Length &waypoint_x,
-      Units::Length &waypoint_y,
-      size_t &waypoint_index_in_target_intent
-      ) {
+void AchievePointCalcs::ComputeDefaultTRP(const AchievePointCalcs &ownship_calcs, const AircraftIntent &ownship_intent,
+                                          const AircraftIntent &target_intent,
+                                          const vector<HorizontalPath> &target_horizontal_path,
+                                          Waypoint &traffic_reference_point, Units::Length &waypoint_x,
+                                          Units::Length &waypoint_y, size_t &waypoint_index_in_target_intent) {
 
    // Get ABP index from ownship
    int ix0 = ownship_intent.GetWaypointIndexByName(ownship_calcs.GetWaypointName());
@@ -180,8 +168,10 @@ void AchievePointCalcs::ComputeDefaultTRP(
             // record "first" point (chronologically last), but keep searching
             waypoint_x = Units::MetersLength(x1);
             waypoint_y = Units::MetersLength(y1);
-            LOG4CPLUS_DEBUG(m_logger, "Target trajectory ends " << d1 <<
-                                                                " m from ABP projection line.  End point will be used if no crossing is found.");
+            LOG4CPLUS_DEBUG(m_logger,
+                            "Target trajectory ends "
+                                  << d1
+                                  << " m from ABP projection line.  End point will be used if no crossing is found.");
          }
       } else {
          // Is (x1,y1) exactly on the line?
@@ -327,7 +317,7 @@ void AchievePointCalcs::ComputeDefaultTRP(
                throw logic_error("Failed to calculate circular arc intersection.");
             }
          }  // end if turn
-      }  // end if not first
+      }     // end if not first
       x0 = x1;
       y0 = y1;
       d0 = d1;
@@ -336,19 +326,18 @@ void AchievePointCalcs::ComputeDefaultTRP(
    if (!crossed) {
       if (end_is_usable) {
          // trajectory end is within 50m of the line, put the TRP there.
-         LOG4CPLUS_WARN(m_logger,
-                        "Target trajectory ends near ABP projection line, using end-of-trajectory as TRP ("
-                              << Units::MetersLength(waypoint_x) << ","
-                              << Units::MetersLength(waypoint_y) << ").");
+         LOG4CPLUS_WARN(m_logger, "Target trajectory ends near ABP projection line, using end-of-trajectory as TRP ("
+                                        << Units::MetersLength(waypoint_x) << "," << Units::MetersLength(waypoint_y)
+                                        << ").");
       } else {
-         string emsg = "Target trajectory never crosses line " +
-                       std::to_string(a) + " * x + " + std::to_string(b) + " * y = " + std::to_string(c);
+         string emsg = "Target trajectory never crosses line " + std::to_string(a) + " * x + " + std::to_string(b) +
+                       " * y = " + std::to_string(c);
          LOG4CPLUS_FATAL(m_logger, emsg);
          throw logic_error(emsg);
       }
    }
 
-   //convert position to (lat,lon)
+   // convert position to (lat,lon)
    EarthModel::LocalPositionEnu xy;
    xy.x = waypoint_x;
    xy.y = waypoint_y;
@@ -367,13 +356,13 @@ void AchievePointCalcs::ComputeDefaultTRP(
       target_intent.GetTangentPlaneSequence()->convertLocalToGeodetic(xy, geo);
       traffic_reference_point.SetRfTurnCenterLatitude(geo.latitude);
       traffic_reference_point.SetRfTurnCenterLongitude(geo.longitude);
-   }
-   else {
+   } else {
       traffic_reference_point.SetRfTurnCenterLatitude(Units::zero());
       traffic_reference_point.SetRfTurnCenterLongitude(Units::zero());
    }
    // populate waypoint_index_in_target_intent
-   AlongPathDistanceCalculator distance_calculator(target_horizontal_path, TrajectoryIndexProgressionDirection::UNDEFINED);
+   AlongPathDistanceCalculator distance_calculator(target_horizontal_path,
+                                                   TrajectoryIndexProgressionDirection::UNDEFINED);
    Units::MetersLength distance_trp_to_end;
    distance_calculator.CalculateAlongPathDistanceFromPosition(waypoint_x, waypoint_y, distance_trp_to_end);
    for (int i = 0; i < target_intent.GetNumberOfWaypoints(); i++) {
@@ -382,20 +371,22 @@ void AchievePointCalcs::ComputeDefaultTRP(
       Units::MetersLength y(target_intent.GetRouteData().m_y[i]);
       Units::MetersLength distance_to_end;
       try {
-            distance_calculator.CalculateAlongPathDistanceFromPosition(x, y, distance_to_end);
+         distance_calculator.CalculateAlongPathDistanceFromPosition(x, y, distance_to_end);
       } catch (std::logic_error e) {
-         LOG4CPLUS_ERROR(m_logger, target_intent.GetWaypointName(i) << " at (" << x << "," << y << ") is not on horizontal path.");
+         LOG4CPLUS_ERROR(m_logger, target_intent.GetWaypointName(i)
+                                         << " at (" << x << "," << y << ") is not on horizontal path.");
          continue;
       }
       Units::MetersLength distance_to_trp = distance_to_end - distance_trp_to_end;
-      LOG4CPLUS_TRACE(m_logger, "Distance from " << target_intent.GetWaypointName(i)
-            << " to TRP is " << distance_to_trp);
+      LOG4CPLUS_TRACE(m_logger,
+                      "Distance from " << target_intent.GetWaypointName(i) << " to TRP is " << distance_to_trp);
       if (distance_to_trp <= Units::MetersLength(100)) {
          waypoint_index_in_target_intent = i;
          break;
       }
    }
-   LOG4CPLUS_DEBUG(m_logger, "Calculated TRP inserts at " << waypoint_index_in_target_intent << endl << traffic_reference_point);
+   LOG4CPLUS_DEBUG(m_logger, "Calculated TRP inserts at " << waypoint_index_in_target_intent << endl
+                                                          << traffic_reference_point);
 }
 
 void AchievePointCalcs::ComputePositions(const AircraftIntent &intent) {
@@ -413,33 +404,28 @@ void AchievePointCalcs::ComputePositions(const AircraftIntent &intent) {
          LOG4CPLUS_FATAL(AchievePointCalcs::m_logger, emsg);
          throw logic_error(emsg);
       }
-      LOG4CPLUS_DEBUG(m_logger, "Waypoint[" << ix << "] = " << m_waypoint_name <<
-                                            "(" << m_waypoint_x << "," << m_waypoint_y << ")");
+      LOG4CPLUS_DEBUG(m_logger, "Waypoint[" << ix << "] = " << m_waypoint_name << "(" << m_waypoint_x << ","
+                                            << m_waypoint_y << ")");
    }
 }
-
 
 void AchievePointCalcs::ComputeAlongPathDistanceFromWaypointToEnd() {
 
    if (this->HasWaypoint()) {
       Units::Length distance_from_waypoint_to_end;
-      m_distance_calculator.CalculateAlongPathDistanceFromPosition(this->m_waypoint_x,
-                                                                   this->m_waypoint_y,
+      m_distance_calculator.CalculateAlongPathDistanceFromPosition(this->m_waypoint_x, this->m_waypoint_y,
                                                                    distance_from_waypoint_to_end);
 
       m_distance_from_waypoint = distance_from_waypoint_to_end;
-      m_distance_calculator.InitializeStartingIndex(); // because we just messed up the index
+      m_distance_calculator.InitializeStartingIndex();  // because we just messed up the index
    }
-
 }
-
 
 void AchievePointCalcs::ComputeEndValues(const VerticalPath &vertical_path) {
 
    if (this->HasWaypoint()) {
       // compute achieve by distance
       ComputeAlongPathDistanceFromWaypointToEnd();
-
 
       // compute time to go.
       if (m_distance_from_waypoint == Units::ZERO_LENGTH) {
@@ -459,7 +445,6 @@ void AchievePointCalcs::ComputeEndValues(const VerticalPath &vertical_path) {
          while ((m_distance_from_waypoint < Units::MetersLength(vertical_path.along_path_distance_m[ix])) && ix > 0) {
             ix--;
          }
-
 
          // Compute the time to go from the achieve by point to the end.
 
@@ -481,10 +466,9 @@ void AchievePointCalcs::ComputeEndValues(const VerticalPath &vertical_path) {
                m_time_to_go_to_waypoint = Units::SecondsTime(ttg0);
             } else {
                // Points valid for interpolation.
-               m_time_to_go_to_waypoint = Units::SecondsTime((ttg1 - ttg0) /
-                                                             (dtg1 - dtg0) *
-                                                             (Units::MetersLength(m_distance_from_waypoint).value() -
-                                                              dtg0) + ttg0);
+               m_time_to_go_to_waypoint = Units::SecondsTime(
+                     (ttg1 - ttg0) / (dtg1 - dtg0) * (Units::MetersLength(m_distance_from_waypoint).value() - dtg0) +
+                     ttg0);
             }
 
          } else {
@@ -495,7 +479,7 @@ void AchievePointCalcs::ComputeEndValues(const VerticalPath &vertical_path) {
    }
 }
 
-const bool AchievePointCalcs::IsWaypointPassed(const interval_management::AircraftState &acstate) {
+const bool AchievePointCalcs::IsWaypointPassed(const interval_management::open_source::AircraftState &acstate) {
    if (!m_waypoint_is_set) {
       string msg("No waypoint set, cannot check whether passed.");
       LOG4CPLUS_FATAL(m_logger, msg);
@@ -503,13 +487,13 @@ const bool AchievePointCalcs::IsWaypointPassed(const interval_management::Aircra
    }
    Units::Length distance_to_end;
    m_distance_calculator.CalculateAlongPathDistanceFromPosition(Units::FeetLength(acstate.m_x),
-                                                                Units::FeetLength(acstate.m_y),
-                                                                distance_to_end);
+                                                                Units::FeetLength(acstate.m_y), distance_to_end);
 
    return (distance_to_end < m_distance_from_waypoint);
 }
 
-const Units::Length AchievePointCalcs::ComputeDistanceToWaypoint(const interval_management::AircraftState &acstate) {
+const Units::Length AchievePointCalcs::ComputeDistanceToWaypoint(
+      const interval_management::open_source::AircraftState &acstate) {
    if (!m_waypoint_is_set) {
       string msg("No waypoint set, cannot compute distance.");
       LOG4CPLUS_FATAL(m_logger, msg);
@@ -517,13 +501,11 @@ const Units::Length AchievePointCalcs::ComputeDistanceToWaypoint(const interval_
    }
    Units::Length distance_to_end;
    m_distance_calculator.CalculateAlongPathDistanceFromPosition(Units::FeetLength(acstate.m_x),
-                                                                Units::FeetLength(acstate.m_y),
-                                                                distance_to_end);
+                                                                Units::FeetLength(acstate.m_y), distance_to_end);
    return distance_to_end - m_distance_from_waypoint;
 }
 
-
-void AchievePointCalcs::ComputeCrossingTime(const interval_management::AircraftState &acstate) {
+void AchievePointCalcs::ComputeCrossingTime(const interval_management::open_source::AircraftState &acstate) {
    /*
     * This implementation does not ensure crossing! It assumes the caller has already
     * calculated a state just after crossing the Achieve waypoint and simply
@@ -531,19 +513,18 @@ void AchievePointCalcs::ComputeCrossingTime(const interval_management::AircraftS
     */
 
    // NOTE:Only working with x,y position throughout; not setting z.
-   interval_management::AircraftState prevstate = acstate;
+   interval_management::open_source::AircraftState prevstate = acstate;
    prevstate.m_x -= acstate.m_xd;
    prevstate.m_y -= acstate.m_yd;
 
-
    // get achieve-by waypoint coordinates
-   interval_management::AircraftState endstate;
+   interval_management::open_source::AircraftState endstate;
    endstate.m_x = Units::FeetLength(m_waypoint_x).value();
    endstate.m_y = Units::FeetLength(m_waypoint_y).value();
 
    // translate origin point to the previous aircraft state
    // translate end point
-   interval_management::AircraftState current_state = acstate;
+   interval_management::open_source::AircraftState current_state = acstate;
    current_state.m_x -= prevstate.m_x;
    current_state.m_y -= prevstate.m_y;
 
@@ -577,5 +558,4 @@ void AchievePointCalcs::ComputeCrossingTime(const interval_management::AircraftS
    double ratio = distclosest / distaircraft;
 
    m_crossing_time = Units::SecondsTime(current_state.GetTimeStamp().value() - 1.0 + ratio);
-
 }

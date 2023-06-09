@@ -1,17 +1,17 @@
 // ****************************************************************************
 // NOTICE
 //
-// This work was produced for the U.S. Government under Contract 693KA8-22-C-00001 
-// and is subject to Federal Aviation Administration Acquisition Management System 
+// This work was produced for the U.S. Government under Contract 693KA8-22-C-00001
+// and is subject to Federal Aviation Administration Acquisition Management System
 // Clause 3.5-13, Rights In Data-General, Alt. III and Alt. IV (Oct. 1996).
 //
-// The contents of this document reflect the views of the author and The MITRE 
-// Corporation and do not necessarily reflect the views of the Federal Aviation 
-// Administration (FAA) or the Department of Transportation (DOT). Neither the FAA 
-// nor the DOT makes any warranty or guarantee, expressed or implied, concerning 
+// The contents of this document reflect the views of the author and The MITRE
+// Corporation and do not necessarily reflect the views of the Federal Aviation
+// Administration (FAA) or the Department of Transportation (DOT). Neither the FAA
+// nor the DOT makes any warranty or guarantee, expressed or implied, concerning
 // the content or accuracy of these views.
 //
-// For further information, please contact The MITRE Corporation, Contracts Management 
+// For further information, please contact The MITRE Corporation, Contracts Management
 // Office, 7515 Colshire Drive, McLean, VA 22102-7539, (703) 983-6000.
 //
 // 2022 The MITRE Corporation. All Rights Reserved.
@@ -23,18 +23,13 @@
 #include <scalar/Frequency.h>
 #include "public/PredictedWindEvaluator.h"
 
-class IMAchieve : public IMAlgorithm
-{
+namespace interval_management {
+namespace open_source {
 
+class IMAchieve : public IMAlgorithm {
 
-public:
-   static const Units::HertzFrequency ACHIEVE_CONTROL_GAIN_DEFAULT;
-   static const Units::HertzFrequency MAINTAIN_CONTROL_GAIN_DEFAULT;
-   static const Units::SecondsTime TIME_THRESHOLD_DEFAULT;
+  public:
    static const Units::Angle TOLERANCE_ANGLE;
-   static const Units::Speed TOLERANCE_SPEED;
-   static const bool THRESHOLD_FLAG_DEFAULT;
-
 
    IMAchieve();
 
@@ -44,20 +39,14 @@ public:
 
    void IterationReset() override;
 
-   aaesim::open_source::Guidance Update(const aaesim::open_source::Guidance &prevguidance,
-                  const aaesim::open_source::DynamicsState &dynamicsstate,
-                  const interval_management::AircraftState &owntruthstate,
-                  const interval_management::AircraftState &targettruthstate,
-                  const vector<interval_management::AircraftState> &targethistory) override;
+   aaesim::open_source::Guidance Update(
+         const aaesim::open_source::Guidance &prevguidance, const aaesim::open_source::DynamicsState &dynamicsstate,
+         const interval_management::open_source::AircraftState &owntruthstate,
+         const interval_management::open_source::AircraftState &targettruthstate,
+         const std::vector<interval_management::open_source::AircraftState> &targethistory) override;
 
-   void Initialize(std::shared_ptr<const aaesim::BadaPerformanceCalculator> aircraft_performance_calculator,
-                   OwnshipPredictionParameters ownship_prediction_parameters,
-                   const AircraftIntent &ownship_aircraft_intent,
-                   const AircraftIntent &target_aircraft_intent,
-                   const IMClearance &im_clearance,
-                   WeatherPrediction &weather_prediction) override;
-
-   void ResetDefaults() override;
+   void Initialize(const OwnshipPredictionParameters &ownship_prediction_parameters,
+                   const AircraftIntent &ownship_aircraft_intent, WeatherPrediction &weather_prediction) override;
 
    void DumpParameters(const std::string &parameters_to_print) override;
 
@@ -67,107 +56,81 @@ public:
 
    virtual const bool InAchieveStage() const;
 
-   void SetThresholdFlag(bool threshold_flag);
-
-   const bool GetThresholdFlag() const;
-
-   void SetTimeThreshold(Units::Time time_threshold);
-
    const Units::Length GetTargetKinematicDtgToTrp() const;
 
    const bool IsWithinErrorThreshold() const;
 
    void SetBlendWind(bool wind_blending_enabled) override;
 
- protected:
-
+  protected:
    void Copy(const IMAchieve &obj);
 
    virtual void CalculateIas(const Units::Length current_ownship_altitude,
                              const aaesim::open_source::DynamicsState &three_dof_dynamics_state);
 
-   virtual void CalculateMach(const Units::Time reference_ttg,
-                              const Units::Length current_ownship_altitude);
+   virtual void CalculateMach(const Units::Time reference_ttg, const Units::Length current_ownship_altitude);
 
    virtual const bool IsOwnshipBelowTransitionAltitude(Units::Length current_ownship_altitude);
 
-   virtual void RecordInternalObserverMetrics(const interval_management::AircraftState &current_ownship_state,
-                                              const interval_management::AircraftState &current_target_state,
-                                              const aaesim::open_source::DynamicsState &dynamics_state,
-                                              const Units::Speed unmodified_ias,
-                                              const Units::Speed tas_command,
-                                              const Units::Speed reference_velocity,
-                                              const Units::Length reference_distance,
-                                              const aaesim::open_source::Guidance &guidance);
+   virtual void RecordInternalObserverMetrics(
+         const interval_management::open_source::AircraftState &current_ownship_state,
+         const interval_management::open_source::AircraftState &current_target_state,
+         const aaesim::open_source::DynamicsState &dynamics_state, const Units::Speed unmodified_ias,
+         const Units::Speed tas_command, const Units::Speed reference_velocity, const Units::Length reference_distance,
+         const aaesim::open_source::Guidance &guidance);
 
-   const bool WithinErrorThreshold(const Units::Length distance_to_go,
-                                   const Units::Time ownship_ttg,
+   const bool WithinErrorThreshold(const Units::Length distance_to_go, const Units::Time ownship_ttg,
                                    const Units::Time reference_ttg);
 
    Units::Time GetErrorThreshold(Units::Length distance_to_go);
 
-   static const std::shared_ptr<PredictedWindEvaluator> m_predicted_wind_evaluator;
+   static const std::shared_ptr<aaesim::open_source::PredictedWindEvaluator> m_predicted_wind_evaluator;
 
-   Units::Frequency m_achieve_control_gain;
-   Units::Frequency m_maintain_control_gain;
-   Units::Time m_time_threshold;
-
-   bool m_threshold_flag;
    bool m_transitioned_to_maintain;
    bool m_within_error_threshold;
    bool m_received_one_valid_target_state;
    std::string m_achieve_by_point;
 
-private:
+  private:
    void IterClearIMAch();
 
    static log4cplus::Logger m_logger;
 };
 
-inline const bool IMAchieve::InAchieveStage() const {
-   return m_ownship_kinematic_dtg_to_abp > Units::zero();
-}
+inline const bool IMAchieve::InAchieveStage() const { return m_ownship_kinematic_dtg_to_abp > Units::zero(); }
 
-inline const bool IMAchieve::IsTargetPassedTrp() const {
-   return m_target_kinematic_dtg_to_trp <= Units::zero();
-}
+inline const bool IMAchieve::IsTargetPassedTrp() const { return m_target_kinematic_dtg_to_trp <= Units::zero(); }
 
 inline const bool IMAchieve::IsTargetPassedLastWaypoint() const {
    return m_target_kinematic_dtg_to_last_waypoint <= Units::zero();
 }
 
-inline const Units::Length IMAchieve::GetTargetKinematicDtgToTrp() const {
-   return m_target_kinematic_dtg_to_trp;
-}
+inline const Units::Length IMAchieve::GetTargetKinematicDtgToTrp() const { return m_target_kinematic_dtg_to_trp; }
 
-inline const bool IMAchieve::IsWithinErrorThreshold() const {
-   return m_within_error_threshold;
-}
+inline const bool IMAchieve::IsWithinErrorThreshold() const { return m_within_error_threshold; }
 
-inline const bool IMAchieve::IsOwnshipBelowTransitionAltitude(Units::Length current_ownship_altitude) {
-   return false;
-}
-
+inline const bool IMAchieve::IsOwnshipBelowTransitionAltitude(Units::Length current_ownship_altitude) { return false; }
 
 inline void IMAchieve::CalculateIas(const Units::Length current_ownship_altitude,
                                     const aaesim::open_source::DynamicsState &three_dof_dynamics_state) {
-// Do nothing.
+   // Do nothing.
 }
 
-inline void IMAchieve::CalculateMach(const Units::Time reference_ttg,
-                                     const Units::Length current_ownship_altitude) {
-// Do nothing.
+inline void IMAchieve::CalculateMach(const Units::Time reference_ttg, const Units::Length current_ownship_altitude) {
+   // Do nothing.
 }
 
-inline void IMAchieve::RecordInternalObserverMetrics(const interval_management::AircraftState &current_ownship_state,
-                                                     const interval_management::AircraftState &current_target_state,
-                                                     const aaesim::open_source::DynamicsState &dynamics_state,
-                                                     const Units::Speed unmodified_ias,
-                                                     const Units::Speed tas_command,
-                                                     const Units::Speed reference_velocity,
-                                                     const Units::Length reference_distance,
-                                                     const aaesim::open_source::Guidance &guidance) {
+inline void IMAchieve::RecordInternalObserverMetrics(
+      const interval_management::open_source::AircraftState &current_ownship_state,
+      const interval_management::open_source::AircraftState &current_target_state,
+      const aaesim::open_source::DynamicsState &dynamics_state, const Units::Speed unmodified_ias,
+      const Units::Speed tas_command, const Units::Speed reference_velocity, const Units::Length reference_distance,
+      const aaesim::open_source::Guidance &guidance) {
    // Do Nothing
 }
 
-inline void IMAchieve::SetBlendWind(bool wind_blending_enabled) { /* required by interface, but not implemented in this class */ }
+inline void IMAchieve::SetBlendWind(bool wind_blending_enabled) { /* required by interface, but not implemented in this
+                                                                     class */
+}
+}  // namespace open_source
+}  // namespace interval_management
