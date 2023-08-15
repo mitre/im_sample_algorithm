@@ -14,13 +14,13 @@
 // For further information, please contact The MITRE Corporation, Contracts Management
 // Office, 7515 Colshire Drive, McLean, VA 22102-7539, (703) 983-6000.
 //
-// 2022 The MITRE Corporation. All Rights Reserved.
+// 2023 The MITRE Corporation. All Rights Reserved.
 // ****************************************************************************
 
 #include "imalgs/IMDistBasedAchieve.h"
 
 #include "public/SimulationTime.h"
-#include "math/CustomMath.h"
+#include "public/CustomMath.h"
 #include "public/CoreUtils.h"
 #include "public/AircraftCalculations.h"
 
@@ -52,7 +52,7 @@ IMDistBasedAchieve::~IMDistBasedAchieve() = default;
 
 void IMDistBasedAchieve::Initialize(const OwnshipPredictionParameters &ownship_prediction_parameters,
                                     const AircraftIntent &ownship_aircraft_intent,
-                                    WeatherPrediction &weather_prediction) {
+                                    aaesim::open_source::WeatherPrediction &weather_prediction) {
    IMKinematicAchieve::Initialize(ownship_prediction_parameters, ownship_aircraft_intent, weather_prediction);
 
    m_im_kinematic_dist_based_maintain->SetQuantizeFlag(GetQuantizeFlag());
@@ -109,7 +109,6 @@ aaesim::open_source::Guidance IMDistBasedAchieve::Update(
                static_cast<int>(m_target_kinematic_trajectory_predictor.GetVerticalPathDistances().size() - 1);
          m_ownship_reference_lookup_index =
                static_cast<int>(m_ownship_kinematic_trajectory_predictor.GetVerticalPathDistances().size() - 1);
-         // TODO: What is this?
          m_reference_precalc_index =
                static_cast<int>(m_ownship_kinematic_trajectory_predictor.GetVerticalPathDistances().size() - 1);
       }
@@ -489,11 +488,12 @@ void IMDistBasedAchieve::CalculateMach(const Units::Time reference_ttg, const Un
                 (m_ownship_kinematic_dtg_to_ptp - m_ownship_kinematic_achieve_by_calcs.GetDistanceFromWaypoint()),
                 m_ownship_ttg_to_abp, reference_ttg) ||
           !m_threshold_flag) {
+         BoundedValue<double, 0, 3> highbound_estimated_mach(m_previous_reference_im_speed_command_mach);
          Units::Speed estimated_true_airspeed =
                m_weather_prediction.getAtmosphere()->CAS2TAS(m_im_speed_command_ias, current_ownship_altitude);
 
-         estimated_mach =
-               BoundedValue<double, 0, 2>(Units::MetersPerSecondSpeed(estimated_true_airspeed).value() /
+         highbound_estimated_mach =
+               BoundedValue<double, 0, 3>(Units::MetersPerSecondSpeed(estimated_true_airspeed).value() /
                                           sqrt(GAMMA * R.value() *
                                                m_weather_prediction.getAtmosphere()
                                                      ->GetTemperature(Units::FeetLength(current_ownship_altitude))
@@ -512,9 +512,12 @@ void IMDistBasedAchieve::CalculateMach(const Units::Time reference_ttg, const Un
                                                      ->GetTemperature(Units::FeetLength(current_ownship_altitude))
                                                      .value()));
 
-         estimated_mach = m_speed_limiter.LimitMachCommand(
-               BoundedValue<double, 0, 2>(m_previous_reference_im_speed_command_mach), estimated_mach, nominal_mach,
-               current_mass, current_ownship_altitude, m_weather_prediction);
+         double unbounded_estimated_mach(highbound_estimated_mach);
+         if (unbounded_estimated_mach > 2) unbounded_estimated_mach = 2;
+         estimated_mach =
+               m_speed_limiter.LimitMachCommand(BoundedValue<double, 0, 2>(m_previous_reference_im_speed_command_mach),
+                                                BoundedValue<double, 0, 2>(unbounded_estimated_mach), nominal_mach,
+                                                current_mass, current_ownship_altitude, m_weather_prediction);
       }
    } else {
       m_predicted_spacing_interval = Units::NegInfinity();
@@ -559,20 +562,6 @@ void IMDistBasedAchieve::RecordData(aaesim::open_source::Guidance &im_guidance,
                                     Units::Time target_reference_ttg_to_trp) {
    m_true_distances->Add(Units::SecondsTime(current_ownship_state.GetTimeStamp().value()),
                          Units::MetersLength(Units::infinity()));
-
-   if (InternalObserver::getInstance()->GetScenarioIter() >= 0) {
-      InternalObserver::getInstance()->IM_command_output(
-            current_ownship_state.GetId(), current_ownship_state.GetTimeStamp().value(), current_ownship_state.m_z,
-            Units::MetersPerSecondSpeed(three_dof_dynamics_state.v_true_airspeed).value(),
-            Units::MetersPerSecondSpeed(current_ownship_state.GetGroundSpeed()).value(),
-            Units::MetersPerSecondSpeed(m_im_speed_command_ias).value(),
-            Units::MetersPerSecondSpeed(unmodified_im_speed_command_ias).value(),
-            Units::MetersPerSecondSpeed(im_speed_command_tas).value(),
-            Units::MetersPerSecondSpeed(ownship_reference_cas).value(),
-            Units::MetersLength(ownship_reference_dtg_to_ptp).value(),
-            Units::MetersLength(-m_ownship_kinematic_dtg_to_ptp).value(),
-            Units::MetersLength(Units::MetersLength(Units::negInfinity())).value());
-   }
 
    if (InternalObserver::getInstance()->outputNM()) {
       NMObserver &nm_observer = InternalObserver::getInstance()->GetNMObserver(current_ownship_state.GetId());
@@ -621,12 +610,12 @@ void IMDistBasedAchieve::RecordData(aaesim::open_source::Guidance &im_guidance,
 
 const Units::MetersLength IMDistBasedAchieve::CalculatePredictedSpacingInterval(
       const Units::Time target_reference_ttg_to_trp) {
-   const auto ownship_reference_dtg_to_ptp =
+   const auto ownship_reference_dtg_to_ptp_index =
          CoreUtils::FindNearestIndex(Units::MetersLength(m_ownship_kinematic_dtg_to_ptp).value(),
                                      m_ownship_kinematic_trajectory_predictor.GetVerticalPathDistances());
 
    const Units::Time own_ttg_to_ptp = Units::SecondsTime(CoreUtils::LinearlyInterpolate(
-         ownship_reference_dtg_to_ptp, Units::MetersLength(m_ownship_kinematic_dtg_to_ptp).value(),
+         ownship_reference_dtg_to_ptp_index, Units::MetersLength(m_ownship_kinematic_dtg_to_ptp).value(),
          m_ownship_kinematic_trajectory_predictor.GetVerticalPathDistances(),
          m_ownship_kinematic_trajectory_predictor.GetVerticalPathTimes()));
 

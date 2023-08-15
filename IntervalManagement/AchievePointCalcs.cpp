@@ -14,12 +14,12 @@
 // For further information, please contact The MITRE Corporation, Contracts Management
 // Office, 7515 Colshire Drive, McLean, VA 22102-7539, (703) 983-6000.
 //
-// 2022 The MITRE Corporation. All Rights Reserved.
+// 2023 The MITRE Corporation. All Rights Reserved.
 // ****************************************************************************
 
 #include "imalgs/AchievePointCalcs.h"
 #include "utility/CustomUnits.h"
-#include "math/CustomMath.h"
+#include "public/CustomMath.h"
 
 #include <string>
 #include <iomanip>
@@ -372,7 +372,7 @@ void AchievePointCalcs::ComputeDefaultTRP(const AchievePointCalcs &ownship_calcs
       Units::MetersLength distance_to_end;
       try {
          distance_calculator.CalculateAlongPathDistanceFromPosition(x, y, distance_to_end);
-      } catch (std::logic_error e) {
+      } catch (std::logic_error &e) {
          LOG4CPLUS_ERROR(m_logger, target_intent.GetWaypointName(i)
                                          << " at (" << x << "," << y << ") is not on horizontal path.");
          continue;

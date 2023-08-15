@@ -14,12 +14,12 @@
 // For further information, please contact The MITRE Corporation, Contracts Management
 // Office, 7515 Colshire Drive, McLean, VA 22102-7539, (703) 983-6000.
 //
-// 2022 The MITRE Corporation. All Rights Reserved.
+// 2023 The MITRE Corporation. All Rights Reserved.
 // ****************************************************************************
 
 #include "imalgs/IMKinematicDistBasedMaintain.h"
 
-#include "math/CustomMath.h"
+#include "public/CustomMath.h"
 #include "public/AircraftCalculations.h"
 #include "public/CoreUtils.h"
 #include "imalgs/InternalObserver.h"
@@ -237,19 +237,6 @@ void IMKinematicDistBasedMaintain::RecordInternalObserverData(
       const Units::Length target_true_dtg, const Units::Length ownship_true_dtg,
       const std::vector<interval_management::open_source::AircraftState> &target_aircraft_state_history,
       const aaesim::open_source::KinematicTrajectoryPredictor &ownship_kinematic_trajectory_predictor) {
-
-   if (InternalObserver::getInstance()->GetScenarioIter() >= 0) {
-      InternalObserver::getInstance()->IM_command_output(
-            ownship_aircraft_state.GetId(), ownship_aircraft_state.GetTimeStamp().value(), ownship_aircraft_state.m_z,
-            Units::MetersPerSecondSpeed(dynamics_state.v_true_airspeed).value(),
-            Units::MetersPerSecondSpeed(ownship_aircraft_state.GetGroundSpeed()).value(),
-            Units::MetersPerSecondSpeed(m_im_speed_command_ias).value(),
-            Units::MetersPerSecondSpeed(m_unmodified_im_speed_command_ias).value(),
-            Units::MetersPerSecondSpeed(true_airspeed_command).value(),
-            Units::MetersPerSecondSpeed(target_aircraft_state.GetGroundSpeed()).value(),
-            Units::MetersLength(-target_true_dtg).value(), Units::MetersLength(-ownship_true_dtg).value(),
-            Units::MetersLength(ownship_true_dtg).value());
-   }
 
    InternalObserver::getInstance()->updateFinalGS(
          target_aircraft_state.GetId(),

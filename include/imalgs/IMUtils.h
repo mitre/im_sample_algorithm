@@ -14,7 +14,7 @@
 // For further information, please contact The MITRE Corporation, Contracts Management
 // Office, 7515 Colshire Drive, McLean, VA 22102-7539, (703) 983-6000.
 //
-// 2022 The MITRE Corporation. All Rights Reserved.
+// 2023 The MITRE Corporation. All Rights Reserved.
 // ****************************************************************************
 
 #pragma once
@@ -23,7 +23,7 @@
 #include <vector>
 #include <scalar/Time.h>
 #include <scalar/Length.h>
-#include "utility/Logging.h"
+#include "public/Logging.h"
 #include "public/AircraftState.h"
 #include "imalgs/AircraftState.h"
 #include "public/HorizontalPath.h"

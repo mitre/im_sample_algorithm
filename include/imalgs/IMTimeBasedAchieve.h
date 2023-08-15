@@ -14,7 +14,7 @@
 // For further information, please contact The MITRE Corporation, Contracts Management
 // Office, 7515 Colshire Drive, McLean, VA 22102-7539, (703) 983-6000.
 //
-// 2022 The MITRE Corporation. All Rights Reserved.
+// 2023 The MITRE Corporation. All Rights Reserved.
 // ****************************************************************************
 
 #pragma once
@@ -118,6 +118,11 @@ class IMTimeBasedAchieve : public IMKinematicAchieve {
          const interval_management::open_source::AircraftState &target_state_at_traffic_alignment,
          const Units::Length target_dtg_at_alignment);
 
+   void DoAlgorithmLogging(const interval_management::open_source::AircraftState &current_ownship_state,
+                           const interval_management::open_source::AircraftState &current_target_state,
+                           const Units::Length &reference_distance, const Units::Speed &tascommand,
+                           const aaesim::open_source::Guidance &guidance_out, const bool &is_crossing_time_valid) const;
+
    interval_management::open_source::AircraftState m_target_state_at_traffic_alignment;
    interval_management::open_source::AircraftState m_target_state_at_cdti_initiate_signal_receipt;
 
@@ -187,6 +192,49 @@ inline const bool IMTimeBasedAchieve::HasOwnshipReachedTargetAlongPathPositionAt
 inline const interval_management::open_source::AircraftState IMTimeBasedAchieve::GetTargetStateProjectedAsgAdjusted()
       const {
    return m_target_state_projected_asg_adjusted;
+}
+
+inline void IMTimeBasedAchieve::DoAlgorithmLogging(
+      const interval_management::open_source::AircraftState &current_ownship_state,
+      const interval_management::open_source::AircraftState &current_target_state,
+      const Units::Length &reference_distance, const Units::Speed &tascommand,
+      const aaesim::open_source::Guidance &guidance_out, const bool &is_crossing_time_valid) const {
+   if (m_logger.getLogLevel() == log4cplus::TRACE_LOG_LEVEL) {
+      using json = nlohmann::json;
+      json j;
+      auto state_to_json = [&j](std::string prefix, const AircraftState &state) {
+         j[prefix + ".id"] = state.GetId();
+         j[prefix + ".timestamp_sec"] = Units::SecondsTime(state.GetTimeStamp()).value();
+         j[prefix + ".groundspeed_mps"] = Units::MetersPerSecondSpeed(state.GetGroundSpeed()).value();
+         j[prefix + ".true_airspeed_mps"] = Units::MetersPerSecondSpeed(state.GetTrueAirspeed()).value();
+         j[prefix + ".position_derivative_x_mps"] = Units::MetersPerSecondSpeed(state.GetSpeedXd()).value();
+         j[prefix + ".position_derivative_y_mps"] = Units::MetersPerSecondSpeed(state.GetSpeedYd()).value();
+         j[prefix + ".position_derivative_z_mps"] = Units::MetersPerSecondSpeed(state.GetSpeedZd()).value();
+         j[prefix + ".position_x_m"] = Units::MetersLength(state.GetPositionX()).value();
+         j[prefix + ".position_y_m"] = Units::MetersLength(state.GetPositionY()).value();
+         j[prefix + ".position_z_m"] = Units::MetersLength(state.GetPositionZ()).value();
+         j[prefix + ".sensed_temp_c"] = Units::CelsiusTemperature(state.GetSensedTemperature()).value();
+         j[prefix + ".sensed_wind_east_mps"] = Units::MetersPerSecondSpeed(state.GetSensedWindEastComponent()).value();
+         j[prefix + ".sensed_wind_north_mps"] =
+               Units::MetersPerSecondSpeed(state.GetSensedWindNorthComponent()).value();
+      };
+      state_to_json("current_ownship_state", current_ownship_state);
+      state_to_json("current_target_state", current_target_state);
+      j["ownship_reference_cas_mps"] = Units::MetersPerSecondSpeed(m_ownship_reference_cas).value();
+      j["reference_distance_m"] = Units::MetersLength(reference_distance).value();
+      j["ownship_kinematic_dtg_to_ptp_m"] = Units::MetersLength(m_ownship_kinematic_dtg_to_ptp).value();
+      j["achieve_control_gain_hz"] = Units::HertzFrequency(m_achieve_control_gain).value();
+      j["tascommand_mps"] = Units::MetersPerSecondSpeed(tascommand).value();
+      j["unmodified_im_speed_command_ias_mps"] = Units::MetersPerSecondSpeed(m_unmodified_im_speed_command_ias).value();
+      j["im_speed_command_ias_mps"] = Units::MetersPerSecondSpeed(m_im_speed_command_ias).value();
+      j["ownship_ttg_to_abp_sec"] = Units::SecondsTime(m_ownship_ttg_to_abp).value();
+      j["target_ttg_to_trp_sec"] = Units::SecondsTime(m_target_ttg_to_trp).value();
+      j["ownship_selected_speed_type"] = guidance_out.GetSelectedSpeed().GetSpeedType();
+      j["predicted_spacing_interval_sec"] = Units::SecondsTime(m_predicted_spacing_interval).value();
+      j["pilot_delay_enabled"] = m_pilot_delay.IsPilotDelayOn();
+      j["is_crossing_time_valid"] = is_crossing_time_valid;
+      LOG4CPLUS_TRACE(m_logger, j.dump());
+   }
 }
 }  // namespace open_source
 }  // namespace interval_management

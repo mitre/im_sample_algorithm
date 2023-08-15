@@ -14,12 +14,12 @@
 // For further information, please contact The MITRE Corporation, Contracts Management
 // Office, 7515 Colshire Drive, McLean, VA 22102-7539, (703) 983-6000.
 //
-// 2022 The MITRE Corporation. All Rights Reserved.
+// 2023 The MITRE Corporation. All Rights Reserved.
 // ****************************************************************************
 
 #include <iomanip>
 #include <utility>
-#include "math/CustomMath.h"
+#include "public/CustomMath.h"
 #include "public/CoreUtils.h"
 #include "public/AircraftCalculations.h"
 #include "imalgs/IMAlgorithm.h"
@@ -174,8 +174,7 @@ void IMAlgorithm::CopyParametersFromConfiguration() {
 
 bool IMAlgorithm::ValidateClearance(const AircraftIntent &ownship_aircraft_intent,
                                     const IMUtils::IMAlgorithmTypes im_algorithm_type) {
-   bool result = m_im_clearance.Validate(ownship_aircraft_intent, im_algorithm_type);
-   return result;
+   return m_im_clearance.Validate(ownship_aircraft_intent, im_algorithm_type);
 }
 
 void IMAlgorithm::Initialize(const OwnshipPredictionParameters &ownship_prediction_parameters,

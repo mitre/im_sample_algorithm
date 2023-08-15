@@ -14,7 +14,7 @@
 // For further information, please contact The MITRE Corporation, Contracts Management
 // Office, 7515 Colshire Drive, McLean, VA 22102-7539, (703) 983-6000.
 //
-// 2022 The MITRE Corporation. All Rights Reserved.
+// 2023 The MITRE Corporation. All Rights Reserved.
 // ****************************************************************************
 
 #pragma once
@@ -46,7 +46,8 @@ class IMAchieve : public IMAlgorithm {
          const std::vector<interval_management::open_source::AircraftState> &targethistory) override;
 
    void Initialize(const OwnshipPredictionParameters &ownship_prediction_parameters,
-                   const AircraftIntent &ownship_aircraft_intent, WeatherPrediction &weather_prediction) override;
+                   const AircraftIntent &ownship_aircraft_intent,
+                   aaesim::open_source::WeatherPrediction &weather_prediction) override;
 
    void DumpParameters(const std::string &parameters_to_print) override;
 

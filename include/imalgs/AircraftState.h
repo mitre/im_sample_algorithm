@@ -14,12 +14,12 @@
 // For further information, please contact The MITRE Corporation, Contracts Management
 // Office, 7515 Colshire Drive, McLean, VA 22102-7539, (703) 983-6000.
 //
-// 2022 The MITRE Corporation. All Rights Reserved.
+// 2023 The MITRE Corporation. All Rights Reserved.
 // ****************************************************************************
 
 #pragma once
 
-#include "utility/Logging.h"
+#include "public/Logging.h"
 #include "public/EarthModel.h"
 #include <scalar/Density.h>
 #include <scalar/Frequency.h>
@@ -36,7 +36,7 @@ class AircraftState {
 
    ~AircraftState() = default;
 
-   // FIXME Stuart rename method or replace callers with GetPsi
+   // FIXME rename method or replace callers with GetPsi
    const Units::UnsignedRadiansAngle GetHeadingCcwFromEastRadians() const;
 
    const Units::Speed GetGroundSpeed() const;
@@ -45,7 +45,7 @@ class AircraftState {
 
    AircraftState &Extrapolate(const AircraftState &in, const Units::SecondsTime &time);
 
-   // FIXME Refactor method name to Populate or use standard constructor. Or use a Builder pattern
+   // FIXME Refactor to use a Builder pattern
    AircraftState &Create(const int &id, const Units::Time &time, const EarthModel::LocalPositionEnu &enu_position,
                          const Units::Speed &xd, const Units::Speed &yd, const Units::Speed &zd,
                          const Units::Angle &gamma, const Units::Speed &sensed_wind_east,

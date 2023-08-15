@@ -14,7 +14,7 @@
 // For further information, please contact The MITRE Corporation, Contracts Management
 // Office, 7515 Colshire Drive, McLean, VA 22102-7539, (703) 983-6000.
 //
-// 2022 The MITRE Corporation. All Rights Reserved.
+// 2023 The MITRE Corporation. All Rights Reserved.
 // ****************************************************************************
 
 #include "imalgs/IMClearance.h"
@@ -30,58 +30,54 @@ using namespace interval_management::open_source;
 log4cplus::Logger IMClearance::m_logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("IMClearance"));
 
 IMClearance::IMClearance()
-   : m_final_approach_spacing_merge_angle_mean(0.0),
+   : m_clearance_type(CUSTOM),
+     m_assigned_spacing_goal_type(TIME),
+     m_target_aircraft_intent(),
+     m_ownship_intent(),
+     m_final_approach_spacing_merge_angle_mean(0),
+     m_final_approach_spacing_merge_angle_std(0),
      m_achieve_by_point(),
      m_planned_termination_point(),
      m_traffic_reference_point(),
-     m_is_vector_aircraft(false) {
-   m_valid = false;
-   m_clearance_type = CUSTOM;
-   m_target_id = IMUtils::UNINITIALIZED_AIRCRAFT_ID;
-   m_assigned_spacing_goal_type = TIME;
-   m_assigned_spacing_goal = -INFINITY;
-   m_planned_final_approach_speed = Units::ZERO_SPEED;
+     m_assigned_spacing_goal(-INFINITY),
+     m_target_id(IMUtils::UNINITIALIZED_AIRCRAFT_ID),
+     m_is_vector_aircraft(false),
+     m_is_coincident_route_pairing(false),
+     m_valid(false) {}
+
+IMClearance::IMClearance(const IMClearance::Builder *builder) {
+   m_clearance_type = builder->GetClearanceType();
+   m_assigned_spacing_goal_type = builder->GetSpacingGoalType();
+   m_target_aircraft_intent = builder->GetTargetAircraftIntent();
+   m_ownship_intent = builder->GetOwnshipAircraftIntent();
+   m_final_approach_spacing_merge_angle_mean = builder->GetMergeAngleMean();
+   m_final_approach_spacing_merge_angle_std = builder->GetMergeAngleStd();
+   m_achieve_by_point = builder->GetAchieveByPoint();
+   m_planned_termination_point = builder->GetPlannedTerminationPoint();
+   m_traffic_reference_point = builder->GetTrafficReferencePoint();
+   m_assigned_spacing_goal = builder->GetAssignedSpacingGoal();
+   m_target_id = builder->GetTargetId();
+   m_is_vector_aircraft = builder->IsVectorAircraft();
    m_is_coincident_route_pairing = false;
-}
-
-IMClearance::IMClearance(const ClearanceType &clearance_type, const int target_id,
-                         const string &traffic_reference_point, const string &achieve_by_point,
-                         const string &planned_termination_point, const SpacingGoalType &assigned_spacing_goal_type,
-                         const double assigned_spacing_goal, const Units::Speed planned_final_approach_speed,
-                         const AircraftIntent &target_intent)
-   : m_final_approach_spacing_merge_angle_mean(0.0),
-     m_final_approach_spacing_merge_angle_std(0.0),
-     m_is_vector_aircraft(false) {
-   m_valid = false;
-
-   m_clearance_type = clearance_type;
-   m_target_id = target_id;
-   m_traffic_reference_point = traffic_reference_point;
-   m_achieve_by_point = achieve_by_point;
-   m_planned_termination_point = planned_termination_point;
-   m_assigned_spacing_goal_type = assigned_spacing_goal_type;
-   m_assigned_spacing_goal = assigned_spacing_goal;
-   m_planned_final_approach_speed = planned_final_approach_speed;
-   m_target_aircraft_intent = target_intent;
 }
 
 IMClearance::IMClearance(const IMClearance &obj) { *this = obj; }
 
-bool IMClearance::operator==(const IMClearance &obj) {
+bool IMClearance::operator==(const IMClearance &obj) const {
    return ((m_valid == obj.m_valid) && (m_clearance_type == obj.m_clearance_type) && (m_target_id == obj.m_target_id) &&
            (m_traffic_reference_point == obj.m_traffic_reference_point) &&
            (m_achieve_by_point == obj.m_achieve_by_point) &&
            (m_assigned_spacing_goal_type == obj.m_assigned_spacing_goal_type) &&
            (m_assigned_spacing_goal == obj.m_assigned_spacing_goal) &&
            (m_planned_termination_point == obj.m_planned_termination_point) &&
-           (m_planned_final_approach_speed == obj.m_planned_final_approach_speed) &&
            (m_final_approach_spacing_merge_angle_mean == obj.m_final_approach_spacing_merge_angle_mean) &&
            (m_final_approach_spacing_merge_angle_std == obj.m_final_approach_spacing_merge_angle_std) &&
            (m_is_vector_aircraft == obj.m_is_vector_aircraft) &&
-           (m_target_aircraft_intent == obj.m_target_aircraft_intent));
+           (m_is_coincident_route_pairing == obj.m_is_coincident_route_pairing) &&
+           (m_target_aircraft_intent == obj.m_target_aircraft_intent) && (m_ownship_intent == obj.m_ownship_intent));
 }
 
-bool IMClearance::operator!=(const IMClearance &obj) { return (!(operator==(obj))); }
+bool IMClearance::operator!=(const IMClearance &obj) const { return (!(operator==(obj))); }
 
 bool IMClearance::Validate(const AircraftIntent &ownship_aircraft_intent,
                            const IMUtils::IMAlgorithmTypes im_algorithm_type) {
@@ -149,8 +145,6 @@ int IMClearance::GetTargetId() const { return m_target_id; }
 
 const string &IMClearance::GetAchieveByPoint() const { return m_achieve_by_point; }
 
-Units::Speed IMClearance::GetPlannedFinalApproachSpeed() const { return m_planned_final_approach_speed; }
-
 IMClearance::SpacingGoalType IMClearance::GetAssignedSpacingGoalType() const { return m_assigned_spacing_goal_type; }
 
 Units::Time IMClearance::GetAssignedTimeSpacingGoal() const {
@@ -189,8 +183,6 @@ void IMClearance::dump(string hdr) const {
    LOG4CPLUS_DEBUG(IMClearance::m_logger, "Planned Termination Pt   " << m_planned_termination_point.c_str());
    LOG4CPLUS_DEBUG(IMClearance::m_logger, "Spacing goal type        " << spacingstr.c_str());
    LOG4CPLUS_DEBUG(IMClearance::m_logger, "Spacing goal             " << m_assigned_spacing_goal);
-   LOG4CPLUS_DEBUG(IMClearance::m_logger,
-                   "Final Approach speed     " << Units::KnotsSpeed(m_planned_final_approach_speed).value());
    LOG4CPLUS_DEBUG(
          IMClearance::m_logger,
          "Final Approach merge angle" << Units::DegreesAngle(m_final_approach_spacing_merge_angle_mean).value());
@@ -204,30 +196,6 @@ const Units::Angle IMClearance::GetFinalApproachSpacingMergeAngleMean() const {
 
 Units::Angle IMClearance::GetFinalApproachSpacingMergeAngleStd() const {
    return m_final_approach_spacing_merge_angle_std;
-}
-
-IMClearance::IMClearance(const IMClearance::ClearanceType &clearance_type, const int target_id,
-                         const std::string &traffic_reference_point, const std::string &achieve_by_point,
-                         const std::string &planned_termination_point,
-                         const IMClearance::SpacingGoalType &assigned_spacing_goal_type,
-                         const double assigned_spacing_goal, const Units::Speed planned_final_approach_speed,
-                         const Units::Angle final_approach_spacing_merge_angle_mean,
-                         const Units::Angle final_approach_spacing_merge_angle_std, const bool fas_is_vector_aircraft,
-                         const AircraftIntent &target_intent) {
-   m_valid = false;
-
-   m_clearance_type = clearance_type;
-   m_target_id = target_id;
-   m_traffic_reference_point = traffic_reference_point;
-   m_achieve_by_point = achieve_by_point;
-   m_planned_termination_point = planned_termination_point;
-   m_assigned_spacing_goal_type = assigned_spacing_goal_type;
-   m_assigned_spacing_goal = assigned_spacing_goal;
-   m_planned_final_approach_speed = planned_final_approach_speed;
-   m_final_approach_spacing_merge_angle_mean = final_approach_spacing_merge_angle_mean;
-   m_final_approach_spacing_merge_angle_std = final_approach_spacing_merge_angle_std;
-   m_is_vector_aircraft = fas_is_vector_aircraft;
-   m_target_aircraft_intent = target_intent;
 }
 
 bool IMClearance::IsVectorAircraft() const { return m_is_vector_aircraft; }

@@ -14,7 +14,7 @@
 // For further information, please contact The MITRE Corporation, Contracts Management
 // Office, 7515 Colshire Drive, McLean, VA 22102-7539, (703) 983-6000.
 //
-// 2022 The MITRE Corporation. All Rights Reserved.
+// 2023 The MITRE Corporation. All Rights Reserved.
 // ****************************************************************************
 
 #pragma once
@@ -35,6 +35,7 @@ class IMKinematicAchieve : public IMAchieve, public Loadable {
 
    static const int MINIMUM_FAS_TRACK_COUNT;
    static const Units::SecondsTime TRACK_ANGLE_TAU;
+   static const bool BLEND_WIND_DEFAULT;
 
    IMKinematicAchieve();
 
@@ -43,7 +44,8 @@ class IMKinematicAchieve : public IMAchieve, public Loadable {
    void IterationReset() override;
 
    void Initialize(const OwnshipPredictionParameters &ownship_prediction_parameters,
-                   const AircraftIntent &ownship_aircraft_intent, WeatherPrediction &weather_prediction) override;
+                   const AircraftIntent &ownship_aircraft_intent,
+                   aaesim::open_source::WeatherPrediction &weather_prediction) override;
 
    aaesim::open_source::Guidance Update(
          const aaesim::open_source::Guidance &prevguidance, const aaesim::open_source::DynamicsState &dynamicsstate,

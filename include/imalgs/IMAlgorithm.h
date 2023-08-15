@@ -14,7 +14,7 @@
 // For further information, please contact The MITRE Corporation, Contracts Management
 // Office, 7515 Colshire Drive, McLean, VA 22102-7539, (703) 983-6000.
 //
-// 2022 The MITRE Corporation. All Rights Reserved.
+// 2023 The MITRE Corporation. All Rights Reserved.
 // ****************************************************************************
 
 #pragma once
@@ -23,7 +23,7 @@
 #include "public/Guidance.h"
 #include "public/AircraftIntent.h"
 #include "imalgs/AircraftState.h"
-#include "utility/Logging.h"
+#include "public/Logging.h"
 #include "public/PilotDelay.h"
 #include "public/ThreeDOFDynamics.h"
 #include "public/TangentPlaneSequence.h"
@@ -66,7 +66,8 @@ class IMAlgorithm {
    IMAlgorithm &operator=(const IMAlgorithm &obj);
 
    virtual void Initialize(const OwnshipPredictionParameters &ownship_prediction_parameters,
-                           const AircraftIntent &ownship_aircraft_intent, WeatherPrediction &weather_prediction);
+                           const AircraftIntent &ownship_aircraft_intent,
+                           aaesim::open_source::WeatherPrediction &weather_prediction);
 
    // Called during initialization whenever the clearance type is not CUSTOM.
    virtual void ResetDefaults();
@@ -212,7 +213,7 @@ class IMAlgorithm {
    FlightStage m_stage_of_im_operation;
    IMClearance m_im_clearance;
    PilotDelay m_pilot_delay;
-   WeatherPrediction m_weather_prediction;
+   aaesim::open_source::WeatherPrediction m_weather_prediction;
    interval_management::open_source::FIMSpeedLimiter m_speed_limiter;
 
    Units::Speed m_previous_reference_im_speed_command_tas;
@@ -273,7 +274,7 @@ class IMAlgorithm {
 
   private:
    void IterClearIMAlg();
-   void SetWeatherPrediction(const WeatherPrediction &weather_prediction);
+   void SetWeatherPrediction(const aaesim::open_source::WeatherPrediction &weather_prediction);
 
    static log4cplus::Logger m_logger;
 };
@@ -345,7 +346,7 @@ inline const bool IMAlgorithm::IsLoaded() const { return m_loaded; }
 
 inline bool IMAlgorithm::IsBlendWind() const { return false; }
 
-inline void IMAlgorithm::SetWeatherPrediction(const WeatherPrediction &weather_prediction) {
+inline void IMAlgorithm::SetWeatherPrediction(const aaesim::open_source::WeatherPrediction &weather_prediction) {
    m_weather_prediction = weather_prediction;
    m_pilot_delay.SetAtmosphere(weather_prediction.getAtmosphere());
 }

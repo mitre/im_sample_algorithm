@@ -14,16 +14,16 @@
 // For further information, please contact The MITRE Corporation, Contracts Management
 // Office, 7515 Colshire Drive, McLean, VA 22102-7539, (703) 983-6000.
 //
-// 2022 The MITRE Corporation. All Rights Reserved.
+// 2023 The MITRE Corporation. All Rights Reserved.
 // ****************************************************************************
+
+#include "imalgs/IMTimeBasedAchieve.h"
 
 #include <stdexcept>
 
-#include "imalgs/IMTimeBasedAchieve.h"
-#include "math/CustomMath.h"
+#include "public/CustomMath.h"
 #include "public/AircraftCalculations.h"
 #include "public/CoreUtils.h"
-#include "imalgs/IMAircraft.h"
 
 using namespace std;
 using namespace aaesim::open_source;
@@ -141,9 +141,9 @@ aaesim::open_source::Guidance IMTimeBasedAchieve::Update(
                }
 
                AircraftSpeed aircraft_speed = guidance_out.GetSelectedSpeed();
-               if (aircraft_speed.GetSpeedType() != INDICATED_AIR_SPEED) {  // throw
+               if (aircraft_speed.GetSpeedType() != INDICATED_AIR_SPEED) {
                   LOG4CPLUS_FATAL(m_logger,
-                                  "AircraftSpeed speed_type not INDICATED_AIR_SPEED.  "
+                                  "AircraftSpeed SpeedValueType not INDICATED_AIR_SPEED.  "
                                   "Unable to update guidance for CAPTURE clearance");
                }
 
@@ -275,7 +275,6 @@ aaesim::open_source::Guidance IMTimeBasedAchieve::HandleAchieveStage(
       }
    }
 
-   LOG4CPLUS_TRACE(m_logger, "Ownship TTG to ABP: " << Units::SecondsTime(m_ownship_ttg_to_abp).value());
    if (is_crossing_time_valid) {
       Units::Time tmp1 = Units::SecondsTime(current_ownship_state.GetTimeStamp().value()) + m_ownship_ttg_to_abp;
       m_predicted_spacing_interval = tmp1 - m_target_trp_crossing_time;
@@ -303,12 +302,6 @@ aaesim::open_source::Guidance IMTimeBasedAchieve::HandleAchieveStage(
 
    if (m_reference_precalc_index >=
        static_cast<int>(m_ownship_kinematic_trajectory_predictor.GetVerticalPathTimes().size() - 1)) {
-      // NEED:Change the calculations here to compute a point before the start.
-      // Use gs not v in the calculation.
-
-      // It is possible for FindNearestIndex to return the last index in the tested vector if the tested value is
-      // greater than vector.size() - 2. We catch those cases here, but this should be reworked to make the logic more
-      // robust and understandable.
       if (Units::SecondsTime(ownrefttgtoend).value() >=
           m_ownship_kinematic_trajectory_predictor.GetVerticalPathTimes().back()) {
          m_reference_precalc_index =
@@ -411,6 +404,9 @@ aaesim::open_source::Guidance IMTimeBasedAchieve::HandleAchieveStage(
          guidance_out.SetMachCommand(mach_equivalent);
       }
    }
+
+   DoAlgorithmLogging(current_ownship_state, current_target_state, reference_distance, tascommand, guidance_out,
+                      is_crossing_time_valid);
 
    return guidance_out;
 }
@@ -628,18 +624,6 @@ void IMTimeBasedAchieve::RecordInternalObserverMetrics(
       const aaesim::open_source::DynamicsState &dynamics_state, const Units::Speed unmodified_ias,
       const Units::Speed tas_command, const Units::Speed reference_velocity, const Units::Length reference_distance,
       const aaesim::open_source::Guidance &guidance) {
-   if (InternalObserver::getInstance()->GetScenarioIter() >= 0) {
-      InternalObserver::getInstance()->IM_command_output(
-            current_ownship_state.GetId(), current_ownship_state.GetTimeStamp().value(), current_ownship_state.m_z,
-            Units::MetersPerSecondSpeed(dynamics_state.v_true_airspeed).value(),
-            Units::MetersPerSecondSpeed(current_ownship_state.GetGroundSpeed()).value(),
-            Units::MetersPerSecondSpeed(m_im_speed_command_ias).value(),
-            Units::MetersPerSecondSpeed(unmodified_ias).value(), Units::MetersPerSecondSpeed(tas_command).value(),
-            Units::MetersPerSecondSpeed(reference_velocity).value(), Units::MetersLength(reference_distance).value(),
-            Units::MetersLength(-m_ownship_kinematic_dtg_to_ptp).value(),
-            Units::MetersLength(Units::negInfinity()).value());
-   }
-
    if (InternalObserver::getInstance()->outputNM()) {
       NMObserver &nm_observer = InternalObserver::getInstance()->GetNMObserver(current_ownship_state.GetId());
 

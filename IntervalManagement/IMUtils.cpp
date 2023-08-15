@@ -14,13 +14,13 @@
 // For further information, please contact The MITRE Corporation, Contracts Management
 // Office, 7515 Colshire Drive, McLean, VA 22102-7539, (703) 983-6000.
 //
-// 2022 The MITRE Corporation. All Rights Reserved.
+// 2023 The MITRE Corporation. All Rights Reserved.
 // ****************************************************************************
 
 #include <stdexcept>
 #include <cfloat>
 #include "imalgs/IMUtils.h"
-#include "public/Scenario.h"
+#include "public/ScenarioUtils.h"
 #include "public/AircraftCalculations.h"
 #include "public/SimulationTime.h"
 
@@ -28,7 +28,7 @@ using namespace std;
 using namespace aaesim::open_source;
 
 log4cplus::Logger IMUtils::m_logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("IMUtils"));
-const int IMUtils::UNINITIALIZED_AIRCRAFT_ID = Scenario::AIRCRAFT_ID_NOT_IN_MAP;
+const int IMUtils::UNINITIALIZED_AIRCRAFT_ID = ScenarioUtils::AIRCRAFT_ID_NOT_IN_MAP;
 const Units::Length IMUtils::BEYOND_END_OF_ROUTE_TOL = Units::MetersLength(-300);  // don't reduce. See AAES-745
 const Units::NauticalMilesLength IMUtils::DIST_QUANTIZE_1_DEFAULT(0);
 const Units::NauticalMilesLength IMUtils::DIST_QUANTIZE_2_DEFAULT(10);
@@ -594,7 +594,7 @@ bool IMUtils::GetCrossingTime(
                                                                       dtgProjected);
       b0 = ProjectTargetPositionFromDistance(dtgProjected, distance_calculator.GetHorizontalPath(), xProjected,
                                              yProjected);
-   } catch (logic_error e) {
+   } catch (logic_error &e) {
       b0 = false;
    }
 
@@ -630,7 +630,7 @@ bool IMUtils::GetCrossingTime(
             b1 = distance_calculator.CalculateAlongPathDistanceFromPosition(
                   Units::FeetLength(aircraft_state_history[loop - 1].m_x),
                   Units::FeetLength(aircraft_state_history[loop - 1].m_y), prevdistance);
-         } catch (logic_error e) {
+         } catch (logic_error &e) {
             b1 = false;
          }
          if (b1) {
@@ -642,7 +642,7 @@ bool IMUtils::GetCrossingTime(
          b2 = distance_calculator.CalculateAlongPathDistanceFromPosition(
                Units::FeetLength(aircraft_state_history[loop].m_x), Units::FeetLength(aircraft_state_history[loop].m_y),
                nextdistance);
-      } catch (logic_error e) {
+      } catch (logic_error &e) {
          b2 = false;
       }
       if (b2) {
@@ -691,7 +691,7 @@ bool IMUtils::GetCrossingTime(
          b1 = distance_calculator.CalculateAlongPathDistanceFromPosition(
                Units::FeetLength(aircraft_state_history.back().m_x),
                Units::FeetLength(aircraft_state_history.back().m_y), nextdistance);
-      } catch (logic_error e) {
+      } catch (logic_error &e) {
          b1 = false;
       }
       if (b1) {
@@ -773,7 +773,7 @@ bool IMUtils::GetPathLengthFromPosition(const Units::Length x, const Units::Leng
        */
       AircraftCalculations::LegacyGetPathLengthFromPosition(x, y, horizontal_path, distance_to_go, track);
       return true;
-   } catch (logic_error e) {
+   } catch (logic_error &e) {
       return false;
    }
 }

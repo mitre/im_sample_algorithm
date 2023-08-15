@@ -14,7 +14,7 @@
 // For further information, please contact The MITRE Corporation, Contracts Management
 // Office, 7515 Colshire Drive, McLean, VA 22102-7539, (703) 983-6000.
 //
-// 2022 The MITRE Corporation. All Rights Reserved.
+// 2023 The MITRE Corporation. All Rights Reserved.
 // ****************************************************************************
 
 #include "imalgs/MOPSPredictedWindEvaluatorVersion2.h"
@@ -41,11 +41,10 @@ MOPSPredictedWindEvaluatorVersion2::MOPSPredictedWindEvaluatorVersion2() = defau
 
 MOPSPredictedWindEvaluatorVersion2::~MOPSPredictedWindEvaluatorVersion2() = default;
 
-bool MOPSPredictedWindEvaluatorVersion2::ArePredictedWindsAccurate(const aaesim::open_source::AircraftState &state,
-                                                                   const WeatherPrediction &weather_prediction,
-                                                                   const Units::Speed reference_cas,
-                                                                   const Units::Length reference_altitude,
-                                                                   const Atmosphere *sensed_atmosphere) const {
+bool MOPSPredictedWindEvaluatorVersion2::ArePredictedWindsAccurate(
+      const aaesim::open_source::AircraftState &state, const aaesim::open_source::WeatherPrediction &weather_prediction,
+      const Units::Speed reference_cas, const Units::Length reference_altitude,
+      const Atmosphere *sensed_atmosphere) const {
 
    Units::FeetLength true_altitude(state.m_z);
    Units::KnotsSpeed tas1 = weather_prediction.CAS2TAS(reference_cas, reference_altitude);
@@ -109,7 +108,7 @@ void MOPSPredictedWindEvaluatorVersion2::LogWindDisagreeMetaData(
       const Units::KnotsSpeed tas1, const Units::KnotsSpeed tas2, const Units::KnotsSpeed gs1,
       const Units::KnotsSpeed gs2, const Units::Speed predicted_wind_x, const Units::Speed predicted_wind_y,
       const aaesim::open_source::AircraftState &state) {
-   LOG4CPLUS_DEBUG(
+   LOG4CPLUS_TRACE(
          m_logger,
          "Winds inaccurate:" << std::endl
                              << "||time||source||altitude(ft)||temperature(C)||pressure(Pa)||density(kg/"

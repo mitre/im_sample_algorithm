@@ -14,18 +14,22 @@
 // For further information, please contact The MITRE Corporation, Contracts Management
 // Office, 7515 Colshire Drive, McLean, VA 22102-7539, (703) 983-6000.
 //
-// 2022 The MITRE Corporation. All Rights Reserved.
+// 2023 The MITRE Corporation. All Rights Reserved.
 // ****************************************************************************
 
+#include "imalgs/IMKinematicAchieve.h"
+
 #include <iomanip>
-#include "math/CustomMath.h"
+
+#include "MiniCSV/minicsv.h"
+#include "public/CustomMath.h"
 #include "public/AircraftCalculations.h"
 #include "public/CoreUtils.h"
 #include "public/Environment.h"
+#include "public/Wind.h"
 #include "public/StandardAtmosphere.h"
+#include "public/ScenarioUtils.h"
 #include "imalgs/IMClearanceLoader.h"
-#include "imalgs/IMKinematicAchieve.h"
-#include "imalgs/IMScenario.h"
 
 using namespace interval_management;
 using namespace interval_management::open_source;
@@ -34,6 +38,7 @@ log4cplus::Logger IMKinematicAchieve::logger = log4cplus::Logger::getInstance(LO
 const int IMKinematicAchieve::MINIMUM_FAS_TRACK_COUNT(5);
 const Units::FeetLength IMKinematicAchieve::TARGET_ALTITUDE_TOLERANCE(3000);
 const Units::SecondsTime IMKinematicAchieve::TRACK_ANGLE_TAU(3.0);
+const bool IMKinematicAchieve::BLEND_WIND_DEFAULT(true);
 
 IMKinematicAchieve::IMKinematicAchieve()
    : m_ownship_kinematic_trajectory_predictor(),
@@ -56,7 +61,7 @@ IMKinematicAchieve::IMKinematicAchieve()
      m_target_history_exists(false),
      m_is_target_aligned(false),
      m_new_trajectory_prediction_available(),
-     m_blend_wind(IMScenario::BLEND_WIND_DEFAULT),
+     m_blend_wind(IMKinematicAchieve::BLEND_WIND_DEFAULT),
      m_tangent_plane_sequence(nullptr) {
    IterClearIMKinAch();
 }
@@ -90,7 +95,7 @@ void IMKinematicAchieve::IterClearIMKinAch() {
 
 void IMKinematicAchieve::Initialize(const OwnshipPredictionParameters &ownship_prediction_parameters,
                                     const AircraftIntent &ownship_aircraft_intent,
-                                    WeatherPrediction &weather_prediction) {
+                                    aaesim::open_source::WeatherPrediction &weather_prediction) {
    IMAchieve::Initialize(ownship_prediction_parameters, ownship_aircraft_intent, weather_prediction);
 
    SetTangentPlaneSequence(std::move(ownship_aircraft_intent.GetTangentPlaneSequence()));
@@ -147,9 +152,9 @@ void IMKinematicAchieve::Initialize(const OwnshipPredictionParameters &ownship_p
 }
 
 void IMKinematicAchieve::ResetDefaults() {
-   if (m_blend_wind != IMScenario::BLEND_WIND_DEFAULT) {
-      LOG4CPLUS_WARN(logger, "mBlendWind reset to " << IMScenario::BLEND_WIND_DEFAULT << RESET_MSG);
-      m_blend_wind = IMScenario::BLEND_WIND_DEFAULT;
+   if (m_blend_wind != IMKinematicAchieve::BLEND_WIND_DEFAULT) {
+      LOG4CPLUS_WARN(logger, "mBlendWind reset to " << IMKinematicAchieve::BLEND_WIND_DEFAULT << RESET_MSG);
+      m_blend_wind = IMKinematicAchieve::BLEND_WIND_DEFAULT;
    }
 
    IMAchieve::ResetDefaults();
@@ -187,12 +192,6 @@ bool IMKinematicAchieve::load(DecodedStream *input) {
    set_stream(input);
 
    register_loadable_with_brackets("configuration", &m_configuration, true);
-
-   LoaderDeprecatedMetaInfo spacingDeprecatedInfo;
-   spacingDeprecatedInfo.isDeprecated = true;
-   spacingDeprecatedInfo.supersededByTagName = "IMClearance.Assigned_Spacing_Goal";
-
-   register_var("spacing", &m_assigned_spacing_goal_from_input_file, spacingDeprecatedInfo);
 
    interval_management::IMClearanceLoader imloader;
    register_loadable_with_brackets("clearance", &imloader, false);
@@ -572,7 +571,7 @@ void IMKinematicAchieve::CalculateRFLegPhase(const std::vector<PrecalcWaypoint> 
    if (has_rf_leg_on_route) {
       bool upper_limit_message_written = false;
 
-      Units::HertzFrequency delta_speed_factor;
+      Units::HertzFrequency delta_speed_factor = Units::ZERO_FREQUENCY;
       Units::Length last_distance = Units::ZERO_LENGTH;
       Units::Length base_distance = Units::ZERO_LENGTH;
       Units::Speed base_ias = Units::ZERO_SPEED;
@@ -866,7 +865,8 @@ void IMKinematicAchieve::ComputeFASTrajectories(
 
    // randomize merge angle around the mean
    Units::Angle merge_angle_std = m_im_clearance.GetFinalApproachSpacingMergeAngleStd();
-   Units::Angle merge_angle = Scenario::m_rand.GaussianSample(merge_angle_mean, merge_angle_std);
+   Units::Angle merge_angle =
+         aaesim::open_source::ScenarioUtils::RANDOM_NUMBER_GENERATOR.GaussianSample(merge_angle_mean, merge_angle_std);
    Units::DegreesAngle final_approach_angle = reverse_final_approach_angle + Units::PI_RADIANS_ANGLE;
    LOG4CPLUS_DEBUG(logger, "Average track angle = " << Units::DegreesAngle(merge_angle_mean)
                                                     << ", randomized merge angle = " << Units::DegreesAngle(merge_angle)

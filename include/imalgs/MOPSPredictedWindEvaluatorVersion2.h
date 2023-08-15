@@ -14,7 +14,7 @@
 // For further information, please contact The MITRE Corporation, Contracts Management
 // Office, 7515 Colshire Drive, McLean, VA 22102-7539, (703) 983-6000.
 //
-// 2022 The MITRE Corporation. All Rights Reserved.
+// 2023 The MITRE Corporation. All Rights Reserved.
 // ****************************************************************************
 
 #pragma once
@@ -40,8 +40,8 @@ class MOPSPredictedWindEvaluatorVersion2 : public aaesim::open_source::Predicted
     * @param weatherPrediction The predicted winds to be evaluated
     */
    virtual bool ArePredictedWindsAccurate(const aaesim::open_source::AircraftState &state,
-                                          const WeatherPrediction &weatherPrediction, const Units::Speed reference_cas,
-                                          const Units::Length reference_altitude,
+                                          const aaesim::open_source::WeatherPrediction &weatherPrediction,
+                                          const Units::Speed reference_cas, const Units::Length reference_altitude,
                                           const Atmosphere *sensed_atmosphere) const;
 
   private:

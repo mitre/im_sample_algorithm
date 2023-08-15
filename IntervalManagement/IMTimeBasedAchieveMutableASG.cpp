@@ -14,16 +14,16 @@
 // For further information, please contact The MITRE Corporation, Contracts Management
 // Office, 7515 Colshire Drive, McLean, VA 22102-7539, (703) 983-6000.
 //
-// 2022 The MITRE Corporation. All Rights Reserved.
+// 2023 The MITRE Corporation. All Rights Reserved.
 // ****************************************************************************
 
 #include <stdexcept>
 #include <imalgs/IMTimeBasedAchieveMutableASG.h>
 
-#include "math/CustomMath.h"
+#include "public/CustomMath.h"
 #include "public/AircraftCalculations.h"
 #include "public/CoreUtils.h"
-#include "imalgs/IMAircraft.h"
+#include "public/SimulationTime.h"
 
 using namespace std;
 using namespace interval_management::open_source;
@@ -69,7 +69,7 @@ bool IMTimeBasedAchieveMutableASG::load(DecodedStream *input) {
 
 void IMTimeBasedAchieveMutableASG::Initialize(const OwnshipPredictionParameters &ownship_prediction_parameters,
                                               const AircraftIntent &ownship_aircraft_intent,
-                                              WeatherPrediction &weather_prediction) {
+                                              aaesim::open_source::WeatherPrediction &weather_prediction) {
    IMKinematicAchieve::Initialize(ownship_prediction_parameters, ownship_aircraft_intent, weather_prediction);
 
    if (m_loaded) {
@@ -77,7 +77,7 @@ void IMTimeBasedAchieveMutableASG::Initialize(const OwnshipPredictionParameters 
       // Positive means the ASG is increasing.
       if (m_asg_change_duration > Units::zero()) {
          m_asg_change_increment = ((m_next_assigned_spacing_goal - m_assigned_spacing_goal) / m_asg_change_duration) *
-                                  SimulationTime::get_simulation_time_step();
+                                  aaesim::open_source::SimulationTime::GetSimulationTimeStep();
       } else {
          // make the change immediate
          m_asg_change_increment = (m_next_assigned_spacing_goal - m_assigned_spacing_goal);
