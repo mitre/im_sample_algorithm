@@ -52,7 +52,7 @@ jobs:
 
       - name: Run tests
         run: |
-          cmake --build build --target run_imalgo_test -j
+          cmake --build build --target run_imalgs_test -j
 
       - name: Upload test results
         uses: actions/upload-artifact@v4
