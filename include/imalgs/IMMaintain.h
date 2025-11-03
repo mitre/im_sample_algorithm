@@ -19,9 +19,10 @@
 
 #pragma once
 
-#include "imalgs/IMAlgorithm.h"
-#include "imalgs/IMAchieve.h"
 #include <scalar/Frequency.h>
+
+#include "imalgs/IMAchieve.h"
+#include "imalgs/IMAlgorithm.h"
 #include "public/EuclideanTrajectoryPredictor.h"
 namespace interval_management {
 namespace open_source {
@@ -36,41 +37,40 @@ class IMMaintain : public IMAlgorithm {
 
    virtual ~IMMaintain() = default;
 
-   virtual void IterationReset();
+   virtual void IterationReset() override;
 
-   virtual void ResetDefaults();
+   virtual void ResetDefaults() override;
 
    void InitializeScenario(IMAchieve *obj, const Units::Frequency maintain_control_gain);
 
    virtual void Prepare(Units::Speed previous_im_speed_command, Units::Speed previous_ias_command,
                         interval_management::open_source::FIMSpeedLimiter speed_limiter, double previous_mach_command,
                         const aaesim::open_source::EuclideanTrajectoryPredictor &ownship_trajectory_predictor,
-                        const AlongPathDistanceCalculator &im_distance_calculator,
+                        const aaesim::open_source::AlongPathDistanceCalculator &im_distance_calculator,
                         const std::vector<interval_management::open_source::AircraftState> &target_adsb_track_history,
                         const IMClearance &im_clearance,
                         const std::vector<interval_management::open_source::FIMSpeedLimiter::RfLegLimit> &rf_limits);
 
    Units::Frequency GetMaintainControlGain() const;
 
-   virtual const double GetSpacingError() const;
+   virtual const double GetSpacingError() const override;
 
-   virtual void SetAssignedSpacingGoal(const IMClearance &clearance);
+   virtual void SetAssignedSpacingGoal(const IMClearance &clearance) override;
 
-   virtual void DumpParameters(const std::string &parameters_to_print);
+   virtual void DumpParameters(const std::string &parameters_to_print) override;
 
    void SetBlendWind(bool wind_blending_enabled) override;
 
   protected:
    void Copy(const IMMaintain &obj);
 
-   AlongPathDistanceCalculator m_ownship_decrementing_distance_calculator;
-   AlongPathDistanceCalculator m_ownship_distance_calculator;
+   aaesim::open_source::AlongPathDistanceCalculator m_ownship_decrementing_distance_calculator;
+   aaesim::open_source::AlongPathDistanceCalculator m_ownship_distance_calculator;
 
   private:
    static log4cplus::Logger m_logger;
 };
 
-inline void IMMaintain::SetBlendWind(bool wind_blending_enabled) { /* required by the interface, but not used */
-}
+inline void IMMaintain::SetBlendWind(bool wind_blending_enabled) { /* required by the interface, but not used */ }
 }  // namespace open_source
 }  // namespace interval_management

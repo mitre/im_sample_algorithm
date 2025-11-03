@@ -20,12 +20,12 @@
 #pragma once
 
 #include "imalgs/IMKinematicAchieve.h"
-#include "imalgs/TrueDistances.h"
 #include "imalgs/IMKinematicDistBasedMaintain.h"
+#include "imalgs/TrueDistances.h"
 
 namespace interval_management {
 namespace open_source {
-class IMDistBasedAchieve : public IMKinematicAchieve {
+class IMDistBasedAchieve final : public IMKinematicAchieve {
   public:
    static const Units::Length DEFAULT_DISTANCE_BASED_ASSIGNED_SPACING_GOAL;
 
@@ -35,7 +35,12 @@ class IMDistBasedAchieve : public IMKinematicAchieve {
 
    virtual ~IMDistBasedAchieve();
 
-   virtual void IterationReset();
+   virtual void IterationReset() override;
+
+   void Initialize(const OwnshipPredictionParameters &ownship_prediction_parameters,
+                   const AircraftIntent &ownship_aircraft_intent,
+                   aaesim::open_source::WeatherPrediction &weather_prediction,
+                   std::shared_ptr<TangentPlaneSequence> &position_converter) override;
 
    virtual void Initialize(const OwnshipPredictionParameters &ownship_prediction_parameters,
                            const AircraftIntent &ownship_aircraft_intent,
@@ -46,29 +51,29 @@ class IMDistBasedAchieve : public IMKinematicAchieve {
          const aaesim::open_source::DynamicsState &three_dof_dynamics_state,
          const interval_management::open_source::AircraftState &current_ownship_state,
          const interval_management::open_source::AircraftState &current_target_state,
-         const std::vector<interval_management::open_source::AircraftState> &target_adsb_history);
+         const std::vector<interval_management::open_source::AircraftState> &target_adsb_history) override;
 
-   virtual void DumpParameters(const std::string &parameters_to_print);
+   virtual void DumpParameters(const std::string &parameters_to_print) override;
 
-   virtual const double GetSpacingError() const;
+   virtual const double GetSpacingError() const override;
 
-   virtual void SetAssignedSpacingGoal(const IMClearance &clearance);
+   virtual void SetAssignedSpacingGoal(const IMClearance &clearance) override;
 
-   virtual const bool IsImOperationComplete() const;
+   virtual const bool IsImOperationComplete() const override;
 
-   virtual const bool InAchieveStage() const;
+   virtual const bool InAchieveStage() const override;
 
-   virtual int GetSpeedChangeCount() const;
+   virtual int GetSpeedChangeCount() const override;
 
-   virtual const Units::Speed GetImSpeedCommandIas() const;
+   virtual const Units::Speed GetImSpeedCommandIas() const override;
 
-   virtual const double GetSpacingInterval() const;
+   virtual const double GetSpacingInterval() const override;
 
-   virtual const double GetPsi() const;
+   virtual const double GetPsi() const override;
 
-   virtual const double GetMsi() const;
+   virtual const double GetMsi() const override;
 
-   virtual const double GetAssignedSpacingGoal() const;
+   virtual const double GetAssignedSpacingGoal() const override;
 
    const Units::Length GetTrueDtgToAchieveByPointUsingReferenceTime(const Units::Time reference_time);
 
@@ -76,11 +81,11 @@ class IMDistBasedAchieve : public IMKinematicAchieve {
 
    const interval_management::open_source::AircraftState GetTargetStateProjectedAsgAdjusted() const override;
 
-   bool load(DecodedStream *input);
+   bool load(DecodedStream *input) override;
 
   protected:
    virtual void CalculateIas(const Units::Length current_ownship_altitude,
-                             const aaesim::open_source::DynamicsState &three_dof_dynamics_state);
+                             const aaesim::open_source::DynamicsState &three_dof_dynamics_state) override;
 
    virtual void CalculateMach(const Units::Time reference_ttg, const Units::Length current_ownship_altitude,
                               const Units::Mass current_mass);
@@ -111,8 +116,8 @@ class IMDistBasedAchieve : public IMKinematicAchieve {
    Units::Length m_predicted_spacing_interval;
    Units::Length m_measured_spacing_interval;
    Units::Length m_assigned_spacing_goal;
-   AlongPathDistanceCalculator m_distance_calculator_target_on_ownship_hpath;
-   PositionCalculator m_position_calculator_target_on_ownship_hpath;
+   aaesim::open_source::AlongPathDistanceCalculator m_distance_calculator_target_on_ownship_hpath;
+   aaesim::open_source::PositionCalculator m_position_calculator_target_on_ownship_hpath;
 
    static log4cplus::Logger m_logger;
 };

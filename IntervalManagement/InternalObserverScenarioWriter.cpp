@@ -40,5 +40,4 @@ void interval_management::open_source::InternalObserverScenarioWriter::ScenarioB
 
 void interval_management::open_source::InternalObserverScenarioWriter::ScenarioEnd(const std::string &scenario_name) {
    InternalObserver::getInstance()->process();
-   InternalObserver::clearInstance();
 }

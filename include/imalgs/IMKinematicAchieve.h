@@ -19,17 +19,18 @@
 
 #pragma once
 
+#include "imalgs/AchievePointCalcs.h"
 #include "imalgs/IMAchieve.h"
 #include "imalgs/IMKinematicTimeBasedMaintain.h"
-#include "public/KinematicTrajectoryPredictor.h"
-#include "imalgs/AchievePointCalcs.h"
 #include "imalgs/InternalObserver.h"
+#include "public/BlendWindsVerticallyByAltitude.h"
+#include "public/KinematicTrajectoryPredictor.h"
+#include "public/WindBlendingAlgorithm.h"
 
 namespace interval_management {
 namespace open_source {
 
 class IMKinematicAchieve : public IMAchieve, public Loadable {
-
   public:
    enum RFLegPhase { NON_RF_LEG, ON_RF_LEG, PRE_RF_LEG };
 
@@ -47,6 +48,11 @@ class IMKinematicAchieve : public IMAchieve, public Loadable {
                    const AircraftIntent &ownship_aircraft_intent,
                    aaesim::open_source::WeatherPrediction &weather_prediction) override;
 
+   virtual void Initialize(const OwnshipPredictionParameters &ownship_prediction_parameters,
+                           const AircraftIntent &ownship_aircraft_intent,
+                           aaesim::open_source::WeatherPrediction &weather_prediction,
+                           std::shared_ptr<TangentPlaneSequence> &position_converter) = 0;
+
    aaesim::open_source::Guidance Update(
          const aaesim::open_source::Guidance &prevguidance, const aaesim::open_source::DynamicsState &dynamicsstate,
          const interval_management::open_source::AircraftState &owntruthstate,
@@ -60,10 +66,6 @@ class IMKinematicAchieve : public IMAchieve, public Loadable {
    const Units::Length GetTargetDtgToLastWaypoint() const override;
 
    virtual const interval_management::open_source::AircraftState GetTargetStateProjectedAsgAdjusted() const = 0;
-
-   bool IsBlendWind() const override;
-
-   void SetBlendWind(bool wind_blending_enabled) override;
 
    /*
     * API
@@ -98,7 +100,7 @@ class IMKinematicAchieve : public IMAchieve, public Loadable {
 
    const aaesim::open_source::KinematicTrajectoryPredictor &GetTargetKinematicPredictor() const;
 
-   bool load(DecodedStream *input);
+   bool load(DecodedStream *input) override;
 
    const bool IsTargetAligned() const;
 
@@ -107,15 +109,15 @@ class IMKinematicAchieve : public IMAchieve, public Loadable {
    const Waypoint &GetTrafficReferencePoint() const;
 
   protected:
-   virtual const bool IsOwnshipBelowTransitionAltitude(Units::Length current_ownship_altitude);
+   virtual const bool IsOwnshipBelowTransitionAltitude(Units::Length current_ownship_altitude) override;
 
-   Waypoint MakeWaypointFromState(const interval_management::open_source::AircraftState aircraft_state,
+   Waypoint MakeWaypointFromState(const interval_management::open_source::AircraftState &aircraft_state,
                                   Units::Speed wind_x, Units::Speed wind_y) const;
 
    void CalculateRFLegPhase(const std::vector<PrecalcWaypoint> &waypoints,
                             const Units::Acceleration deceleration_rate_flight_path_angle,
                             const VerticalPath &vertical_path,
-                            const std::vector<HorizontalPath> &horizontal_trajectory);
+                            const std::vector<aaesim::open_source::HorizontalPath> &horizontal_trajectory);
 
    void ComputeFASTrajectories(const interval_management::open_source::AircraftState &owntruthstate,
                                const interval_management::open_source::AircraftState &targettruthstate);
@@ -135,9 +137,9 @@ class IMKinematicAchieve : public IMAchieve, public Loadable {
 
    AircraftIntent m_ownship_aircraft_intent;
 
-   AlongPathDistanceCalculator m_ownship_distance_calculator;
-   AlongPathDistanceCalculator m_target_distance_calculator;
-   AlongPathDistanceCalculator m_im_ownship_distance_calculator;
+   aaesim::open_source::AlongPathDistanceCalculator m_ownship_distance_calculator;
+   aaesim::open_source::AlongPathDistanceCalculator m_target_distance_calculator;
+   aaesim::open_source::AlongPathDistanceCalculator m_im_ownship_distance_calculator;
 
    std::list<Units::Angle> m_ownship_track_angle_history;
    std::list<Units::Angle> m_target_track_angle_history;
@@ -154,7 +156,13 @@ class IMKinematicAchieve : public IMAchieve, public Loadable {
    bool m_is_target_aligned;
    bool m_new_trajectory_prediction_available;
 
+   std::shared_ptr<aaesim::open_source::WindBlendingAlgorithm> m_wind_blender{
+         std::make_shared<aaesim::open_source::BlendWindsVerticallyByAltitude>()};
+
    static const Units::FeetLength TARGET_ALTITUDE_TOLERANCE;
+
+  protected:
+   void SetTangentPlaneSequence(std::shared_ptr<TangentPlaneSequence> tangent_plane_sequence);
 
   private:
    void IterClearIMKinAch();
@@ -171,13 +179,7 @@ class IMKinematicAchieve : public IMAchieve, public Loadable {
 
    void CalculateTargetDtgToImPoints(const interval_management::open_source::AircraftState &current_lead_state);
 
-   void TrimAircraftIntentAfterWaypoint(AircraftIntent &aircraft_intent, const std::string &waypoint_name);
-
-   void SetTangentPlaneSequence(std::shared_ptr<TangentPlaneSequence> tangent_plane_sequence);
-
    static log4cplus::Logger logger;
-
-   bool m_blend_wind;
 
    std::shared_ptr<TangentPlaneSequence> m_tangent_plane_sequence;
 };
@@ -224,10 +226,6 @@ inline const aaesim::open_source::KinematicTrajectoryPredictor &IMKinematicAchie
       const {
    return m_target_kinematic_trajectory_predictor;
 }
-
-inline bool IMKinematicAchieve::IsBlendWind() const { return m_blend_wind; }
-
-inline void IMKinematicAchieve::SetBlendWind(bool wind_blending_enabled) { m_blend_wind = wind_blending_enabled; }
 
 inline void IMKinematicAchieve::SetRecordMaintainMetrics(bool new_value) {
    InternalObserver::getInstance()->SetRecordMaintainMetrics(new_value);

@@ -18,32 +18,18 @@
 // ****************************************************************************
 
 #include "imalgs/IMClearance.h"
-#include "imalgs/IMClearanceLoader.h"
-#include "utility/CustomUnits.h"
-#include "loader/LoadError.h"
-#include "imalgs/IMUtils.h"
+
 #include <stdexcept>
+
+#include "imalgs/IMClearanceLoader.h"
+#include "imalgs/IMUtils.h"
+#include "loader/LoadError.h"
+#include "utility/CustomUnits.h"
 
 using namespace std;
 using namespace interval_management::open_source;
 
 log4cplus::Logger IMClearance::m_logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("IMClearance"));
-
-IMClearance::IMClearance()
-   : m_clearance_type(CUSTOM),
-     m_assigned_spacing_goal_type(TIME),
-     m_target_aircraft_intent(),
-     m_ownship_intent(),
-     m_final_approach_spacing_merge_angle_mean(0),
-     m_final_approach_spacing_merge_angle_std(0),
-     m_achieve_by_point(),
-     m_planned_termination_point(),
-     m_traffic_reference_point(),
-     m_assigned_spacing_goal(-INFINITY),
-     m_target_id(IMUtils::UNINITIALIZED_AIRCRAFT_ID),
-     m_is_vector_aircraft(false),
-     m_is_coincident_route_pairing(false),
-     m_valid(false) {}
 
 IMClearance::IMClearance(const IMClearance::Builder *builder) {
    m_clearance_type = builder->GetClearanceType();
@@ -61,40 +47,12 @@ IMClearance::IMClearance(const IMClearance::Builder *builder) {
    m_is_coincident_route_pairing = false;
 }
 
-IMClearance::IMClearance(const IMClearance &obj) { *this = obj; }
-
-bool IMClearance::operator==(const IMClearance &obj) const {
-   return ((m_valid == obj.m_valid) && (m_clearance_type == obj.m_clearance_type) && (m_target_id == obj.m_target_id) &&
-           (m_traffic_reference_point == obj.m_traffic_reference_point) &&
-           (m_achieve_by_point == obj.m_achieve_by_point) &&
-           (m_assigned_spacing_goal_type == obj.m_assigned_spacing_goal_type) &&
-           (m_assigned_spacing_goal == obj.m_assigned_spacing_goal) &&
-           (m_planned_termination_point == obj.m_planned_termination_point) &&
-           (m_final_approach_spacing_merge_angle_mean == obj.m_final_approach_spacing_merge_angle_mean) &&
-           (m_final_approach_spacing_merge_angle_std == obj.m_final_approach_spacing_merge_angle_std) &&
-           (m_is_vector_aircraft == obj.m_is_vector_aircraft) &&
-           (m_is_coincident_route_pairing == obj.m_is_coincident_route_pairing) &&
-           (m_target_aircraft_intent == obj.m_target_aircraft_intent) && (m_ownship_intent == obj.m_ownship_intent));
-}
-
-bool IMClearance::operator!=(const IMClearance &obj) const { return (!(operator==(obj))); }
-
 bool IMClearance::Validate(const AircraftIntent &ownship_aircraft_intent,
                            const IMUtils::IMAlgorithmTypes im_algorithm_type) {
    if (im_algorithm_type == IMUtils::IMAlgorithmTypes::TESTSPEEDCONTROL ||
-       im_algorithm_type == IMUtils::IMAlgorithmTypes::RTA ||
-       im_algorithm_type == IMUtils::IMAlgorithmTypes::RTA_TOAC_NOT_IMALGORITHM ||
        im_algorithm_type == IMUtils::IMAlgorithmTypes::NONE) {
       m_valid = true;
       return m_valid;
-   }
-
-   static const IMClearance empty;
-   if (*this == empty) {
-      m_valid = false;
-      std::string msg = "The clearance object is null. Something in the input is wrong.";
-      LOG4CPLUS_FATAL(m_logger, msg);
-      throw LoadError(msg);
    }
 
    if (im_algorithm_type == IMUtils::IMAlgorithmTypes::NONE && m_clearance_type == ClearanceType::NONE) {
@@ -150,7 +108,7 @@ IMClearance::SpacingGoalType IMClearance::GetAssignedSpacingGoalType() const { r
 Units::Time IMClearance::GetAssignedTimeSpacingGoal() const {
    if (m_assigned_spacing_goal_type != SpacingGoalType::TIME) {
       char msg[100];
-      sprintf(msg, "Spacing goal type is %d", m_assigned_spacing_goal_type);
+      snprintf(msg, sizeof(msg), "Spacing goal type is %d", m_assigned_spacing_goal_type);
       LOG4CPLUS_FATAL(m_logger, msg);
       throw logic_error(msg);
    }
@@ -164,28 +122,11 @@ const string &IMClearance::GetTrafficReferencePoint() const { return m_traffic_r
 Units::Length IMClearance::GetAssignedDistanceSpacingGoal() const {
    if (m_assigned_spacing_goal_type != SpacingGoalType::DIST) {
       char msg[100];
-      sprintf(msg, "Spacing goal type is %d", m_assigned_spacing_goal_type);
+      snprintf(msg, sizeof(msg), "Spacing goal type is %d", m_assigned_spacing_goal_type);
       LOG4CPLUS_FATAL(m_logger, msg);
       throw logic_error(msg);
    }
    return Units::NauticalMilesLength(m_assigned_spacing_goal);
-}
-
-void IMClearance::dump(string hdr) const {
-   string clearstr = IMClearanceLoader::GetClearanceString(m_clearance_type);
-   string spacingstr = IMClearanceLoader::GetAssignedSpacingTypeString(m_assigned_spacing_goal_type);
-
-   LOG4CPLUS_DEBUG(IMClearance::m_logger, hdr);
-   LOG4CPLUS_DEBUG(IMClearance::m_logger, "Clearance type           " << clearstr.c_str());
-   LOG4CPLUS_DEBUG(IMClearance::m_logger, "Target id                " << m_target_id);
-   LOG4CPLUS_DEBUG(IMClearance::m_logger, "Target reference pt      " << m_traffic_reference_point.c_str());
-   LOG4CPLUS_DEBUG(IMClearance::m_logger, "Achieve Pt               " << m_achieve_by_point.c_str());
-   LOG4CPLUS_DEBUG(IMClearance::m_logger, "Planned Termination Pt   " << m_planned_termination_point.c_str());
-   LOG4CPLUS_DEBUG(IMClearance::m_logger, "Spacing goal type        " << spacingstr.c_str());
-   LOG4CPLUS_DEBUG(IMClearance::m_logger, "Spacing goal             " << m_assigned_spacing_goal);
-   LOG4CPLUS_DEBUG(
-         IMClearance::m_logger,
-         "Final Approach merge angle" << Units::DegreesAngle(m_final_approach_spacing_merge_angle_mean).value());
 }
 
 const bool IMClearance::IsCoincidentRoutePairing() const { return m_is_coincident_route_pairing; }
@@ -274,8 +215,7 @@ bool IMClearance::ValidateBasicInputs(const AircraftIntent &ownship_aircraft_int
    /*
     * NOTE: All statements in here should throw when a check fails.
     */
-   if (im_algorithm_type == IMUtils::IMAlgorithmTypes::RTA ||
-       im_algorithm_type == IMUtils::IMAlgorithmTypes::TESTSPEEDCONTROL ||
+   if (im_algorithm_type == IMUtils::IMAlgorithmTypes::TESTSPEEDCONTROL ||
        im_algorithm_type == IMUtils::IMAlgorithmTypes::NONE)
       return true;
 
@@ -326,7 +266,6 @@ void IMClearance::SetFinalApproachSpacingMergeAngleStd(Units::Angle final_approa
 
 bool IMClearance::ValidatePlannedTerminationPoint(const AircraftIntent &ownship_aircraft_intent,
                                                   const IMUtils::IMAlgorithmTypes im_algorithm_type) const {
-
    if (ownship_aircraft_intent.GetWaypointIndexByName(m_planned_termination_point) < 0) {
       const string msg =
             "The planned termination point, " + m_planned_termination_point + ", was not found in the ownship intent.";

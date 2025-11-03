@@ -19,13 +19,14 @@
 
 #pragma once
 
-#include <string>
 #include <scalar/Length.h>
 #include <scalar/Time.h>
 
+#include <string>
+
 namespace interval_management {
 namespace open_source {
-class AchieveObserver {
+class AchieveObserver final {
   public:
    AchieveObserver();
 

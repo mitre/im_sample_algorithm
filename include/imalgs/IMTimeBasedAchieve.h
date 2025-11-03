@@ -33,40 +33,45 @@ class IMTimeBasedAchieve : public IMKinematicAchieve {
 
    IMTimeBasedAchieve &operator=(const IMTimeBasedAchieve &obj);
 
-   virtual void IterationReset();
+   virtual void IterationReset() override;
 
    virtual aaesim::open_source::Guidance Update(
          const aaesim::open_source::Guidance &previous_im_guidance,
          const aaesim::open_source::DynamicsState &three_dof_dynamics_state,
          const interval_management::open_source::AircraftState &current_ownship_state,
          const interval_management::open_source::AircraftState &current_target_state,
-         const std::vector<interval_management::open_source::AircraftState> &target_adsb_history);
+         const std::vector<interval_management::open_source::AircraftState> &target_adsb_history) override;
 
-   virtual const bool IsImOperationComplete() const;
+   virtual const bool IsImOperationComplete() const override;
 
-   virtual const double GetAssignedSpacingGoal() const;
+   virtual const double GetAssignedSpacingGoal() const override;
 
-   virtual const Units::Speed GetImSpeedCommandIas() const;
+   virtual const Units::Speed GetImSpeedCommandIas() const override;
 
-   virtual const double GetSpacingInterval() const;
+   virtual const double GetSpacingInterval() const override;
 
-   virtual const double GetPsi() const;
+   virtual const double GetPsi() const override;
 
-   virtual const double GetMsi() const;
+   virtual const double GetMsi() const override;
 
-   virtual const double GetSpacingError() const;
+   virtual const double GetSpacingError() const override;
 
-   virtual int GetSpeedChangeCount() const;
+   virtual int GetSpeedChangeCount() const override;
 
-   virtual void DumpParameters(const std::string &parameters_to_print);
+   virtual void DumpParameters(const std::string &parameters_to_print) override;
 
    const interval_management::open_source::AircraftState GetTargetStateProjectedAsgAdjusted() const override;
 
-   bool load(DecodedStream *input);
+   bool load(DecodedStream *input) override;
+
+   void Initialize(const OwnshipPredictionParameters &ownship_prediction_parameters,
+                   const AircraftIntent &ownship_aircraft_intent,
+                   aaesim::open_source::WeatherPrediction &weather_prediction,
+                   std::shared_ptr<TangentPlaneSequence> &position_converter) override;
 
   protected:
    virtual void CalculateIas(const Units::Length current_ownship_altitude,
-                             const aaesim::open_source::DynamicsState &three_dof_dynamics_state);
+                             const aaesim::open_source::DynamicsState &three_dof_dynamics_state) override;
 
    virtual void CalculateMach(const Units::Time reference_ttg, const Units::Length current_ownship_altitude,
                               const Units::Mass current_mass);
@@ -76,15 +81,16 @@ class IMTimeBasedAchieve : public IMKinematicAchieve {
          const interval_management::open_source::AircraftState &current_target_state,
          const aaesim::open_source::DynamicsState &dynamics_state, const Units::Speed unmodified_ias,
          const Units::Speed tas_command, const Units::Speed reference_velocity, const Units::Length reference_distance,
-         const aaesim::open_source::Guidance &guidance);
+         const aaesim::open_source::Guidance &guidance) override;
 
    void Copy(const IMTimeBasedAchieve &obj);
 
-   virtual void SetAssignedSpacingGoal(const IMClearance &clearance);
+   virtual void SetAssignedSpacingGoal(const IMClearance &clearance) override;
 
    std::shared_ptr<interval_management::open_source::IMKinematicTimeBasedMaintain> m_im_kinematic_time_based_maintain;
 
    Units::SecondsTime m_assigned_spacing_goal;
+   Units::Time m_predicted_spacing_interval;
 
   private:
    aaesim::open_source::Guidance HandleAchieveStage(
@@ -130,7 +136,6 @@ class IMTimeBasedAchieve : public IMKinematicAchieve {
 
    Units::Time m_time_since_traffic_alignment;
    Units::Time m_time_at_traffic_alignment;
-   Units::Time m_predicted_spacing_interval;
    Units::Time m_measured_spacing_interval;
 
    interval_management::open_source::AircraftState m_target_state_projected_asg_adjusted;
@@ -202,7 +207,7 @@ inline void IMTimeBasedAchieve::DoAlgorithmLogging(
    if (m_logger.getLogLevel() == log4cplus::TRACE_LOG_LEVEL) {
       using json = nlohmann::json;
       json j;
-      auto state_to_json = [&j](std::string prefix, const AircraftState &state) {
+      auto state_to_json = [&j](const std::string &prefix, const AircraftState &state) {
          j[prefix + ".id"] = state.GetId();
          j[prefix + ".timestamp_sec"] = Units::SecondsTime(state.GetTimeStamp()).value();
          j[prefix + ".groundspeed_mps"] = Units::MetersPerSecondSpeed(state.GetGroundSpeed()).value();

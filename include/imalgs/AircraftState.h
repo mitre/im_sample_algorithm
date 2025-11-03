@@ -19,8 +19,6 @@
 
 #pragma once
 
-#include "public/Logging.h"
-#include "public/EarthModel.h"
 #include <scalar/Density.h>
 #include <scalar/Frequency.h>
 #include <scalar/Pressure.h>
@@ -28,9 +26,12 @@
 #include <scalar/Temperature.h>
 #include <scalar/UnsignedAngle.h>
 
+#include "public/EarthModel.h"
+#include "public/Logging.h"
+
 namespace interval_management {
 namespace open_source {
-class AircraftState {
+class AircraftState final {
   public:
    AircraftState();
 

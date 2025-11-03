@@ -26,7 +26,7 @@ using std::vector;
 namespace interval_management {
 namespace open_source {
 
-class Statistics {
+class Statistics final {
   public:
    Statistics();
 
@@ -49,10 +49,10 @@ class Statistics {
    double Get95thBounds();
 
   private:
-   double m_sum_of_samples;
-   vector<double> m_samples;
-   double m_max;
-   double m_min;
+   double m_sum_of_samples{0};
+   vector<double> m_samples{};
+   double m_max{0};
+   double m_min{0};
 };
 }  // namespace open_source
 }  // namespace interval_management

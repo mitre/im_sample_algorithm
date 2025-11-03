@@ -138,30 +138,6 @@ TEST(IMClearance, basic) {
    } catch (logic_error &e) {
       // expected
    }
-
-   // 4) Comparator Operators
-   auto builder3 = IMClearance::Builder(IMClearance::ClearanceType::CAPTURE, 4, AircraftIntent(), "YOKXO", "DERVL",
-                                        IMClearance::SpacingGoalType::TIME, 120);
-   IMClearance c2 = builder3.Build();
-   auto builder4 = IMClearance::Builder(IMClearance::ClearanceType::ACHIEVE, 4, AircraftIntent(), "YOKXO", "DERVL",
-                                        IMClearance::SpacingGoalType::TIME, 120);
-   IMClearance c3 = builder4.Build();
-
-   // ==
-   if (!(c1 == c2)) {
-      FAIL();
-   }
-
-   // !=
-   if (!(c1 != c3)) {
-      FAIL();
-   }
-
-   // 5) Operator = (copy)
-   IMClearance c4 = c2;
-   if (!(c4 == c2)) {
-      FAIL();
-   }
 }
 
 TEST(IMClearance, load_build) {

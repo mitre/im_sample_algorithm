@@ -1,0 +1,16 @@
+cmake_minimum_required(VERSION 3.29...4.1.2)
+
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -fno-strict-aliasing -Wunused-result")
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Wall -Wno-sign-compare -O1 -g3 -Wunused-result")
+
+CPMAddPackage(
+      NAME googletest
+      GITHUB_REPOSITORY google/googletest
+      VERSION 1.15.2
+      OPTIONS
+      "INSTALL_GTEST OFF"
+      "GTEST_FORCE_SHARED_CRT ON"
+      "BUILD_GMOCK ON"
+)
+
+set(LIBRARY_OUTPUT_PATH ${CMAKE_CURRENT_SOURCE_DIR}/lib)

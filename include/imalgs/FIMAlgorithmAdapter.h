@@ -20,12 +20,13 @@
 #pragma once
 
 #include "imalgs/IMAlgorithm.h"
-#include "public/FlightDeckApplication.h"
 #include "public/ASSAP.h"
+#include "public/FlightDeckApplication.h"
+#include "public/TangentPlaneSequence.h"
 
 namespace interval_management {
 namespace open_source {
-class FIMAlgorithmAdapter : public aaesim::open_source::FlightDeckApplication {
+class FIMAlgorithmAdapter final : public aaesim::open_source::FlightDeckApplication {
   public:
    FIMAlgorithmAdapter(std::shared_ptr<interval_management::open_source::IMAlgorithm> im_algorithm,
                        IMUtils::IMAlgorithmTypes algorithm_type);
@@ -44,13 +45,16 @@ class FIMAlgorithmAdapter : public aaesim::open_source::FlightDeckApplication {
    }
 
   private:
+   inline static log4cplus::Logger m_logger{log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("FIMAlgorithmAdapter"))};
+   static void LogAircraftState(const aaesim::open_source::AircraftState &state);
    void UpdateTargetHistory(const aaesim::open_source::SimulationTime &simtime);
-   std::shared_ptr<interval_management::open_source::IMAlgorithm> m_im_algorithm;
-   IMUtils::IMAlgorithmTypes m_im_algorithm_type;
-   std::shared_ptr<const aaesim::open_source::ASSAP> m_assap;
-   aaesim::open_source::GuidanceFlightPhase m_current_guidance_phase;
-   std::vector<interval_management::open_source::AircraftState> m_target_history;
-   bool m_initialized;
+   interval_management::open_source::AircraftState ConvertAircraftState(
+         const aaesim::open_source::AircraftState &state) const;
+   std::shared_ptr<interval_management::open_source::IMAlgorithm> m_im_algorithm{};
+   IMUtils::IMAlgorithmTypes m_im_algorithm_type{IMUtils::IMAlgorithmTypes::NONE};
+   std::shared_ptr<const aaesim::open_source::ASSAP> m_assap{};
+   std::vector<interval_management::open_source::AircraftState> m_target_history{};
+   std::shared_ptr<TangentPlaneSequence> m_position_converter{};
 };
 
 inline std::shared_ptr<interval_management::open_source::IMAlgorithm>
@@ -59,5 +63,6 @@ inline std::shared_ptr<interval_management::open_source::IMAlgorithm>
 }
 
 inline IMUtils::IMAlgorithmTypes FIMAlgorithmAdapter::GetImAlgorithmType() const { return m_im_algorithm_type; }
+
 }  // namespace open_source
 }  // namespace interval_management

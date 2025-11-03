@@ -35,20 +35,21 @@
 
 namespace interval_management {
 namespace open_source {
-class AchievePointCalcs {
+class AchievePointCalcs final {
 
   public:
-   AchievePointCalcs(void);
+   AchievePointCalcs();
 
    AchievePointCalcs(const std::string &waypoint, const AircraftIntent &intent, const VerticalPath &vpath,
-                     const std::vector<HorizontalPath> &htraj);
+                     const std::vector<aaesim::open_source::HorizontalPath> &htraj);
 
    /** Constructor for target, with enough info to calculate TRP */
    AchievePointCalcs(const std::string &waypoint, const AircraftIntent &intent, const VerticalPath &vpath,
-                     const std::vector<HorizontalPath> &htraj, const AchievePointCalcs &ownship_calcs,
-                     const AircraftIntent &ownship_intent);
+                     const std::vector<aaesim::open_source::HorizontalPath> &htraj,
+                     const AchievePointCalcs &ownship_calcs, const AircraftIntent &ownship_intent,
+                     const std::shared_ptr<TangentPlaneSequence> &position_converter);
 
-   virtual ~AchievePointCalcs(void);
+   ~AchievePointCalcs() = default;
 
    /**
     * Compute waypoint distance from end of horizontal path (if there is an achieve waypoint).
@@ -91,7 +92,8 @@ class AchievePointCalcs {
 
    static void ComputeDefaultTRP(const AchievePointCalcs &ownship_calcs, const AircraftIntent &ownship_intent,
                                  const AircraftIntent &target_intent,
-                                 const std::vector<HorizontalPath> &target_horizontal_path,
+                                 const std::shared_ptr<TangentPlaneSequence> &position_converter,
+                                 const std::vector<aaesim::open_source::HorizontalPath> &target_horizontal_path,
                                  Waypoint &traffic_reference_point, Units::Length &waypoint_x,
                                  Units::Length &waypoint_y, size_t &waypoint_index_in_target_intent);
 
@@ -112,12 +114,12 @@ class AchievePointCalcs {
    Units::Time m_time_to_go_to_waypoint;
    Units::Time m_crossing_time;
    bool m_waypoint_is_set;
-   std::vector<HorizontalPath> m_horizontal_path;
+   std::vector<aaesim::open_source::HorizontalPath> m_horizontal_path;
 
   private:
    static log4cplus::Logger m_logger;
 
-   AlongPathDistanceCalculator m_distance_calculator;
+   aaesim::open_source::AlongPathDistanceCalculator m_distance_calculator;
 };
 
 inline const bool AchievePointCalcs::HasWaypoint() const { return m_waypoint_is_set; }

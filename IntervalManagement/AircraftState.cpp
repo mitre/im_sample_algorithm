@@ -22,12 +22,10 @@
 #include "utility/CustomUnits.h"
 #include "imalgs/IMUtils.h"
 
-using namespace interval_management::open_source;
-
 log4cplus::Logger interval_management::open_source::AircraftState::m_logger =
       log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("AircraftState"));
 
-AircraftState::AircraftState()
+interval_management::open_source::AircraftState::AircraftState()
    : m_x(0),
      m_y(0),
      m_z(0),
@@ -45,17 +43,18 @@ AircraftState::AircraftState()
      m_gamma(Units::ZERO_ANGLE),
      m_sensed_temperature(Units::negInfinity()) {}
 
-const Units::UnsignedRadiansAngle AircraftState::GetHeadingCcwFromEastRadians() const {
+const Units::UnsignedRadiansAngle interval_management::open_source::AircraftState::GetHeadingCcwFromEastRadians()
+      const {
    double result = atan3(m_yd, m_xd);
    return Units::UnsignedRadiansAngle(result);
 }
 
-const Units::Speed AircraftState::GetGroundSpeed() const {
+const Units::Speed interval_management::open_source::AircraftState::GetGroundSpeed() const {
    return Units::FeetPerSecondSpeed(sqrt(pow(m_xd, 2) + pow(m_yd, 2)));
 }
 
-AircraftState &AircraftState::Interpolate(const AircraftState &a, const AircraftState &b,
-                                          const Units::SecondsTime time) {
+interval_management::open_source::AircraftState &interval_management::open_source::AircraftState::Interpolate(
+      const AircraftState &a, const AircraftState &b, const Units::SecondsTime time) {
 
    const double dt = Units::SecondsTime(b.GetTimeStamp() - a.GetTimeStamp()).value();
    double weight_a, weight_b;
@@ -80,7 +79,8 @@ AircraftState &AircraftState::Interpolate(const AircraftState &a, const Aircraft
    return *this;
 }
 
-AircraftState &AircraftState::Extrapolate(const AircraftState &in, const Units::SecondsTime &time) {
+interval_management::open_source::AircraftState &interval_management::open_source::AircraftState::Extrapolate(
+      const AircraftState &in, const Units::SecondsTime &time) {
    const double dt = time.value() - in.GetTimeStamp().value();
    m_time = time;
    m_id = in.m_id;
@@ -93,7 +93,7 @@ AircraftState &AircraftState::Extrapolate(const AircraftState &in, const Units::
    return *this;
 }
 
-Units::Speed AircraftState::GetTrueAirspeed() const {
+Units::Speed interval_management::open_source::AircraftState::GetTrueAirspeed() const {
    Units::MetersPerSecondSpeed tas_x, tas_y;
    tas_x = Units::FeetPerSecondSpeed(m_xd) - m_sensed_wind_east_component;
    tas_y = Units::FeetPerSecondSpeed(m_yd) - m_sensed_wind_north_component;
@@ -101,13 +101,12 @@ Units::Speed AircraftState::GetTrueAirspeed() const {
    return tas;
 }
 
-AircraftState &AircraftState::Create(const int &id, const Units::Time &time,
-                                     const EarthModel::LocalPositionEnu &enu_position, const Units::Speed &xd,
-                                     const Units::Speed &yd, const Units::Speed &zd, const Units::Angle &gamma,
-                                     const Units::Speed &sensed_wind_east, const Units::Speed &sensed_wind_north,
-                                     const Units::Speed &sensed_wind_parallel,
-                                     const Units::Speed &sensed_wind_perpendicular,
-                                     const Units::Temperature &sensed_temperature, const Units::Angle &psi_enu) {
+interval_management::open_source::AircraftState &interval_management::open_source::AircraftState::Create(
+      const int &id, const Units::Time &time, const EarthModel::LocalPositionEnu &enu_position, const Units::Speed &xd,
+      const Units::Speed &yd, const Units::Speed &zd, const Units::Angle &gamma, const Units::Speed &sensed_wind_east,
+      const Units::Speed &sensed_wind_north, const Units::Speed &sensed_wind_parallel,
+      const Units::Speed &sensed_wind_perpendicular, const Units::Temperature &sensed_temperature,
+      const Units::Angle &psi_enu) {
 
    this->m_id = id;
    this->m_time = time;

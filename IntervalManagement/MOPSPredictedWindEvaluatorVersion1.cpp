@@ -50,19 +50,17 @@ MOPSPredictedWindEvaluatorVersion1::~MOPSPredictedWindEvaluatorVersion1() = defa
 bool MOPSPredictedWindEvaluatorVersion1::ArePredictedWindsAccurate(
       const aaesim::open_source::AircraftState &state, const aaesim::open_source::WeatherPrediction &weatherPrediction,
       const Units::Speed reference_cas, const Units::Length reference_altitude,
-      const Atmosphere *sensed_atmosphere) const {
+      const std::shared_ptr<Atmosphere> &sensed_atmosphere) const {
 
    Units::MetersPerSecondSpeed windeastcomp, windnorthcomp;
    Units::Frequency NOT_USED;
-   weatherPrediction.getAtmosphere()->CalculateWindGradientAtAltitude(
-         Units::FeetLength(state.m_z), weatherPrediction.east_west, windeastcomp, NOT_USED);
-   weatherPrediction.getAtmosphere()->CalculateWindGradientAtAltitude(
-         Units::FeetLength(state.m_z), weatherPrediction.north_south, windnorthcomp, NOT_USED);
+   weatherPrediction.east_west().CalculateWindGradientAtAltitude(state.GetAltitudeMsl(), windeastcomp, NOT_USED);
+   weatherPrediction.north_south().CalculateWindGradientAtAltitude(state.GetAltitudeMsl(), windnorthcomp, NOT_USED);
 
    // Speed
    Units::Speed predicted_spd = sqrt(Units::sqr(windeastcomp) + Units::sqr(windnorthcomp));
-   Units::Speed Vwx_sensed = Units::MetersPerSecondSpeed(state.m_Vwx);
-   Units::Speed Vwy_sensed = Units::MetersPerSecondSpeed(state.m_Vwy);
+   auto Vwx_sensed = Units::MetersPerSecondSpeed(state.GetSensedWindEast());
+   auto Vwy_sensed = Units::MetersPerSecondSpeed(state.GetSensedWindNorth());
    Units::Speed sensed_spd = sqrt((Vwx_sensed * Vwx_sensed) + (Vwy_sensed * Vwy_sensed));
 
    bool isWindSpdAccurate = abs(abs(sensed_spd) - abs(predicted_spd)) <= toleranceSpeed;
@@ -74,7 +72,7 @@ bool MOPSPredictedWindEvaluatorVersion1::ArePredictedWindsAccurate(
    // Direction
    Units::Angle predicted_dir = Units::arctan2(windnorthcomp.value(),
                                                windeastcomp.value());  // ENU, so east is the x-component
-   Units::Angle measured_dir = Units::arctan2(state.m_Vwy, state.m_Vwx);
+   Units::Angle measured_dir = Units::arctan2(Vwy_sensed.value(), Vwx_sensed.value());
    Units::SignedDegreesAngle difference = measured_dir - predicted_dir;
 
    bool isWindDirAccurate = abs(difference) <= toleranceAngle;

@@ -47,9 +47,5 @@ set(LIBRARY_OUTPUT_PATH ${CMAKE_CURRENT_SOURCE_DIR}/lib)
 
 add_library(imalgs STATIC ${IMALGS_SOURCE_FILES} ${OBSERVER_SOURCE_FILES})
 target_compile_options(imalgs PUBLIC "-Wno-inconsistent-missing-destructor-override" "-Wno-inconsistent-missing-override" "-Wno-overloaded-virtual")
-target_include_directories(imalgs PUBLIC
-        ${aaesim_INCLUDE_DIRS})
-target_link_libraries(imalgs
-        pub)
-
-
+target_include_directories(imalgs PUBLIC ${fmacm_INCLUDE_DIRS})
+target_link_libraries(imalgs pub)

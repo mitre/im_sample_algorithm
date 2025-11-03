@@ -20,34 +20,35 @@
 #pragma once
 
 #include <vector>
+
 #include "imalgs/NMObserverEntry.h"
 #include "imalgs/Statistics.h"
 
 namespace interval_management {
 namespace open_source {
 
-class NMObserver {
+class NMObserver final {
   public:
-   NMObserver(void);
+   NMObserver() = default;
 
-   ~NMObserver(void);
+   ~NMObserver() = default;
 
    // adds a new output entry to the Nautical Mile Observer
    void output_NM_values(double predictedDistance, double trueDistance, double time, double currIAS, double currGS,
                          double targetGS, double minIAS, double maxIAS, double minTAS, double maxTAS);
 
-   std::vector<NMObserverEntry> entry_list;
+   std::vector<NMObserverEntry> entry_list{};
 
-   std::vector<double> predictedDistance;
-   std::vector<double> trueDistance;
-   std::vector<double> time;
-   std::vector<Statistics> ac_IAS_stats;
-   std::vector<Statistics> ac_GS_stats;
-   std::vector<Statistics> target_GS_stats;
-   std::vector<Statistics> min_IAS_stats;
-   std::vector<Statistics> max_IAS_stats;
+   std::vector<double> predictedDistance{};
+   std::vector<double> trueDistance{};
+   std::vector<double> time{};
+   std::vector<Statistics> ac_IAS_stats{};
+   std::vector<Statistics> ac_GS_stats{};
+   std::vector<Statistics> target_GS_stats{};
+   std::vector<Statistics> min_IAS_stats{};
+   std::vector<Statistics> max_IAS_stats{};
 
-   int curr_NM;
+   int curr_NM{-2};
 
    void initialize_stats();
 };

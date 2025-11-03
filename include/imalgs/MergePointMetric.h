@@ -19,18 +19,18 @@
 
 #pragma once
 
-#include "public/AircraftIntent.h"
 #include <scalar/Length.h>
+
+#include "public/AircraftIntent.h"
 
 namespace interval_management {
 namespace open_source {
 
-class MergePointMetric {
-
+class MergePointMetric final {
   public:
-   MergePointMetric(void);
+   MergePointMetric();
 
-   ~MergePointMetric(void);
+   ~MergePointMetric();
 
    // Determines and stores the merge point.
    void determineMergePoint(const AircraftIntent &IMIntent, const AircraftIntent &targIntent);
@@ -57,24 +57,24 @@ class MergePointMetric {
    // Checks if newest IM position closer to waypoint than the stored IM position.
    bool newPointCloser(double x, double y);
 
-   int m_im_ac_id;
-   int m_target_ac_id;
+   int m_im_ac_id{0};
+   int m_target_ac_id{0};
 
-   std::string mMergePointName;
-   Units::Length mMergePointX;
-   Units::Length mMergePointY;
+   std::string mMergePointName{};
+   Units::Length mMergePointX{Units::ZERO_LENGTH};
+   Units::Length mMergePointY{Units::ZERO_LENGTH};
 
-   double mIMX;  // ft
-   double mIMY;  // ft
+   double m_im_x_ft{0};
+   double m_im_y_ft{0};
 
-   Units::Length mIMDist;
+   Units::Length mIMDist{Units::infinity()};
 
-   double mTargX;  // ft
-   double mTargY;  // ft
+   double m_targ_x_ft{0};
+   double m_targ_y_ft{0};
 
-   Units::Length mMergeDist;
+   Units::Length mMergeDist{Units::infinity()};
 
-   bool mReportMetrics;
+   bool mReportMetrics{false};
 };
 
 }  // namespace open_source

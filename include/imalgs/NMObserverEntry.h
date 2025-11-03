@@ -22,22 +22,22 @@
 namespace interval_management {
 namespace open_source {
 
-class NMObserverEntry {
+class NMObserverEntry final {
   public:
-   NMObserverEntry(void);
+   NMObserverEntry();
 
-   ~NMObserverEntry(void);
+   ~NMObserverEntry();
 
-   double predictedDistance;
-   double trueDistance;
-   double time;
-   double acIAS;
-   double acGS;
-   double targetGS;
-   double minIAS;
-   double maxIAS;
-   double minTAS;
-   double maxTAS;
+   double predictedDistance{0.0};
+   double trueDistance{0.0};
+   double time{0.0};
+   double acIAS{0.0};
+   double acGS{0.0};
+   double targetGS{0.0};
+   double minIAS{0.0};
+   double maxIAS{0.0};
+   double minTAS{0.0};
+   double maxTAS{0.0};
 };
 
 }  // namespace open_source

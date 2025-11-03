@@ -25,17 +25,9 @@ using namespace std;
 using namespace interval_management::open_source;
 log4cplus::Logger MergePointMetric::logger = log4cplus::Logger::getInstance("MergePointMetric");
 
-MergePointMetric::MergePointMetric(void) {
-   m_im_ac_id = 0;
-   m_target_ac_id = 0;
-   mReportMetrics = false;
-   mMergePointName = "";
-   mIMDist = mMergeDist = Units::infinity();
-   mTargY = mTargX = mIMY = mIMX = 0;
-   mMergePointY = mMergePointX = Units::ZERO_LENGTH;
-}
+MergePointMetric::MergePointMetric() = default;
 
-MergePointMetric::~MergePointMetric(void) {}
+MergePointMetric::~MergePointMetric() = default;
 
 void MergePointMetric::determineMergePoint(const AircraftIntent &imintent, const AircraftIntent &targintent) {
 
@@ -87,15 +79,16 @@ void MergePointMetric::update(double imXNew, double imYNew, double targXNew, dou
    if (newPointCloser(imXNew, imYNew)) {
       // Replace the current information with the new information.
 
-      mIMX = imXNew;
-      mIMY = imYNew;
-      mIMDist = AircraftCalculations::PtToPtDist(mMergePointX, mMergePointY, Units::FeetLength(mIMX),
-                                                 Units::FeetLength(mIMY));
+      m_im_x_ft = imXNew;
+      m_im_y_ft = imYNew;
+      mIMDist = aaesim::open_source::AircraftCalculations::PtToPtDist(
+            mMergePointX, mMergePointY, Units::FeetLength(m_im_x_ft), Units::FeetLength(m_im_y_ft));
 
-      mTargX = targXNew;
-      mTargY = targYNew;
-      mMergeDist = AircraftCalculations::PtToPtDist(Units::FeetLength(mIMX), Units::FeetLength(mIMY),
-                                                    Units::FeetLength(mTargX), Units::FeetLength(mTargY));
+      m_targ_x_ft = targXNew;
+      m_targ_y_ft = targYNew;
+      mMergeDist = aaesim::open_source::AircraftCalculations::PtToPtDist(
+            Units::FeetLength(m_im_x_ft), Units::FeetLength(m_im_y_ft), Units::FeetLength(m_targ_x_ft),
+            Units::FeetLength(m_targ_y_ft));
    }
 }
 
@@ -126,8 +119,8 @@ bool MergePointMetric::newPointCloser(double x, double y) {
    // returns true if the new closer to the merge point.
    //         else false.
 
-   return (AircraftCalculations::PtToPtDist(mMergePointX, mMergePointY, Units::FeetLength(x), Units::FeetLength(y)) <
-           mIMDist);
+   return (aaesim::open_source::AircraftCalculations::PtToPtDist(mMergePointX, mMergePointY, Units::FeetLength(x),
+                                                                 Units::FeetLength(y)) < mIMDist);
 }
 
 bool MergePointMetric::mergePointFound() {

@@ -30,7 +30,7 @@ log4cplus::Logger PredictionFileKinematic::logger =
       log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("PredictionFileKinematic"));
 
 PredictionFileKinematic::PredictionFileKinematic()
-   : OutputHandler("", "-Predicted_Kinematic_Trajectory.csv"),
+   : OutputHandler("", "_predicted_kinematic_trajectory.csv"),
      algorithm_prediction_ownship(),
      algorithm_prediction_target() {}
 
@@ -61,60 +61,31 @@ void PredictionFileKinematic::Finish() {
       os << "vwn_mps";
       os << "algorithm";
       os << "flap_setting";
-
       os << NEWLINE;
-      os.flush();
 
-      // Important for outputting double data.
       os.set_precision(10);
 
-      for (auto id = algorithm_prediction_ownship.cbegin(); id != algorithm_prediction_ownship.cend(); ++id) {
-         if (id->second.size() == 0) {
-            LOG4CPLUS_DEBUG(logger,
-                            "No predicted data will be reported for acid " << id->first << ". No algorithm available.");
-         }
-         for (auto ix = 0; ix < id->second.size(); ++ix) {
-            os << id->second[ix].iteration_number;
-            os << id->second[ix].acid;
-            os << id->second[ix].source;
-            os << Units::SecondsTime(id->second[ix].simulation_time).value();
-            os << Units::MetersLength(id->second[ix].altitude).value();
-            os << Units::MetersPerSecondSpeed(id->second[ix].IAS).value();
-            os << Units::SecondsTime(id->second[ix].time_to_go).value();
-            os << Units::MetersLength(id->second[ix].distance_to_go).value();
-            os << Units::MetersPerSecondSpeed(id->second[ix].GS).value();
-            os << Units::MetersPerSecondSpeed(id->second[ix].TAS).value();
-            os << id->second[ix].VwePred.value();
-            os << id->second[ix].VwnPred.value();
-            os << id->second[ix].algorithm;
-            os << id->second[ix].flap_setting;
-
+      auto data_writer = [this](const std::pair<std::string, std::vector<PredictionFileBase::PredictionData>> &data) {
+         for (auto ix = 0; ix < data.second.size(); ++ix) {
+            os << data.second[ix].iteration_number;
+            os << data.second[ix].acid;
+            os << data.second[ix].source;
+            os << Units::SecondsTime(data.second[ix].simulation_time).value();
+            os << Units::MetersLength(data.second[ix].altitude).value();
+            os << Units::MetersPerSecondSpeed(data.second[ix].IAS).value();
+            os << Units::SecondsTime(data.second[ix].time_to_go).value();
+            os << Units::MetersLength(data.second[ix].distance_to_go).value();
+            os << Units::MetersPerSecondSpeed(data.second[ix].GS).value();
+            os << Units::MetersPerSecondSpeed(data.second[ix].TAS).value();
+            os << data.second[ix].VwePred.value();
+            os << data.second[ix].VwnPred.value();
+            os << data.second[ix].algorithm;
+            os << data.second[ix].flap_setting;
             os << NEWLINE;
-            os.flush();
          }
-      }
-
-      for (auto id = algorithm_prediction_target.cbegin(); id != algorithm_prediction_target.cend(); ++id) {
-         for (auto ix = 0; ix < id->second.size(); ++ix) {
-            os << id->second[ix].iteration_number;
-            os << id->second[ix].acid;
-            os << id->second[ix].source;
-            os << Units::SecondsTime(id->second[ix].simulation_time).value();
-            os << Units::MetersLength(id->second[ix].altitude).value();
-            os << Units::MetersPerSecondSpeed(id->second[ix].IAS).value();
-            os << Units::SecondsTime(id->second[ix].time_to_go).value();
-            os << Units::MetersLength(id->second[ix].distance_to_go).value();
-            os << Units::MetersPerSecondSpeed(id->second[ix].GS).value();
-            os << Units::MetersPerSecondSpeed(id->second[ix].TAS).value();
-            os << id->second[ix].VwePred.value();
-            os << id->second[ix].VwnPred.value();
-            os << id->second[ix].algorithm;
-            os << id->second[ix].flap_setting;
-
-            os << NEWLINE;
-            os.flush();
-         }
-      }
+      };
+      std::for_each(algorithm_prediction_ownship.cbegin(), algorithm_prediction_ownship.cend(), data_writer);
+      std::for_each(algorithm_prediction_target.cbegin(), algorithm_prediction_target.cend(), data_writer);
 
       os.close();
    }
@@ -137,8 +108,8 @@ void PredictionFileKinematic::Gather(
             std::dynamic_pointer_cast<IMKinematicAchieve>(im_algorithm_adapter->GetImAlgorithm());
       IMUtils::IMAlgorithmTypes im_algorithm_type = im_algorithm_adapter->GetImAlgorithmType();
 
-      const VerticalPath *ownship_vert_path;
-      const VerticalPath *target_vert_path;
+      const VerticalPath *ownship_vert_path{};
+      const VerticalPath *target_vert_path{};
 
       switch (im_algorithm_type) {
          case IMUtils::IMAlgorithmTypes::TIMEBASEDACHIEVE:
@@ -149,15 +120,10 @@ void PredictionFileKinematic::Gather(
             target_vert_path =
                   &im_kinematic_achieve->GetTargetKinematicPredictor().GetVerticalPredictor()->GetVerticalPath();
             break;
-         case IMUtils::IMAlgorithmTypes::RTA:
-            ownship_vert_path =
-                  &im_kinematic_achieve->GetOwnshipKinematicPredictor().GetVerticalPredictor()->GetVerticalPath();
-            break;
          case IMUtils::IMAlgorithmTypes::NONE:
          case IMUtils::IMAlgorithmTypes::TESTSPEEDCONTROL:
          case IMUtils::IMAlgorithmTypes::KINETICACHIEVE:
          case IMUtils::IMAlgorithmTypes::KINETICTARGETACHIEVE:
-         case IMUtils::IMAlgorithmTypes::RTA_TOAC_NOT_IMALGORITHM:
             break;
          default:
             const std::string msg =
@@ -171,46 +137,34 @@ void PredictionFileKinematic::Gather(
             (flight_stage == IMAlgorithm::FlightStage::ACHIEVE || flight_stage == IMAlgorithm::FlightStage::MAINTAIN) &&
             flightdeck_application->IsActive();
 
-      if (im_operation_is_active) {
+      if (im_operation_is_active && im_kinematic_achieve->IsNewTrajectoryPredictionAvailable()) {
          std::vector<PredictionData> &ownship_prediction_data = algorithm_prediction_ownship[aircraft_id];
-
          if (TrajectoryWasRegenerated(ownship_prediction_data, *ownship_vert_path, iteration,
                                       PredictionData::DataSource::IM_ALGO_OWNSHIP)) {
+            auto prediction_data_vector =
+                  ExtractPredictionDataFromVerticalPath(iteration, simulation_time, aircraft_id, *ownship_vert_path,
+                                                        PredictionData::DataSource::IM_ALGO_OWNSHIP);
+            ownship_prediction_data.insert(ownship_prediction_data.end(),
+                                           std::make_move_iterator(prediction_data_vector.begin()),
+                                           std::make_move_iterator(prediction_data_vector.end()));
+         }
 
-            if (im_algorithm_type != IMUtils::IMAlgorithmTypes::RTA) {
-               std::vector<PredictionData> &target_prediction_data = algorithm_prediction_target[aircraft_id];
-               if (TrajectoryWasRegenerated(target_prediction_data, *target_vert_path, iteration,
-                                            PredictionData::DataSource::IM_ALGO_TARGET)) {
-
-                  auto prediction_data_vector = ExtractPredictionDataFromVerticalPath(
-                        iteration, simulation_time, aircraft_id, *ownship_vert_path,
-                        PredictionData::DataSource::IM_ALGO_OWNSHIP);
-                  ownship_prediction_data.insert(ownship_prediction_data.end(),
-                                                 std::make_move_iterator(prediction_data_vector.begin()),
-                                                 std::make_move_iterator(prediction_data_vector.end()));
-                  prediction_data_vector.clear();
-                  prediction_data_vector = ExtractPredictionDataFromVerticalPath(
-                        iteration, simulation_time, aircraft_id, *target_vert_path,
-                        PredictionData::DataSource::IM_ALGO_TARGET);
-                  target_prediction_data.insert(target_prediction_data.end(),
-                                                std::make_move_iterator(prediction_data_vector.begin()),
-                                                std::make_move_iterator(prediction_data_vector.end()));
-               }
-            } else {
-               auto prediction_data_vector =
-                     ExtractPredictionDataFromVerticalPath(iteration, simulation_time, aircraft_id, *ownship_vert_path,
-                                                           PredictionData::DataSource::IM_ALGO_OWNSHIP);
-               ownship_prediction_data.insert(ownship_prediction_data.end(),
-                                              std::make_move_iterator(prediction_data_vector.begin()),
-                                              std::make_move_iterator(prediction_data_vector.end()));
-            }
+         std::vector<PredictionData> &target_prediction_data = algorithm_prediction_target[aircraft_id];
+         if (TrajectoryWasRegenerated(target_prediction_data, *target_vert_path, iteration,
+                                      PredictionData::DataSource::IM_ALGO_TARGET)) {
+            auto prediction_data_vector =
+                  ExtractPredictionDataFromVerticalPath(iteration, simulation_time, aircraft_id, *target_vert_path,
+                                                        PredictionData::DataSource::IM_ALGO_TARGET);
+            target_prediction_data.insert(target_prediction_data.end(),
+                                          std::make_move_iterator(prediction_data_vector.begin()),
+                                          std::make_move_iterator(prediction_data_vector.end()));
          }
       }
    }
 }
 
 const bool PredictionFileKinematic::TrajectoryWasRegenerated(
-      const std::vector<PredictionData> &prediction_data_single_acid, const VerticalPath vertical_path,
+      const std::vector<PredictionData> &prediction_data_single_acid, const VerticalPath &vertical_path,
       const int iteration, const PredictionData::DataSource source) const {
 
    if (!prediction_data_single_acid.empty()) {

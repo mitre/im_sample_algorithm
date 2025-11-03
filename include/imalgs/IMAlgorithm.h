@@ -24,7 +24,7 @@
 #include "public/AircraftIntent.h"
 #include "imalgs/AircraftState.h"
 #include "public/Logging.h"
-#include "public/PilotDelay.h"
+#include "public/StatisticalPilotDelay.h"
 #include "public/ThreeDOFDynamics.h"
 #include "public/TangentPlaneSequence.h"
 #include <scalar/Time.h>
@@ -89,8 +89,7 @@ class IMAlgorithm {
    void UpdatePositionMetrics(const interval_management::open_source::AircraftState &ownship_aircraft_state,
                               const interval_management::open_source::AircraftState &target_aircraft_state);
 
-   void SetPilotDelay(const bool pilot_delay_on, const Units::Time pilot_delay_mean,
-                      const Units::Time pilot_delay_standard_deviation);
+   void SetPilotDelay(aaesim::open_source::StatisticalPilotDelay &pilot_delay);
 
    void DisablePilotDelayModel();
 
@@ -150,15 +149,15 @@ class IMAlgorithm {
 
    virtual const double GetSpacingInterval() const;
 
+   virtual bool IsBlendWind() const;
+
+   virtual void SetBlendWind(bool wind_blending_enabled);
+
    const Units::Speed GetUnmodifiedImSpeedCommandIas() const;
 
    const IMClearance &GetClearance() const;
 
    const unsigned long int GetActiveFilter() const;
-
-   virtual bool IsBlendWind() const;
-
-   virtual void SetBlendWind(bool wind_blending_enabled) = 0;
 
    Units::Length GetMiddleToFinalQuantizationTransitionDistance() const;
 
@@ -200,6 +199,9 @@ class IMAlgorithm {
 
    void SetClearance(const IMClearance &im_clearance) { m_im_clearance = im_clearance; }
 
+   std::shared_ptr<Atmosphere> GetAtmosphere() { return m_weather_prediction.GetForecastAtmosphere(); }
+   void SetAtmosphere(std::shared_ptr<Atmosphere> atmosphere) { m_weather_prediction.SetAtmosphere(atmosphere); }
+
   protected:
    void Copy(const IMAlgorithm &obj);
 
@@ -212,7 +214,7 @@ class IMAlgorithm {
    AircraftIntent m_target_aircraft_intent;
    FlightStage m_stage_of_im_operation;
    IMClearance m_im_clearance;
-   PilotDelay m_pilot_delay;
+   aaesim::open_source::StatisticalPilotDelay m_pilot_delay;
    aaesim::open_source::WeatherPrediction m_weather_prediction;
    interval_management::open_source::FIMSpeedLimiter m_speed_limiter;
 
@@ -265,6 +267,7 @@ class IMAlgorithm {
    Units::KnotsSpeed m_loaded_speed_quantize_middle_phase;
    Units::KnotsSpeed m_loaded_speed_quantize_first_phase;
    bool m_loaded_use_speed_limiting;
+   bool m_loaded_use_wind_blending;
    bool m_loaded_use_speed_quantization;
 
    Units::Frequency m_achieve_control_gain;
@@ -298,6 +301,10 @@ inline void IMAlgorithm::DisablePilotDelayModel() { m_pilot_delay.SetUsePilotDel
 inline void IMAlgorithm::EnableDefaultPilotDelayModel() { m_pilot_delay.SetUsePilotDelay(true); }
 
 inline void IMAlgorithm::SetLimitFlag(bool limit_flag) { m_speed_limiter.SetLimitFlag(limit_flag); }
+
+inline void IMAlgorithm::SetBlendWind(bool wind_blending_enabled) {
+   m_loaded_use_wind_blending = wind_blending_enabled;
+}
 
 inline void IMAlgorithm::SetErrorDistance(Units::Length error_distance) { m_error_distance = error_distance; }
 
@@ -344,11 +351,10 @@ inline int IMAlgorithm::GetSpeedChangeCount() const { return m_total_number_of_i
 
 inline const bool IMAlgorithm::IsLoaded() const { return m_loaded; }
 
-inline bool IMAlgorithm::IsBlendWind() const { return false; }
+inline bool IMAlgorithm::IsBlendWind() const { return m_loaded_use_wind_blending; }
 
 inline void IMAlgorithm::SetWeatherPrediction(const aaesim::open_source::WeatherPrediction &weather_prediction) {
    m_weather_prediction = weather_prediction;
-   m_pilot_delay.SetAtmosphere(weather_prediction.getAtmosphere());
 }
 
 inline Units::Length IMAlgorithm::GetMiddleToFinalQuantizationTransitionDistance() const {

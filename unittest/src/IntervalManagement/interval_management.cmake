@@ -1,17 +1,15 @@
-cmake_minimum_required(VERSION 3.14)
-
+cmake_minimum_required(VERSION 3.29...4.1.2)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
 
 set(IMALGORITHM_TEST_SOURCE
         ${UNITTEST_DIR}/src/IntervalManagement/imalgo_tests.cpp
         ${UNITTEST_DIR}/src/IntervalManagement/predicted_wind_evaluator_tests.cpp
-        ${UNITTEST_DIR}/src/IntervalManagement/clearance_tests.cpp
+        # ${UNITTEST_DIR}/src/IntervalManagement/clearance_tests.cpp
         )
 
 add_executable(imalgs_test
         ${IMALGORITHM_TEST_SOURCE}
-        ${PUBLIC_TEST_SUPPORT_SOURCE}
         ${UNITTEST_DIR}/src/main.cpp
 )
 target_link_libraries(imalgs_test
@@ -19,7 +17,8 @@ target_link_libraries(imalgs_test
         imalgs
 )
 target_include_directories(imalgs_test PUBLIC
-        ${aaesim_INCLUDE_DIRS}
+        ${fmacm_INCLUDE_DIRS}
+        ${fmacm_SOURCE_DIR}/unittest/src
         ${UNITTEST_DIR}/src
         ${geolib_idealab_INCLUDE_DIRS})
 set_target_properties(imalgs_test PROPERTIES

@@ -23,7 +23,6 @@
 
 #include "public/CustomMath.h"
 #include "public/SimulationTime.h"
-#include "public/AircraftCalculations.h"
 #include "public/CoreUtils.h"
 #include "imalgs/InternalObserver.h"
 
@@ -45,7 +44,8 @@ aaesim::open_source::Guidance IMKinematicTimeBasedMaintain::Update(
       const std::vector<interval_management::open_source::AircraftState> &target_aircraft_state_history,
       const interval_management::open_source::AchievePointCalcs &ownship_achieve_point_calcs,
       const interval_management::open_source::AchievePointCalcs &traffic_reference_point_calcs,
-      PilotDelay &pilot_delay_model, const Units::Length &target_kinematic_dtg_to_end_of_route) {
+      aaesim::open_source::StatisticalPilotDelay &pilot_delay_model,
+      const Units::Length &target_kinematic_dtg_to_end_of_route) {
    /*
     * Developer's note: In this level of the algorithm, all uses of the /target state/
     * must be projected onto ownship's route prior to use. This includes all items
@@ -255,7 +255,7 @@ aaesim::open_source::Guidance IMKinematicTimeBasedMaintain::Update(
 void IMKinematicTimeBasedMaintain::CalculateIas(
       const Units::Length current_ownship_altitude, const aaesim::open_source::DynamicsState &dynamics_state,
       const aaesim::open_source::KinematicTrajectoryPredictor &ownship_kinematic_trajectory_predictor,
-      PilotDelay &pilot_delay) {
+      aaesim::open_source::StatisticalPilotDelay &pilot_delay) {
    m_im_speed_command_ias = m_speed_limiter.LimitSpeedCommand(
          m_previous_im_speed_command_ias, m_im_speed_command_ias,
          ownship_kinematic_trajectory_predictor.GetVerticalPathCasByIndex(m_ownship_reference_lookup_index),
@@ -278,7 +278,7 @@ void IMKinematicTimeBasedMaintain::CalculateIas(
 void IMKinematicTimeBasedMaintain::CalculateMach(
       const Units::Length current_ownship_altitude, const Units::Speed true_airspeed_command,
       const aaesim::open_source::KinematicTrajectoryPredictor &ownship_kinematic_trajectory_predictor,
-      PilotDelay &pilot_delay, const Units::Mass current_mass) {
+      aaesim::open_source::StatisticalPilotDelay &pilot_delay, const Units::Mass current_mass) {
 
    // Make sure velocity is within nominal limits (AAES-694)
    Units::Speed nominal_profile_ias = Units::MetersPerSecondSpeed(

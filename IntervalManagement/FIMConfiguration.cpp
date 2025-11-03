@@ -18,39 +18,10 @@
 // ****************************************************************************
 
 #include "imalgs/FIMConfiguration.h"
-#include "imalgs/IMUtils.h"
 
 using namespace interval_management::open_source;
 
 log4cplus::Logger FIMConfiguration::m_logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("FIMConfiguration"));
-const FIMConfiguration DEFAULT_CONFIGURATION();
-
-// Do not change these values without discussing with Lesley Weitz.
-const Units::HertzFrequency FIMConfiguration::ACHIEVE_CONTROL_GAIN_DEFAULT(0.008);
-const Units::HertzFrequency FIMConfiguration::MAINTAIN_CONTROL_GAIN_DEFAULT(0.008);
-const Units::SecondsTime FIMConfiguration::TIME_THRESHOLD_DEFAULT(0);
-const Units::SecondsPerNauticalMileInvertedSpeed FIMConfiguration::SLOPE_DEFAULT(0.25);
-const Units::NauticalMilesLength FIMConfiguration::ERROR_DISTANCE_DEFAULT(0);
-const bool FIMConfiguration::THRESHOLD_FLAG_DEFAULT(true);
-
-FIMConfiguration::FIMConfiguration()
-   : m_achieve_control_gain(ACHIEVE_CONTROL_GAIN_DEFAULT),
-     m_maintain_control_gain(MAINTAIN_CONTROL_GAIN_DEFAULT),
-     m_time_threshold(TIME_THRESHOLD_DEFAULT),
-     m_slope(SLOPE_DEFAULT),
-     m_error_distance(ERROR_DISTANCE_DEFAULT),
-
-     m_use_speed_limiting(IMUtils::LIMIT_FLAG_DEFAULT),
-     m_threshold_flag(THRESHOLD_FLAG_DEFAULT),
-     m_use_speed_quantization(IMUtils::QUANTIZE_FLAG_DEFAULT),
-
-     m_loaded_middle_to_final_quantize_transition_distance(IMUtils::DIST_QUANTIZE_1_DEFAULT),
-     m_loaded_first_to_middle_quantize_transition_distance(IMUtils::DIST_QUANTIZE_2_DEFAULT),
-     m_loaded_speed_quantize_final_phase(IMUtils::SPEED_QUANTIZE_1_DEFAULT_1_KNOT),
-     m_loaded_speed_quantize_middle_phase(IMUtils::SPEED_QUANTIZE_2_DEFAULT),
-     m_loaded_speed_quantize_first_phase(IMUtils::SPEED_QUANTIZE_3_DEFAULT) {}
-
-FIMConfiguration::~FIMConfiguration() {}
 
 bool FIMConfiguration::load(DecodedStream *input) {
    set_stream(input);
@@ -59,6 +30,7 @@ bool FIMConfiguration::load(DecodedStream *input) {
    register_var("k_maintain", &m_maintain_control_gain);
 
    register_var("limit", &m_use_speed_limiting);
+   register_var("blend_wind", &m_use_wind_blending);
 
    // speed quantization values (have defaults if not loaded)
    register_var("dist_quantize_1", &m_loaded_middle_to_final_quantize_transition_distance);

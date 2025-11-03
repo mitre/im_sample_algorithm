@@ -58,7 +58,8 @@ AchievePointCalcs::AchievePointCalcs(const string &waypoint, const AircraftInten
 
 AchievePointCalcs::AchievePointCalcs(const string &waypoint, const AircraftIntent &intent, const VerticalPath &vpath,
                                      const vector<HorizontalPath> &htraj, const AchievePointCalcs &ownship_calcs,
-                                     const AircraftIntent &ownship_intent) {
+                                     const AircraftIntent &ownship_intent,
+                                     const std::shared_ptr<TangentPlaneSequence> &position_converter) {
    Clear();
 
    m_waypoint_name = waypoint;
@@ -69,8 +70,8 @@ AchievePointCalcs::AchievePointCalcs(const string &waypoint, const AircraftInten
    if (m_waypoint_name == "CALCULATED_TRP") {
       Waypoint traffic_reference_point;
       size_t waypoint_index;
-      ComputeDefaultTRP(ownship_calcs, ownship_intent, intent, m_horizontal_path, traffic_reference_point, m_waypoint_x,
-                        m_waypoint_y, waypoint_index);
+      ComputeDefaultTRP(ownship_calcs, ownship_intent, intent, position_converter, m_horizontal_path,
+                        traffic_reference_point, m_waypoint_x, m_waypoint_y, waypoint_index);
       LOG4CPLUS_DEBUG(m_logger, "Calculated TRP = (" << m_waypoint_x << "," << m_waypoint_y << ")");
       // log the geographic coordinates
       EarthModel::LocalPositionEnu xy;
@@ -78,7 +79,7 @@ AchievePointCalcs::AchievePointCalcs(const string &waypoint, const AircraftInten
       xy.y = m_waypoint_y;
       xy.z = Units::zero();
       EarthModel::GeodeticPosition geo;
-      intent.GetTangentPlaneSequence()->convertLocalToGeodetic(xy, geo);
+      position_converter->ConvertLocalToGeodetic(xy, geo);
       LOG4CPLUS_DEBUG(m_logger, "(lat,lon) = (" << std::setprecision(10) << Units::DegreesAngle(geo.latitude) << ","
                                                 << Units::DegreesAngle(geo.longitude) << ")");
    } else {
@@ -86,8 +87,6 @@ AchievePointCalcs::AchievePointCalcs(const string &waypoint, const AircraftInten
    }
    ComputeEndValues(vpath);
 }
-
-AchievePointCalcs::~AchievePointCalcs() = default;
 
 void AchievePointCalcs::Clear() {
 
@@ -107,6 +106,7 @@ void AchievePointCalcs::Clear() {
 
 void AchievePointCalcs::ComputeDefaultTRP(const AchievePointCalcs &ownship_calcs, const AircraftIntent &ownship_intent,
                                           const AircraftIntent &target_intent,
+                                          const std::shared_ptr<TangentPlaneSequence> &position_converter,
                                           const vector<HorizontalPath> &target_horizontal_path,
                                           Waypoint &traffic_reference_point, Units::Length &waypoint_x,
                                           Units::Length &waypoint_y, size_t &waypoint_index_in_target_intent) {
@@ -154,7 +154,7 @@ void AchievePointCalcs::ComputeDefaultTRP(const AchievePointCalcs &ownship_calcs
    // Search horizontal path for an intersecting segment
    HorizontalTurnPath trp_turn;
    bool first(true), crossed(false), end_is_usable(false);
-   double x0, y0, d0;
+   double x0{}, y0{}, d0{};
    vector<HorizontalPath>::const_iterator hpi;
    for (hpi = target_horizontal_path.begin(); hpi != target_horizontal_path.end(); ++hpi) {
       double x1 = hpi->GetXPositionMeters();
@@ -343,7 +343,7 @@ void AchievePointCalcs::ComputeDefaultTRP(const AchievePointCalcs &ownship_calcs
    xy.y = waypoint_y;
    xy.z = Units::zero();
    EarthModel::GeodeticPosition geo;
-   target_intent.GetTangentPlaneSequence()->convertLocalToGeodetic(xy, geo);
+   position_converter->ConvertLocalToGeodetic(xy, geo);
 
    // populate traffic_reference_point
    traffic_reference_point.SetName("CALCULATED_TRP");
@@ -353,7 +353,7 @@ void AchievePointCalcs::ComputeDefaultTRP(const AchievePointCalcs &ownship_calcs
    if (trp_turn.radius > Units::zero()) {
       xy.x = Units::MetersLength(trp_turn.x_position_meters);
       xy.y = Units::MetersLength(trp_turn.y_position_meters);
-      target_intent.GetTangentPlaneSequence()->convertLocalToGeodetic(xy, geo);
+      position_converter->ConvertLocalToGeodetic(xy, geo);
       traffic_reference_point.SetRfTurnCenterLatitude(geo.latitude);
       traffic_reference_point.SetRfTurnCenterLongitude(geo.longitude);
    } else {

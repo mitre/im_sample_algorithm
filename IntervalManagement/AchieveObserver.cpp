@@ -17,8 +17,9 @@
 // 2023 The MITRE Corporation. All Rights Reserved.
 // ****************************************************************************
 
-#include <cstdio>
 #include "imalgs/AchieveObserver.h"
+
+#include <cstdio>
 
 using namespace std;
 using namespace interval_management::open_source;
@@ -60,9 +61,9 @@ string AchieveObserver::ToString() {
 
    char *txt = new char[301];
 
-   sprintf(txt, "%d,%d,%lf,%lf,%lf,%lf,%lf", m_iteration, m_id, Units::SecondsTime(m_time).value(),
-           Units::SecondsTime(m_targ_ttg_to_ach).value(), Units::SecondsTime(m_own_ttg_to_ach).value(),
-           Units::MetersLength(m_curr_dist).value(), Units::MetersLength(m_ref_dist).value());
+   snprintf(txt, 301, "%d,%d,%lf,%lf,%lf,%lf,%lf", m_iteration, m_id, Units::SecondsTime(m_time).value(),
+            Units::SecondsTime(m_targ_ttg_to_ach).value(), Units::SecondsTime(m_own_ttg_to_ach).value(),
+            Units::MetersLength(m_curr_dist).value(), Units::MetersLength(m_ref_dist).value());
 
    str = txt;
 

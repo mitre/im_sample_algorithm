@@ -23,7 +23,7 @@
 
 namespace interval_management {
 namespace open_source {
-class MOPSPredictedWindEvaluatorVersion1 : public aaesim::open_source::PredictedWindEvaluator {
+class MOPSPredictedWindEvaluatorVersion1 final : public aaesim::open_source::PredictedWindEvaluator {
   public:
    const static std::shared_ptr<aaesim::open_source::PredictedWindEvaluator> &GetInstance();
 
@@ -44,7 +44,7 @@ class MOPSPredictedWindEvaluatorVersion1 : public aaesim::open_source::Predicted
    virtual bool ArePredictedWindsAccurate(const aaesim::open_source::AircraftState &state,
                                           const aaesim::open_source::WeatherPrediction &weatherPrediction,
                                           const Units::Speed reference_cas, const Units::Length reference_altitude,
-                                          const Atmosphere *sensed_atmosphere) const;
+                                          const std::shared_ptr<Atmosphere> &sensed_atmosphere) const;
 
   private:
    const static Units::Angle toleranceAngle;
