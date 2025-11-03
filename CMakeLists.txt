@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.29...4.1.2)
+cmake_minimum_required(VERSION 3.26...4.1.2)
 project(im_sample_algorithm VERSION 5.2.0.0) # the nano value is a boolean. 1 == SNAPSHOT, 0 == release
 
 set (CMAKE_CXX_STANDARD 20)

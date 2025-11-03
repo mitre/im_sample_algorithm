@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.29...4.1.2)
+cmake_minimum_required(VERSION 3.26...4.1.2)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -fno-strict-aliasing -Wunused-result")
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Wall -Wno-sign-compare -O1 -g3 -Wunused-result")
