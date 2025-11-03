@@ -22,7 +22,7 @@
 
 This [repository](https://github.com/mitre/im_sample_algorithm) contains a C++ library with some tests.
 _It is not an application._
-GitHub [CI](../.github/worflows/ci.yml) is used to build & run tests.
+GitHub [CI](../.github/workflows/ci.yml) is used to build & run tests.
 
 You should be familiar with the [FAA's Flight-deck Interval Management](https://www.faa.gov/about/office_org/headquarters_offices/ang/offices/tc/library/storyboard/detailedwebpages/im.html) concept. To understand any of this content at a techincal level, you need to also have [RTCA's DO-361A, Appendix C](https://my.rtca.org/).
 
