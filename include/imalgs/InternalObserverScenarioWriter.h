@@ -22,7 +22,7 @@
 #include "public/ScenarioEventNotifier.h"
 
 namespace interval_management::open_source {
-class InternalObserverScenarioWriter : public aaesim::open_source::ScenarioEventNotifier {
+class InternalObserverScenarioWriter final : public aaesim::open_source::ScenarioEventNotifier {
   public:
    InternalObserverScenarioWriter() = default;
    ~InternalObserverScenarioWriter() = default;
@@ -30,5 +30,7 @@ class InternalObserverScenarioWriter : public aaesim::open_source::ScenarioEvent
    void IterationEnd(const int &iteration_number) override;
    void ScenarioBegin(const std::string &scenario_name) override;
    void ScenarioEnd(const std::string &scenario_name) override;
+   void ErrorOccurred(const int &iteration_number,
+                      const std::exception &exception_object) override { /*nothing to do*/ };
 };
 }  // namespace interval_management::open_source

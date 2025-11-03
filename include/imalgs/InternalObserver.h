@@ -35,17 +35,15 @@
 namespace interval_management {
 namespace open_source {
 
-class InternalObserver {
+class InternalObserver final {
   public:
    static void FatalError(const char *str) {
       LOG4CPLUS_FATAL(logger, str);
       throw std::logic_error(str);
    }
    static InternalObserver *getInstance();
-   static void clearInstance();
 
    void process();
-   void collect_ptis_b_report(Sensor::ADSB::ADSBSVReport adsb_sv_report);
    void process_NM_aircraft();
    void outputMaintainMetrics();
    void updateFinalGS(int id, double gs);
@@ -64,63 +62,55 @@ class InternalObserver {
    MaintainMetric &GetMaintainMetric(int id);
    MergePointMetric &GetMergePointMetric(int id);
    ClosestPointMetric &GetClosestPointMetric(int id);
-   void set_scenario_name(std::string in);
+   void set_scenario_name(const std::string &in);
    void initializeIteration();
    void setNMOutput(bool NMflag);
-   bool outputNM(void);
+   bool outputNM();
    void SetRecordMaintainMetrics(bool new_value);
    const bool GetRecordMaintainMetrics() const;
-   int GetScenarioIter() const;
+
    void SetScenarioIter(int scenario_iter);
-   CrossTrackObserver &GetCrossEntry();
+
+   ~InternalObserver() = default;
 
   private:
-   static InternalObserver *mInstance;
+   static std::unique_ptr<InternalObserver> m_instance;
    static log4cplus::Logger logger;
 
-   class AircraftIterationStats {
-     public:
-      MergePointMetric m_merge_point_metric;
-      MaintainMetric m_maintain_metric;
-      ClosestPointMetric m_closest_point_metric;
-      double finalGS;
-      AircraftIterationStats();
+   struct AircraftIterationStats {
+      MergePointMetric m_merge_point_metric{};
+      MaintainMetric m_maintain_metric{};
+      ClosestPointMetric m_closest_point_metric{};
+      double finalGS{-1.0};
    };
 
-   class AircraftScenarioStats {
-     public:
-      NMObserver m_nm_observer;
-      std::vector<AchieveObserver> m_achieve_list;
+   struct AircraftScenarioStats {
+      NMObserver m_nm_observer{};
+      std::vector<AchieveObserver> m_achieve_list{};
    };
 
    InternalObserver();
-   ~InternalObserver() = default;
-   void process_ptis_b_reports();
+
    void dumpPredictedWind();
    void process_NM_stats();
    void processMaintainMetrics();
    void processClosestPointMetric();
    void dumpAchieveList();
 
-   bool outputNMFiles;
-   bool m_save_maintain_metrics;
-   std::string scenario_name;
-   int m_scenario_iter;  // variable to store the current scenario iteration
-   CrossTrackObserver m_cross_entry;
-   std::vector<std::string> predWinds;
+   bool outputNMFiles{true};
+   bool m_save_maintain_metrics{true};
+   std::string scenario_name{};
+   int m_scenario_iter{0};
+   CrossTrackObserver m_cross_entry{};
+   std::vector<std::string> predWinds{};
 
-   // Data for individual aircraft
-   std::map<int, AircraftIterationStats> m_aircraft_iteration_stats;  // cleared between iterations
-   std::map<int, AircraftScenarioStats> m_aircraft_scenario_stats;    // never cleared
+   std::map<int, AircraftIterationStats> m_aircraft_iteration_stats{};
+   std::map<int, AircraftScenarioStats> m_aircraft_scenario_stats{};
 
-   // output data vectors
-   std::vector<Sensor::ADSB::ADSBSVReport> ptis_b_report_list;
-
-   // string vectors for file output
-   std::vector<std::string> maintainOutput;
-   std::vector<std::string> finalGSOutput;
-   std::vector<std::string> mergePointOutput;
-   std::vector<std::string> closestPointOutput;
+   std::vector<std::string> maintainOutput{};
+   std::vector<std::string> finalGSOutput{};
+   std::vector<std::string> mergePointOutput{};
+   std::vector<std::string> closestPointOutput{};
 };
 }  // namespace open_source
 }  // namespace interval_management

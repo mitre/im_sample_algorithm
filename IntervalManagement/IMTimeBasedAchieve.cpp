@@ -22,7 +22,6 @@
 #include <stdexcept>
 
 #include "public/CustomMath.h"
-#include "public/AircraftCalculations.h"
 #include "public/CoreUtils.h"
 
 using namespace std;
@@ -463,6 +462,18 @@ aaesim::open_source::Guidance IMTimeBasedAchieve::HandleMaintainStage(
 
    if (built) {
       if (!m_transitioned_to_maintain) {
+         if (!m_im_kinematic_time_based_maintain->GetAtmosphere()) {
+            m_im_kinematic_time_based_maintain->SetAtmosphere(std::shared_ptr<Atmosphere>(GetAtmosphere()->Clone()));
+         }
+         if (m_im_kinematic_time_based_maintain->GetAtmosphere()->GetTemperatureOffset() !=
+             GetAtmosphere()->GetTemperatureOffset()) {
+            LOG4CPLUS_WARN(m_logger,
+                           "Different atmospheric temperature offsets in Achieve ("
+                                 << GetAtmosphere()->GetTemperatureOffset() << ") vs Maintain ("
+                                 << m_im_kinematic_time_based_maintain->GetAtmosphere()->GetTemperatureOffset()
+                                 << ").");
+         }
+
          m_im_kinematic_time_based_maintain->Prepare(
                m_previous_reference_im_speed_command_tas, m_previous_im_speed_command_ias, m_speed_limiter,
                m_previous_reference_im_speed_command_mach, m_ownship_kinematic_trajectory_predictor,
@@ -683,4 +694,12 @@ const Units::Speed IMTimeBasedAchieve::GetImSpeedCommandIas() const {
    } else {
       return m_im_kinematic_time_based_maintain->GetImSpeedCommandIas();
    }
+}
+
+void IMTimeBasedAchieve::Initialize(const OwnshipPredictionParameters &ownship_prediction_parameters,
+                                    const AircraftIntent &ownship_aircraft_intent,
+                                    aaesim::open_source::WeatherPrediction &weather_prediction,
+                                    std::shared_ptr<TangentPlaneSequence> &position_converter) {
+   SetTangentPlaneSequence(position_converter);
+   IMKinematicAchieve::Initialize(ownship_prediction_parameters, ownship_aircraft_intent, weather_prediction);
 }

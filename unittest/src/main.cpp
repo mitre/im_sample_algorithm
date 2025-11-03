@@ -17,26 +17,16 @@
 // 2023 The MITRE Corporation. All Rights Reserved.
 // ****************************************************************************
 
-#pragma once
+#include "gtest/gtest.h"
+#include "public/Logging.h"
+#include <log4cplus/initializer.h>
 
-namespace interval_management {
-namespace open_source {
-class CrossTrackObserver final {
-  public:
-   CrossTrackObserver(void);
-
-   ~CrossTrackObserver(void);
-
-   double time;
-   double x;
-   double y;
-   double dynamic_cross;
-   double commanded_cross;
-   double unmodified_cross;
-   double psi_command;
-   double phi;
-   double limited_phi;
-   double reported_distance;
-};
-}  // namespace open_source
-}  // namespace interval_management
+GTEST_API_ int main(int argc, char **argv) {
+   log4cplus::Initializer initializer;
+   LoadLoggerProperties();
+   log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("main"));
+   LOG4CPLUS_INFO(logger, "Running main()");
+   testing::InitGoogleTest(&argc, argv);
+   (void)!RUN_ALL_TESTS();  // we ignore the return status here.
+   return 0;
+}

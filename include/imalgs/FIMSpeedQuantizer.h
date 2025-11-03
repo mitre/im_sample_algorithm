@@ -17,15 +17,15 @@
 // 2023 The MITRE Corporation. All Rights Reserved.
 // ****************************************************************************
 
-#include "utility/BoundedValue.h"
 #include "public/Logging.h"
-#include "scalar/Speed.h"
 #include "scalar/Length.h"
+#include "scalar/Speed.h"
+#include "utility/BoundedValue.h"
 
 namespace interval_management {
 namespace open_source {
 
-class FIMSpeedQuantizer {
+class FIMSpeedQuantizer final {
   public:
    FIMSpeedQuantizer();
 

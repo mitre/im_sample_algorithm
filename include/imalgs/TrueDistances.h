@@ -19,14 +19,14 @@
 
 #pragma once
 
-#include <vector>
-#include <scalar/Time.h>
 #include <scalar/Length.h>
+#include <scalar/Time.h>
+
+#include <vector>
 
 namespace interval_management {
 namespace open_source {
-class TrueDistances {
-
+class TrueDistances final {
   public:
    static const Units::Time END_OF_ROUTE_CROSSING_TIME_TOLERANCE;
 

@@ -25,6 +25,7 @@
 
 using namespace std;
 using namespace aaesim::open_source;
+using namespace aaesim::open_source::constants;
 using namespace interval_management::open_source;
 
 namespace aaesim {
@@ -89,7 +90,8 @@ TEST(IMAlgorithm, API) {
    im_time_based_achieve->SetSlope(Units::KnotsInvertedSpeed(0));
    im_time_based_achieve->SetErrorDistance(Units::MetersLength(0));
    im_time_based_achieve->SetBlendWind(true);
-   im_time_based_achieve->SetPilotDelay(true, Units::SecondsTime(0), Units::SecondsTime(0));
+   auto no_delay = aaesim::open_source::StatisticalPilotDelay::NoDelay();
+   im_time_based_achieve->SetPilotDelay(no_delay);
 
    im_time_based_achieve->GetTargetTrpCrossingTime();
    im_time_based_achieve->GetOwnshipTtgtoAbp();
@@ -775,8 +777,8 @@ TEST(IMUtils, GetTargetStateAtGivenDtgOnOwnshipsPath) {
    result = IMUtils::GetTargetStateOnOwnshipPathForDtg(
          aircraft_state_history, ownship_horizontal_traj,
          Units::MetersLength(aircraft_state_history[0].m_distance_to_go_meters - 0.1), Units::Angle());
-   EXPECT_DOUBLE_EQ(Units::SecondsTime(aircraft_state_history[0].GetTimeStamp().value() + 0.5).value(),
-                    result.GetTimeStamp().value());
+   EXPECT_NEAR(Units::SecondsTime(aircraft_state_history[0].GetTimeStamp().value() + 0.5).value(),
+               result.GetTimeStamp().value(), 1e-8);
    EXPECT_LT(result.m_x, Units::FeetLength(xboundupper).value());
    EXPECT_GT(result.m_x, Units::FeetLength(xboundlower).value());
    EXPECT_DOUBLE_EQ(Units::FeetLength(expected_y_value).value(), Units::FeetLength(result.m_y).value());
@@ -818,73 +820,78 @@ TEST(AircraftState, Create) {
    auto actual_gamma = Units::DegreesAngle(2);
    auto actual_time = Units::MinutesTime(1);
 
-   interval_management::open_source::AircraftState *test_state = new interval_management::open_source::AircraftState();
-   test_state->Create(actual_id, actual_time, actual_position, actual_xd, actual_yd, actual_zd, actual_gamma,
-                      Units::zero(), Units::zero(), Units::zero(), Units::zero(), Units::zero(), Units::zero());
+   interval_management::open_source::AircraftState test_state = interval_management::open_source::AircraftState();
+   test_state.Create(actual_id, actual_time, actual_position, actual_xd, actual_yd, actual_zd, actual_gamma,
+                     Units::zero(), Units::zero(), Units::zero(), Units::zero(), Units::zero(), Units::zero());
 
-   EXPECT_EQ(actual_id, test_state->GetId());
-   EXPECT_DOUBLE_EQ(Units::SecondsTime(actual_time).value(), test_state->GetTimeStamp().value());
-   EXPECT_DOUBLE_EQ(Units::MetersLength(actual_x).value(), Units::MetersLength(test_state->GetPositionX()).value());
-   EXPECT_DOUBLE_EQ(Units::MetersLength(actual_y).value(), Units::MetersLength(test_state->GetPositionY()).value());
-   EXPECT_DOUBLE_EQ(Units::MetersLength(actual_z).value(), Units::MetersLength(test_state->GetPositionZ()).value());
+   EXPECT_EQ(actual_id, test_state.GetId());
+   EXPECT_DOUBLE_EQ(Units::SecondsTime(actual_time).value(), test_state.GetTimeStamp().value());
+   EXPECT_DOUBLE_EQ(Units::MetersLength(actual_x).value(), Units::MetersLength(test_state.GetPositionX()).value());
+   EXPECT_DOUBLE_EQ(Units::MetersLength(actual_y).value(), Units::MetersLength(test_state.GetPositionY()).value());
+   EXPECT_DOUBLE_EQ(Units::MetersLength(actual_z).value(), Units::MetersLength(test_state.GetPositionZ()).value());
    EXPECT_DOUBLE_EQ(Units::MetersPerSecondSpeed(actual_xd).value(),
-                    Units::MetersPerSecondSpeed(test_state->GetSpeedXd()).value());
+                    Units::MetersPerSecondSpeed(test_state.GetSpeedXd()).value());
    EXPECT_DOUBLE_EQ(Units::MetersPerSecondSpeed(actual_yd).value(),
-                    Units::MetersPerSecondSpeed(test_state->GetSpeedYd()).value());
+                    Units::MetersPerSecondSpeed(test_state.GetSpeedYd()).value());
    EXPECT_DOUBLE_EQ(Units::MetersPerSecondSpeed(actual_zd).value(),
-                    Units::MetersPerSecondSpeed(test_state->GetSpeedZd()).value());
-   EXPECT_DOUBLE_EQ(Units::RadiansAngle(actual_gamma).value(), Units::RadiansAngle(test_state->GetGamma()).value());
+                    Units::MetersPerSecondSpeed(test_state.GetSpeedZd()).value());
+   EXPECT_DOUBLE_EQ(Units::RadiansAngle(actual_gamma).value(), Units::RadiansAngle(test_state.GetGamma()).value());
 }
 
 TEST(IMUtils, ConvertAircraftStates) {
-   auto actual_id = 100;
-   auto actual_x = Units::MetersLength(10);
-   auto actual_y = Units::FeetLength(20);
-   auto actual_z = Units::NauticalMilesLength(1);
-   auto actual_position = EarthModel::LocalPositionEnu::Of(actual_x, actual_y, actual_z);
-   auto actual_xd = Units::MetersPerSecondSpeed(10);
-   auto actual_yd = Units::FeetPerSecondSpeed(20);
-   auto actual_zd = Units::KnotsSpeed(1);
-   auto actual_gamma = Units::DegreesAngle(2);
-   auto actual_time = Units::MinutesTime(1);
-   auto actual_psi = Units::SignedRadiansAngle(Units::arctan2(actual_xd.value(), actual_yd.value()));
-   auto actual_sensed_veast = Units::MetersPerSecondSpeed(10);
-   auto actual_sensed_vnorth = Units::MetersPerSecondSpeed(5);
-   auto actual_sensed_wind_parallel = Units::MetersPerSecondSpeed(3);
-   auto actual_sensed_wind_perpendicular = Units::MetersPerSecondSpeed(1);
-   auto actual_sensed_temperature = Units::CelsiusTemperature(22);
-   interval_management::open_source::AircraftState *test_state = new interval_management::open_source::AircraftState();
-   test_state->Create(actual_id, actual_time, actual_position, actual_xd, actual_yd, actual_zd, actual_gamma,
-                      actual_sensed_veast, actual_sensed_vnorth, actual_sensed_wind_parallel,
-                      actual_sensed_wind_perpendicular, actual_sensed_temperature, actual_psi);
+   const auto actual_id = 100;
+   const auto actual_x = Units::MetersLength(10);
+   const auto actual_y = Units::FeetLength(20);
+   const auto actual_z = Units::NauticalMilesLength(1);
+   const auto actual_position = EarthModel::LocalPositionEnu::Of(actual_x, actual_y, actual_z);
+   const auto actual_xd = Units::MetersPerSecondSpeed(10);
+   const auto actual_yd = Units::FeetPerSecondSpeed(20);
+   const auto actual_zd = Units::KnotsSpeed(1);
+   const auto actual_gamma = Units::DegreesAngle(2);
+   const auto actual_time = Units::MinutesTime(1);
+   const auto actual_psi = Units::SignedRadiansAngle(Units::arctan2(actual_xd.value(), actual_yd.value()));
+   const auto actual_sensed_veast = Units::MetersPerSecondSpeed(10);
+   const auto actual_sensed_vnorth = Units::MetersPerSecondSpeed(5);
+   const auto actual_sensed_wind_parallel = Units::MetersPerSecondSpeed(3);
+   const auto actual_sensed_wind_perpendicular = Units::MetersPerSecondSpeed(1);
+   const auto actual_sensed_temperature = Units::CelsiusTemperature(22);
+   interval_management::open_source::AircraftState test_state = interval_management::open_source::AircraftState();
+   test_state.Create(actual_id, actual_time, actual_position, actual_xd, actual_yd, actual_zd, actual_gamma,
+                     actual_sensed_veast, actual_sensed_vnorth, actual_sensed_wind_parallel,
+                     actual_sensed_wind_perpendicular, actual_sensed_temperature, actual_psi);
 
    // This is the tested method
    // convert to aaesim::open_source::AircraftState
-   const aaesim::open_source::AircraftState converted_state_1 = IMUtils::ConvertToAaesimAircraftState(*test_state);
+   const aaesim::open_source::AircraftState converted_state_1 = IMUtils::ConvertToAaesimAircraftState(test_state);
 
    // assert data transferred
-   EXPECT_EQ(actual_id, converted_state_1.m_id);
-   EXPECT_DOUBLE_EQ(Units::SecondsTime(actual_time).value(), converted_state_1.m_time);
+   EXPECT_EQ(actual_id, converted_state_1.GetUniqueId());
+   EXPECT_DOUBLE_EQ(Units::SecondsTime(actual_time).value(), converted_state_1.GetTime().value());
    EXPECT_DOUBLE_EQ(Units::MetersLength(actual_x).value(),
-                    Units::MetersLength(converted_state_1.GetPositionX()).value());
+                    Units::MetersLength(converted_state_1.GetPositionEnuX()).value());
    EXPECT_DOUBLE_EQ(Units::MetersLength(actual_y).value(),
-                    Units::MetersLength(converted_state_1.GetPositionY()).value());
+                    Units::MetersLength(converted_state_1.GetPositionEnuY()).value());
    EXPECT_DOUBLE_EQ(Units::MetersLength(actual_z).value(),
-                    Units::MetersLength(converted_state_1.GetPositionZ()).value());
+                    Units::MetersLength(converted_state_1.GetAltitudeMsl()).value());
    EXPECT_DOUBLE_EQ(Units::MetersPerSecondSpeed(actual_xd).value(),
-                    Units::MetersPerSecondSpeed(converted_state_1.GetSpeedXd()).value());
+                    Units::MetersPerSecondSpeed(converted_state_1.GetSpeedEnuX()).value());
    EXPECT_DOUBLE_EQ(Units::MetersPerSecondSpeed(actual_yd).value(),
-                    Units::MetersPerSecondSpeed(converted_state_1.GetSpeedYd()).value());
+                    Units::MetersPerSecondSpeed(converted_state_1.GetSpeedEnuY()).value());
    EXPECT_DOUBLE_EQ(Units::MetersPerSecondSpeed(actual_zd).value(),
-                    Units::MetersPerSecondSpeed(converted_state_1.GetSpeedZd()).value());
-   EXPECT_DOUBLE_EQ(Units::RadiansAngle(actual_gamma).value(), converted_state_1.m_gamma);
-   EXPECT_DOUBLE_EQ(Units::RadiansAngle(actual_psi).value(), Units::RadiansAngle(converted_state_1.m_psi).value());
+                    Units::MetersPerSecondSpeed(converted_state_1.GetVerticalSpeed()).value());
+   EXPECT_DOUBLE_EQ(Units::RadiansAngle(actual_gamma).value(),
+                    Units::RadiansAngle(converted_state_1.GetFlightPathAngle()).value());
+   EXPECT_DOUBLE_EQ(Units::RadiansAngle(actual_psi).value(), Units::RadiansAngle(converted_state_1.GetPsi()).value());
    EXPECT_DOUBLE_EQ(Units::CelsiusTemperature(actual_sensed_temperature).value(),
-                    Units::CelsiusTemperature(converted_state_1.m_sensed_temperature).value());
-   EXPECT_DOUBLE_EQ(Units::MetersPerSecondSpeed(actual_sensed_veast).value(), converted_state_1.m_Vwx);
-   EXPECT_DOUBLE_EQ(Units::MetersPerSecondSpeed(actual_sensed_vnorth).value(), converted_state_1.m_Vwy);
-   EXPECT_DOUBLE_EQ(Units::MetersPerSecondSpeed(actual_sensed_wind_parallel).value(), converted_state_1.m_Vw_para);
-   EXPECT_DOUBLE_EQ(Units::MetersPerSecondSpeed(actual_sensed_wind_perpendicular).value(), converted_state_1.m_Vw_perp);
+                    Units::CelsiusTemperature(converted_state_1.GetSensedTemperature()).value());
+   EXPECT_DOUBLE_EQ(Units::MetersPerSecondSpeed(actual_sensed_veast).value(),
+                    Units::MetersPerSecondSpeed(converted_state_1.GetSensedWindEast()).value());
+   EXPECT_DOUBLE_EQ(Units::MetersPerSecondSpeed(actual_sensed_vnorth).value(),
+                    Units::MetersPerSecondSpeed(converted_state_1.GetSensedWindNorth()).value());
+   EXPECT_DOUBLE_EQ(Units::MetersPerSecondSpeed(actual_sensed_wind_parallel).value(),
+                    Units::MetersPerSecondSpeed(converted_state_1.GetSensedWindParallel()).value());
+   EXPECT_DOUBLE_EQ(Units::MetersPerSecondSpeed(actual_sensed_wind_perpendicular).value(),
+                    Units::MetersPerSecondSpeed(converted_state_1.GetSensedWindPerpendicular()).value());
 
    // This is the tested method
    // convert to interval_management::open_source::AircraftState

@@ -19,14 +19,15 @@
 
 #pragma once
 
-#include "loader/Loadable.h"
-#include "imalgs/IMClearance.h"
-#include "public/Logging.h"
 #include <map>
+
+#include "imalgs/IMClearance.h"
+#include "loader/Loadable.h"
+#include "public/Logging.h"
 
 namespace interval_management {
 
-class IMClearanceLoader : public Loadable {
+class IMClearanceLoader final : public Loadable {
   public:
    IMClearanceLoader();
 

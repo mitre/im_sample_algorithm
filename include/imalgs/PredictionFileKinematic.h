@@ -34,7 +34,7 @@ class PredictionFileKinematic final : private PredictionFileBase, public OutputH
 
   private:
    const bool TrajectoryWasRegenerated(const std::vector<PredictionData> &prediction_data_single_acid,
-                                       const VerticalPath vertical_path, const int iteration,
+                                       const VerticalPath &vertical_path, const int iteration,
                                        const PredictionData::DataSource source) const;
 
    std::map<std::string, std::vector<PredictionData> > algorithm_prediction_ownship;

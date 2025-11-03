@@ -46,7 +46,8 @@ class IMKinematicTimeBasedMaintain final : public IMMaintain {
          const std::vector<interval_management::open_source::AircraftState> &target_aircraft_state_history,
          const interval_management::open_source::AchievePointCalcs &ownship_achieve_point_calcs,
          const interval_management::open_source::AchievePointCalcs &traffic_reference_point_calcs,
-         PilotDelay &pilot_delay_model, const Units::Length &target_kinematic_dtg_to_end_of_route);
+         aaesim::open_source::StatisticalPilotDelay &pilot_delay_model,
+         const Units::Length &target_kinematic_dtg_to_end_of_route);
 
    virtual const double GetMsi() const;
 
@@ -65,11 +66,11 @@ class IMKinematicTimeBasedMaintain final : public IMMaintain {
    void CalculateIas(const Units::Length current_ownship_altitude,
                      const aaesim::open_source::DynamicsState &dynamics_state,
                      const aaesim::open_source::KinematicTrajectoryPredictor &ownship_kinematic_trajectory_predictor,
-                     PilotDelay &pilot_delay);
+                     aaesim::open_source::StatisticalPilotDelay &pilot_delay);
 
    void CalculateMach(const Units::Length current_ownship_altitude, const Units::Speed true_airspeed_command,
                       const aaesim::open_source::KinematicTrajectoryPredictor &ownship_kinematic_trajectory_predictor,
-                      PilotDelay &pilot_delay, const Units::Mass current_mass);
+                      aaesim::open_source::StatisticalPilotDelay &pilot_delay, const Units::Mass current_mass);
 
    const bool IsOwnshipBelowTransitionAltitude(
          Units::Length current_ownship_altitude,
@@ -98,7 +99,7 @@ inline void IMKinematicTimeBasedMaintain::DoAlgorithmLogging(
    using json = nlohmann::json;
    if (m_logger.getLogLevel() == log4cplus::TRACE_LOG_LEVEL) {
       json j;
-      auto state_to_json = [&j](std::string prefix, const AircraftState &state) {
+      auto state_to_json = [&j](const std::string &prefix, const AircraftState &state) {
          j[prefix + ".id"] = state.GetId();
          j[prefix + ".timestamp_sec"] = Units::SecondsTime(state.GetTimeStamp()).value();
          j[prefix + ".groundspeed_mps"] = Units::MetersPerSecondSpeed(state.GetGroundSpeed()).value();

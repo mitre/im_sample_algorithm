@@ -28,7 +28,7 @@ log4cplus::Logger interval_management::open_source::FIMAlgorithmDataWriter::m_lo
       log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("FIMAlgorithmDataWriter"));
 
 interval_management::open_source::FIMAlgorithmDataWriter::FIMAlgorithmDataWriter()
-   : OutputHandler("", "_IMAlgorithm.csv"), m_sim_data() {
+   : OutputHandler("", "_im_algorithm.csv"), m_sim_data() {
    m_sim_data.reserve(10000);
 }
 
@@ -80,7 +80,6 @@ void interval_management::open_source::FIMAlgorithmDataWriter::Finish() {
       os << "current_imspeed_command_count";
 
       os << NEWLINE;
-      os.flush();
 
       // Important for outputting double data.
       os.set_precision(10);
@@ -120,7 +119,6 @@ void interval_management::open_source::FIMAlgorithmDataWriter::Finish() {
          os << Units::MetersLength(ix.m_current_imspeed_count).value();
 
          os << NEWLINE;
-         os.flush();
       }
 
       os.close();

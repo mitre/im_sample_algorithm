@@ -44,9 +44,9 @@ MOPSPredictedWindEvaluatorVersion2::~MOPSPredictedWindEvaluatorVersion2() = defa
 bool MOPSPredictedWindEvaluatorVersion2::ArePredictedWindsAccurate(
       const aaesim::open_source::AircraftState &state, const aaesim::open_source::WeatherPrediction &weather_prediction,
       const Units::Speed reference_cas, const Units::Length reference_altitude,
-      const Atmosphere *sensed_atmosphere) const {
+      const std::shared_ptr<Atmosphere> &sensed_atmosphere) const {
 
-   Units::FeetLength true_altitude(state.m_z);
+   Units::FeetLength true_altitude{state.GetAltitudeMsl()};
    Units::KnotsSpeed tas1 = weather_prediction.CAS2TAS(reference_cas, reference_altitude);
    Units::KnotsSpeed tas2 = sensed_atmosphere->CAS2TAS(reference_cas, true_altitude);
 
@@ -57,19 +57,17 @@ bool MOPSPredictedWindEvaluatorVersion2::ArePredictedWindsAccurate(
    Units::HertzFrequency dVwx_dh;
    Units::HertzFrequency dVwy_dh;
 
-   weather_prediction.GetForecastAtmosphere()->CalculateWindGradientAtAltitude(
-         reference_altitude, weather_prediction.east_west, predicted_wind_x, dVwx_dh);
-   weather_prediction.GetForecastAtmosphere()->CalculateWindGradientAtAltitude(
-         reference_altitude, weather_prediction.north_south, predicted_wind_y, dVwy_dh);
+   weather_prediction.east_west().CalculateWindGradientAtAltitude(reference_altitude, predicted_wind_x, dVwx_dh);
+   weather_prediction.north_south().CalculateWindGradientAtAltitude(reference_altitude, predicted_wind_y, dVwy_dh);
 
-   double sin_heading(sin(state.m_psi));
-   double cos_heading(cos(state.m_psi));
+   double sin_heading(sin(state.GetPsi()));
+   double cos_heading(cos(state.GetPsi()));
 
    // calculate predicted tailwind and crosswind based on true course
    Units::Speed vw_para1(predicted_wind_x * cos_heading + predicted_wind_y * sin_heading);
    Units::Speed vw_perp1(-predicted_wind_x * sin_heading + predicted_wind_y * cos_heading);
-   Units::MetersPerSecondSpeed vw_para2(state.m_Vw_para);
-   Units::MetersPerSecondSpeed vw_perp2(state.m_Vw_perp);
+   Units::MetersPerSecondSpeed vw_para2{state.GetSensedWindParallel()};
+   Units::MetersPerSecondSpeed vw_perp2{state.GetSensedWindPerpendicular()};
 
    // Pythagorean-subtract crosswind
    Units::KnotsSpeed tas_para1 = Units::sqrt(Units::sqr(tas1) - Units::sqr(vw_perp1));
@@ -114,17 +112,18 @@ void MOPSPredictedWindEvaluatorVersion2::LogWindDisagreeMetaData(
                              << "||time||source||altitude(ft)||temperature(C)||pressure(Pa)||density(kg/"
                                 "m^3)||wind_ew(kts)||wind_ns(kts)"
                              << "||CAS(kts)||TAS(kts)||GS(kts)||" << std::endl
-                             << "|" << state.m_time << "|predicted|" << Units::FeetLength(reference_altitude).value()
-                             << "|" << (predicted_temperature.value() - 273.15) << "|" << predicted_pressure.value()
-                             << "|" << predicted_density.value() << "|" << Units::KnotsSpeed(predicted_wind_x).value()
-                             << "|" << Units::KnotsSpeed(predicted_wind_y).value() << "|"
+                             << "|" << state.GetTime().value() << "|predicted|"
+                             << Units::FeetLength(reference_altitude).value() << "|"
+                             << (predicted_temperature.value() - 273.15) << "|" << predicted_pressure.value() << "|"
+                             << predicted_density.value() << "|" << Units::KnotsSpeed(predicted_wind_x).value() << "|"
+                             << Units::KnotsSpeed(predicted_wind_y).value() << "|"
                              << Units::KnotsSpeed(reference_cas).value() << "|" << Units::KnotsSpeed(tas1).value()
                              << "|" << Units::KnotsSpeed(gs1).value() << "|" << std::endl
-                             << "|" << state.m_time << "|  true   |" << true_altitude.value() << "|"
+                             << "|" << state.GetTime().value() << "|  true   |" << true_altitude.value() << "|"
                              << (true_temperature.value() - 273.15) << "|" << true_pressure.value() << "|"
                              << true_density.value() << "|"
-                             << Units::KnotsSpeed(Units::MetersPerSecondSpeed(state.m_Vwx)).value() << "|"
-                             << Units::KnotsSpeed(Units::MetersPerSecondSpeed(state.m_Vwy)).value() << "|"
-                             << Units::KnotsSpeed(reference_cas).value() << "|" << Units::KnotsSpeed(tas2).value()
-                             << "|" << Units::KnotsSpeed(gs2).value() << "|");
+                             << Units::KnotsSpeed(Units::MetersPerSecondSpeed(state.GetSensedWindEast())).value() << "|"
+                             << Units::KnotsSpeed(Units::MetersPerSecondSpeed(state.GetSensedWindNorth())).value()
+                             << "|" << Units::KnotsSpeed(reference_cas).value() << "|"
+                             << Units::KnotsSpeed(tas2).value() << "|" << Units::KnotsSpeed(gs2).value() << "|");
 }

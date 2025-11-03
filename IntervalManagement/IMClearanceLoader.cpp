@@ -126,7 +126,11 @@ const IMClearance IMClearanceLoader::BuildClearance(void) {
    IMClearance::Builder builder(m_clearance_type, m_target_id, m_target_aircraft_intent, m_achieve_by_point,
                                 m_planned_termination_point, m_assigned_spacing_goal_type, m_assigned_spacing_goal);
    builder.TrafficReferencePoint(m_traffic_reference_point);
-   if (m_ownship_aircraft_intent.IsLoaded()) builder.OwnshipIntent(m_ownship_aircraft_intent);
+
+   if (m_ownship_aircraft_intent.IsLoaded()) {
+      builder.OwnshipIntent(m_ownship_aircraft_intent);
+   }
+
    if (m_clearance_type == IMClearance::ClearanceType::FAS) {
       builder.FinalApproachParameters(m_final_approach_spacing_merge_angle_mean,
                                       m_final_approach_spacing_merge_angle_std, m_is_vector_aircraft);

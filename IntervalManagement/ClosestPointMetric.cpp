@@ -22,12 +22,7 @@
 
 using namespace interval_management::open_source;
 
-ClosestPointMetric::ClosestPointMetric(void) {
-   m_im_ac_id = 0;
-   m_target_ac_id = 0;
-   m_report_metrics = false;
-   mMinDist = Units::infinity();
-}
+ClosestPointMetric::ClosestPointMetric() = default;
 
 void ClosestPointMetric::update(double imx, double imy, double targx, double targy) {
 
@@ -38,8 +33,8 @@ void ClosestPointMetric::update(double imx, double imy, double targx, double tar
    // imx,imy:position of IM aircraft.
    // targx,targy:position of target aircraft.
 
-   Units::Length dist = AircraftCalculations::PtToPtDist(Units::FeetLength(imx), Units::FeetLength(imy),
-                                                         Units::FeetLength(targx), Units::FeetLength(targy));
+   Units::Length dist = aaesim::open_source::AircraftCalculations::PtToPtDist(
+         Units::FeetLength(imx), Units::FeetLength(imy), Units::FeetLength(targx), Units::FeetLength(targy));
 
    if (dist < mMinDist) {
       mMinDist = dist;

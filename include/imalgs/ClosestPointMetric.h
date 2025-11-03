@@ -23,11 +23,11 @@
 
 namespace interval_management {
 namespace open_source {
-class ClosestPointMetric {
+class ClosestPointMetric final {
   public:
-   ClosestPointMetric(void);
+   ClosestPointMetric();
 
-   ~ClosestPointMetric(void) = default;
+   ~ClosestPointMetric() = default;
 
    // Computes distance for input position and updates minimum
    // position if less than minimum distance.
@@ -41,12 +41,12 @@ class ClosestPointMetric {
    int GetTargetAcId() const;
 
   private:
-   int m_im_ac_id;
-   int m_target_ac_id;
-   bool m_report_metrics;
+   int m_im_ac_id{0};
+   int m_target_ac_id{0};
+   bool m_report_metrics{false};
 
    // Minimum distance between IM and target aircraft.
-   Units::Length mMinDist;
+   Units::Length mMinDist{Units::Infinity()};
 };
 }  // namespace open_source
 }  // namespace interval_management

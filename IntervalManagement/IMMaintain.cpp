@@ -55,7 +55,7 @@ void IMMaintain::InitializeScenario(IMAchieve *obj, const Units::Frequency maint
 void IMMaintain::Prepare(Units::Speed previous_im_speed_command, Units::Speed previous_ias_command,
                          interval_management::open_source::FIMSpeedLimiter speed_limiter, double previous_mach_command,
                          const aaesim::open_source::EuclideanTrajectoryPredictor &ownship_trajectory_predictor,
-                         const AlongPathDistanceCalculator &im_distance_calculator,
+                         const aaesim::open_source::AlongPathDistanceCalculator &im_distance_calculator,
                          const std::vector<interval_management::open_source::AircraftState> &target_adsb_track_history,
                          const IMClearance &im_clearance,
                          const std::vector<interval_management::open_source::FIMSpeedLimiter::RfLegLimit> &rf_limits) {
@@ -63,8 +63,9 @@ void IMMaintain::Prepare(Units::Speed previous_im_speed_command, Units::Speed pr
    m_previous_reference_im_speed_command_tas = previous_im_speed_command;
    m_previous_im_speed_command_ias = previous_ias_command;
    m_previous_reference_im_speed_command_mach = previous_mach_command;
-   m_ownship_decrementing_distance_calculator = AlongPathDistanceCalculator(
-         ownship_trajectory_predictor.GetHorizontalPath(), TrajectoryIndexProgressionDirection::DECREMENTING);
+   m_ownship_decrementing_distance_calculator = aaesim::open_source::AlongPathDistanceCalculator(
+         ownship_trajectory_predictor.GetHorizontalPath(),
+         aaesim::open_source::TrajectoryIndexProgressionDirection::DECREMENTING);
    m_ownship_distance_calculator = im_distance_calculator;
    m_speed_limiter = speed_limiter;
 

@@ -27,11 +27,11 @@
 
 namespace interval_management {
 namespace open_source {
-class MaintainMetric {
+class MaintainMetric final {
   public:
-   MaintainMetric(void);
+   MaintainMetric();
 
-   ~MaintainMetric(void) = default;
+   ~MaintainMetric() = default;
 
    // Adds data to be added for each pass through an IM::update method.
    void AddSpacingErrorSec(double err);
@@ -68,19 +68,19 @@ class MaintainMetric {
 
   private:
    // Running sum of time spacing errors between IM and target ac.
-   Statistics spacingError;
+   Statistics spacingError{};
 
    // Time went by achieve by point.
-   double achieveByTime;
+   double achieveByTime{-1.0};
 
    // Time spent in maintain stage, (current time - achieve by time)
-   double totalMaintainTime;
+   double totalMaintainTime{0.0};
 
    // Number of cycles with a spacing error > 10 secs.
-   int numCyclesOutsideThreshold;
+   int numCyclesOutsideThreshold{0};
 
    /** Output should be enabled for IM aircraft */
-   bool m_output_enabled;
+   bool m_output_enabled{false};
 };
 }  // namespace open_source
 }  // namespace interval_management

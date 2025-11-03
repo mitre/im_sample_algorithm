@@ -21,26 +21,9 @@
 
 using namespace interval_management::open_source;
 
-NMObserver::NMObserver(void) { curr_NM = -2; }
-
-NMObserver::~NMObserver(void) {}
-
-void NMObserver::output_NM_values(double predictedDistance, double trueDistance, double time, double currIAS,
-                                  double currGS, double targetGS, double minIAS, double maxIAS, double minTAS,
-                                  double maxTAS) {
-   // Creates and adds a new entry to the nautical mile observer report.
-   //
-   // predictedDistance:predicted distance (current distance from IM algorithms).
-   // trueDistance:true distance.
-   // time:time.
-   // currIAS:current aircraft indicated airspeed.
-   // currGS:current aircraft ground speed.
-   // targetGS:target aircraft ground speed.
-   // minIAS:minimum aircraft indicated airspeed.
-   // maxIAS:maximum aircraft indicated airspeed.
-   // minTAS:mininum aircraft true airspeed.
-   // maxTAS:maximum aircraft true airspeed.
-
+void NMObserver::output_NM_values(const double predictedDistance, const double trueDistance, const double time,
+                                  const double currIAS, const double currGS, const double targetGS, const double minIAS,
+                                  const double maxIAS, const double minTAS, const double maxTAS) {
    NMObserverEntry new_entry;
 
    new_entry.predictedDistance = predictedDistance;
@@ -58,7 +41,6 @@ void NMObserver::output_NM_values(double predictedDistance, double trueDistance,
 }
 
 void NMObserver::initialize_stats() {
-   // sets the stats size
    while (predictedDistance.size() < entry_list.size()) {
       Statistics temp_value;
       predictedDistance.push_back(0.0);

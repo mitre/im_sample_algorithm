@@ -19,16 +19,16 @@
 
 #pragma once
 
-#include "public/FlightDeckApplication.h"
 #include "imalgs/FIMAlgorithmAdapter.h"
-#include "imalgs/IMKinematicAchieve.h"
-#include "imalgs/IMTimeBasedAchieveMutableASG.h"
-#include "imalgs/IMTimeBasedAchieve.h"
 #include "imalgs/IMDistBasedAchieve.h"
+#include "imalgs/IMKinematicAchieve.h"
+#include "imalgs/IMTimeBasedAchieve.h"
+#include "imalgs/IMTimeBasedAchieveMutableASG.h"
+#include "public/FlightDeckApplication.h"
 #include "public/PassThroughAssap.h"
 namespace interval_management {
 namespace open_source {
-class FIMAlgorithmInitializer : public aaesim::open_source::FlightDeckApplicationInitializer {
+class FIMAlgorithmInitializer final : public aaesim::open_source::FlightDeckApplicationInitializer {
   public:
    FIMAlgorithmInitializer() = default;
 
@@ -41,9 +41,10 @@ class FIMAlgorithmInitializer : public aaesim::open_source::FlightDeckApplicatio
       std::shared_ptr<const aaesim::open_source::ASSAP> m_surveillance_processor;
 
      public:
-      Builder() : m_performance_parameters(), m_prediction_parameters() {
-         m_surveillance_processor = std::make_shared<aaesim::open_source::PassThroughAssap>();
-      };
+      Builder()
+         : m_performance_parameters(),
+           m_prediction_parameters(),
+           m_surveillance_processor(std::make_shared<aaesim::open_source::PassThroughAssap>()) {};
       ~Builder() = default;
       const interval_management::open_source::FIMAlgorithmInitializer Build() const;
       Builder *AddOwnshipPerformanceParameters(

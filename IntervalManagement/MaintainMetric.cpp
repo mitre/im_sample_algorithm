@@ -22,12 +22,7 @@
 
 using namespace interval_management::open_source;
 
-MaintainMetric::MaintainMetric(void) {
-   achieveByTime = -1.0;
-   totalMaintainTime = 0.0;
-   numCyclesOutsideThreshold = 0;
-   m_output_enabled = false;
-}
+MaintainMetric::MaintainMetric() = default;
 
 void MaintainMetric::AddSpacingErrorSec(double err) {
 

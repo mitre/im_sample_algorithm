@@ -23,16 +23,12 @@
 
 using namespace interval_management::open_source;
 
-Statistics::Statistics() {
-   m_sum_of_samples = 0;
-   m_max = 0.0;
-   m_min = 0.0;
-}
+Statistics::Statistics() = default;
 
-Statistics::~Statistics() {}
+Statistics::~Statistics() = default;
 
 void Statistics::Insert(double value) {
-   if (m_samples.size() == 0) {
+   if (m_samples.empty()) {
       m_max = value;
       m_min = value;
    } else {
@@ -48,10 +44,10 @@ void Statistics::Insert(double value) {
 double Statistics::ComputeStandardDeviation() const {
    double sDev = -1.0;
 
-   if (m_samples.size() > 0) {
+   if (!m_samples.empty()) {
 
       double variance_sum = 0.0;
-      for (int loop = 0; loop < (int)m_samples.size(); loop++) {
+      for (int loop = 0; loop < static_cast<int>(m_samples.size()); loop++) {
          if (loop != 0) {
             variance_sum += pow(m_samples[loop] - GetMean(), 2);
          } else {
@@ -65,8 +61,6 @@ double Statistics::ComputeStandardDeviation() const {
 }
 
 double Statistics::GetPercentile(double percentage) {
-   int desired_sample_num;
-   double result;
    vector<double> samples_sorted;
 
    for (unsigned int i = 0; i < m_samples.size(); i++) {
@@ -76,7 +70,8 @@ double Statistics::GetPercentile(double percentage) {
 
    stable_sort(samples_sorted.begin(), samples_sorted.end());
 
-   desired_sample_num = (int)(percentage * m_samples.size());
+   double result;
+   const int desired_sample_num = static_cast<int>(percentage * m_samples.size());
 
    if (desired_sample_num == 0) {
       result = samples_sorted.at(0);
@@ -84,13 +79,13 @@ double Statistics::GetPercentile(double percentage) {
       result = samples_sorted.at(desired_sample_num - 1);
    }
 
-   return (result);
+   return result;
 }
 
 double Statistics::Get95thBounds() {
    double bound95 = -1.0;
 
-   double n = (double)m_samples.size();
+   const double n = static_cast<double>(m_samples.size());
    double prob = 0.0;
    double delta = 0.1;
 

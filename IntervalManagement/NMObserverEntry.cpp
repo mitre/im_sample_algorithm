@@ -21,17 +21,6 @@
 
 using namespace interval_management::open_source;
 
-NMObserverEntry::NMObserverEntry(void) {
-   predictedDistance = 0.0;
-   trueDistance = 0.0;
-   time = 0.0;
-   acIAS = 0.0;
-   acGS = 0.0;
-   targetGS = 0.0;
-   minIAS = 0.0;
-   maxIAS = 0.0;
-   minTAS = 0.0;
-   maxTAS = 0.0;
-}
+NMObserverEntry::NMObserverEntry() = default;
 
-NMObserverEntry::~NMObserverEntry(void) {}
+NMObserverEntry::~NMObserverEntry() = default;

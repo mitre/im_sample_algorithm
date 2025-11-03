@@ -23,7 +23,7 @@ using namespace interval_management::open_source;
 
 interval_management::open_source::FIMAlgorithmInitializer::FIMAlgorithmInitializer(
       const FIMAlgorithmInitializer::Builder *builder) {
-   fms_prediction_paramters = builder->GetFmsPredictionParameters();
+   fms_prediction_parameters = builder->GetFmsPredictionParameters();
    performance_parameters = builder->GetPerformanceParameters();
    surveillance_processor = builder->GetSurveillanceProcessor();
 }
@@ -50,29 +50,26 @@ void interval_management::open_source::FIMAlgorithmInitializer::Initialize(
 
 void interval_management::open_source::FIMAlgorithmInitializer::Initialize(
       interval_management::open_source::IMKinematicAchieve *kinematic_algorithm) {
-   kinematic_algorithm->Initialize(BuildOwnshipPredictionParameters(), fms_prediction_paramters.ownship_aircraft_intent,
-                                   fms_prediction_paramters.weather_prediction);
+   kinematic_algorithm->Initialize(BuildOwnshipPredictionParameters(), fms_prediction_parameters.fms_intent,
+                                   fms_prediction_parameters.weather_prediction, position_converter);
 }
 
 void interval_management::open_source::FIMAlgorithmInitializer::Initialize(
       interval_management::open_source::IMTimeBasedAchieveMutableASG *test_vector_algorithm) {
-   test_vector_algorithm->Initialize(BuildOwnshipPredictionParameters(),
-                                     fms_prediction_paramters.ownship_aircraft_intent,
-                                     fms_prediction_paramters.weather_prediction);
+   test_vector_algorithm->Initialize(BuildOwnshipPredictionParameters(), fms_prediction_parameters.fms_intent,
+                                     fms_prediction_parameters.weather_prediction);
 }
 
 void interval_management::open_source::FIMAlgorithmInitializer::Initialize(
       interval_management::open_source::IMTimeBasedAchieve *time_achieve_algorithm) {
-   time_achieve_algorithm->Initialize(BuildOwnshipPredictionParameters(),
-                                      fms_prediction_paramters.ownship_aircraft_intent,
-                                      fms_prediction_paramters.weather_prediction);
+   time_achieve_algorithm->Initialize(BuildOwnshipPredictionParameters(), fms_prediction_parameters.fms_intent,
+                                      fms_prediction_parameters.weather_prediction, position_converter);
 }
 
 void interval_management::open_source::FIMAlgorithmInitializer::Initialize(
       interval_management::open_source::IMDistBasedAchieve *dist_achieve_algorithm) {
-   dist_achieve_algorithm->Initialize(BuildOwnshipPredictionParameters(),
-                                      fms_prediction_paramters.ownship_aircraft_intent,
-                                      fms_prediction_paramters.weather_prediction);
+   dist_achieve_algorithm->Initialize(BuildOwnshipPredictionParameters(), fms_prediction_parameters.fms_intent,
+                                      fms_prediction_parameters.weather_prediction, position_converter);
 }
 
 IMAlgorithm::OwnshipPredictionParameters
@@ -82,11 +79,11 @@ IMAlgorithm::OwnshipPredictionParameters
    ownship_prediction_parameters.flap_speeds = performance_parameters.flap_speeds;
    ownship_prediction_parameters.flight_envelope = performance_parameters.flight_envelope;
    ownship_prediction_parameters.mass_data = performance_parameters.mass_data;
-   ownship_prediction_parameters.expected_cruise_altitude = fms_prediction_paramters.expected_cruise_altitude;
-   ownship_prediction_parameters.maximum_allowable_bank_angle = fms_prediction_paramters.maximum_allowable_bank_angle;
-   ownship_prediction_parameters.transition_altitude = fms_prediction_paramters.transition_altitude;
-   ownship_prediction_parameters.transition_ias = fms_prediction_paramters.transition_ias;
-   ownship_prediction_parameters.transition_mach = fms_prediction_paramters.transition_mach;
+   ownship_prediction_parameters.expected_cruise_altitude = fms_prediction_parameters.expected_cruise_altitude;
+   ownship_prediction_parameters.maximum_allowable_bank_angle = fms_prediction_parameters.maximum_allowable_bank_angle;
+   ownship_prediction_parameters.transition_altitude = fms_prediction_parameters.transition_altitude;
+   ownship_prediction_parameters.transition_ias = fms_prediction_parameters.transition_ias;
+   ownship_prediction_parameters.transition_mach = fms_prediction_parameters.transition_mach;
    return ownship_prediction_parameters;
 }
 

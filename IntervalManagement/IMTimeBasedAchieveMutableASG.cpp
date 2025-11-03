@@ -21,7 +21,6 @@
 #include <imalgs/IMTimeBasedAchieveMutableASG.h>
 
 #include "public/CustomMath.h"
-#include "public/AircraftCalculations.h"
 #include "public/CoreUtils.h"
 #include "public/SimulationTime.h"
 
@@ -65,6 +64,14 @@ bool IMTimeBasedAchieveMutableASG::load(DecodedStream *input) {
    const bool mLoaded = IMTimeBasedAchieve::load(input);
 
    return mLoaded;
+}
+
+void IMTimeBasedAchieveMutableASG::Initialize(const OwnshipPredictionParameters &ownship_prediction_parameters,
+                                              const AircraftIntent &ownship_aircraft_intent,
+                                              aaesim::open_source::WeatherPrediction &weather_prediction,
+                                              std::shared_ptr<TangentPlaneSequence> &position_converter) {
+   SetTangentPlaneSequence(nullptr);
+   Initialize(ownship_prediction_parameters, ownship_aircraft_intent, weather_prediction);
 }
 
 void IMTimeBasedAchieveMutableASG::Initialize(const OwnshipPredictionParameters &ownship_prediction_parameters,

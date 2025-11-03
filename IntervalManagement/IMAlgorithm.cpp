@@ -21,7 +21,6 @@
 #include <utility>
 #include "public/CustomMath.h"
 #include "public/CoreUtils.h"
-#include "public/AircraftCalculations.h"
 #include "imalgs/IMAlgorithm.h"
 #include "imalgs/InternalObserver.h"
 
@@ -77,6 +76,7 @@ IMAlgorithm::IMAlgorithm()
      m_loaded_speed_quantize_middle_phase(IMUtils::SPEED_QUANTIZE_2_DEFAULT),
      m_loaded_speed_quantize_first_phase(IMUtils::SPEED_QUANTIZE_3_DEFAULT),
      m_loaded_use_speed_limiting(IMUtils::LIMIT_FLAG_DEFAULT),
+     m_loaded_use_wind_blending(IMUtils::WIND_BLENDING_FLAG_DEFAULT),
      m_loaded_use_speed_quantization(IMUtils::QUANTIZE_FLAG_DEFAULT) {
    IterClearIMAlg();
 }
@@ -151,6 +151,7 @@ void IMAlgorithm::Copy(const IMAlgorithm &obj) {
    m_loaded_speed_quantize_middle_phase = obj.m_loaded_speed_quantize_middle_phase;
    m_loaded_speed_quantize_first_phase = obj.m_loaded_speed_quantize_first_phase;
    m_loaded_use_speed_limiting = obj.m_loaded_use_speed_limiting;
+   m_loaded_use_wind_blending = obj.m_loaded_use_wind_blending;
    m_loaded_use_speed_quantization = obj.m_loaded_use_speed_quantization;
 }
 
@@ -161,6 +162,7 @@ void IMAlgorithm::CopyParametersFromConfiguration() {
    m_slope = m_configuration.m_slope;
    m_error_distance = m_configuration.m_error_distance;
    m_loaded_use_speed_limiting = m_configuration.m_use_speed_limiting;
+   m_loaded_use_wind_blending = m_configuration.m_use_wind_blending;
    m_threshold_flag = m_configuration.m_threshold_flag;
    m_loaded_use_speed_quantization = m_configuration.m_use_speed_quantization;
    m_loaded_middle_to_final_quantize_transition_distance =
@@ -205,10 +207,8 @@ aaesim::open_source::Guidance IMAlgorithm::Update(
    return prevguidance;
 }
 
-void IMAlgorithm::SetPilotDelay(const bool pilot_delay_on, const Units::Time pilot_delay_mean,
-                                const Units::Time pilot_delay_standard_deviation) {
-   m_pilot_delay.SetUsePilotDelay(pilot_delay_on);
-   m_pilot_delay.SetPilotDelayParameters(pilot_delay_mean, pilot_delay_standard_deviation);
+void IMAlgorithm::SetPilotDelay(aaesim::open_source::StatisticalPilotDelay &pilot_delay) {
+   m_pilot_delay = std::move(pilot_delay);
 }
 
 void IMAlgorithm::IterClearIMAlg() {
@@ -281,8 +281,6 @@ void IMAlgorithm::DumpParameters(const std::string &parameters_to_print) {
                    "slope " << Units::SecondsPerNauticalMileInvertedSpeed(m_slope).value() << std::endl);
    LOG4CPLUS_DEBUG(IMAlgorithm::m_logger,
                    "error distance " << Units::NauticalMilesLength(m_error_distance).value() << std::endl);
-
-   m_pilot_delay.DumpParameters("mPilotDelay");
 
    LOG4CPLUS_DEBUG(IMAlgorithm::m_logger, "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++" << std::endl);
 }

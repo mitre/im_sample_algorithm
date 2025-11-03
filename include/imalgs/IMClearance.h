@@ -19,25 +19,26 @@
 
 #pragma once
 
-#include <string>
-#include <optional>
-
-#include <scalar/Time.h>
 #include <scalar/Length.h>
 #include <scalar/Speed.h>
-#include "public/Logging.h"
-#include "public/AircraftIntent.h"
+#include <scalar/Time.h>
+
+#include <optional>
+#include <string>
+
 #include "imalgs/IMUtils.h"
+#include "public/AircraftIntent.h"
+#include "public/Logging.h"
 
 namespace interval_management {
 namespace open_source {
-class IMClearance {
+class IMClearance final {
   public:
    enum ClearanceType { NONE = -1, CUSTOM = 0, CAPTURE, MAINTAIN, ACHIEVE, FAS };
 
    enum SpacingGoalType { TIME = 0, DIST };
 
-   IMClearance();
+   IMClearance() = default;
 
    ~IMClearance() = default;
 
@@ -60,26 +61,25 @@ class IMClearance {
       Builder(const ClearanceType &clearance_type, const int target_id, const AircraftIntent &target_intent,
               const std::string &achieve_by_point, const std::string &planned_termination_point,
               const SpacingGoalType &assigned_spacing_goal_type, const double assigned_spacing_goal)
-         : m_builder_ownship_intent(),
+         : m_builder_clearance_type(clearance_type),
+           m_builder_assigned_spacing_goal_type(assigned_spacing_goal_type),
+           m_builder_target_aircraft_intent(target_intent),
+           m_builder_ownship_intent(),
            m_builder_final_approach_spacing_merge_angle_mean(0),
            m_builder_final_approach_spacing_merge_angle_std(0),
+           m_builder_achieve_by_point(achieve_by_point),
+           m_builder_planned_termination_point(planned_termination_point),
            m_builder_traffic_reference_point(),
-           m_builder_is_vector_aircraft(false) {
-         m_builder_clearance_type = clearance_type;
-         m_builder_target_id = target_id;
-         m_builder_target_aircraft_intent = target_intent;
-         m_builder_achieve_by_point = achieve_by_point;
-         m_builder_planned_termination_point = planned_termination_point;
-         m_builder_assigned_spacing_goal_type = assigned_spacing_goal_type;
-         m_builder_assigned_spacing_goal = assigned_spacing_goal;
-      };
+           m_builder_assigned_spacing_goal(assigned_spacing_goal),
+           m_builder_target_id(target_id),
+           m_builder_is_vector_aircraft(false) {};
       ~Builder() = default;
       const IMClearance Build() const { return IMClearance(this); }
       Builder *OwnshipIntent(const AircraftIntent &ownship_intent) {
          m_builder_ownship_intent = ownship_intent;
          return this;
       };
-      Builder *TrafficReferencePoint(const std::string traffic_reference_point) {
+      Builder *TrafficReferencePoint(const std::string &traffic_reference_point) {
          m_builder_traffic_reference_point = traffic_reference_point;
          return this;
       };
@@ -104,12 +104,6 @@ class IMClearance {
       int GetTargetId() const { return m_builder_target_id; };
       bool IsVectorAircraft() const { return m_builder_is_vector_aircraft; };
    };
-
-   IMClearance(const IMClearance &obj);
-
-   bool operator==(const IMClearance &obj) const;
-
-   bool operator!=(const IMClearance &obj) const;
 
    bool Validate(const AircraftIntent &ownship_aircraft_intent, const IMUtils::IMAlgorithmTypes im_algorithm_type);
 
@@ -138,8 +132,6 @@ class IMClearance {
    const bool AbpAndPtpAreColocated() const;
 
    bool IsVectorAircraft() const;
-
-   void dump(std::string hdr) const;
 
    Units::Angle GetFinalApproachSpacingMergeAngleStd() const;
 
@@ -170,20 +162,20 @@ class IMClearance {
    bool ValidatePlannedTerminationPoint(const AircraftIntent &ownship_aircraft_intent,
                                         const IMUtils::IMAlgorithmTypes im_algorithm_type) const;
 
-   ClearanceType m_clearance_type;
-   SpacingGoalType m_assigned_spacing_goal_type;
-   AircraftIntent m_target_aircraft_intent;
-   AircraftIntent m_ownship_intent;
-   Units::RadiansAngle m_final_approach_spacing_merge_angle_mean;
-   Units::RadiansAngle m_final_approach_spacing_merge_angle_std;
-   std::string m_achieve_by_point;
-   std::string m_planned_termination_point;
-   std::string m_traffic_reference_point;
-   double m_assigned_spacing_goal;
-   int m_target_id;
-   bool m_is_vector_aircraft;
-   bool m_is_coincident_route_pairing;
-   bool m_valid;
+   ClearanceType m_clearance_type{CUSTOM};
+   SpacingGoalType m_assigned_spacing_goal_type{TIME};
+   AircraftIntent m_target_aircraft_intent{};
+   AircraftIntent m_ownship_intent{};
+   Units::RadiansAngle m_final_approach_spacing_merge_angle_mean{0};
+   Units::RadiansAngle m_final_approach_spacing_merge_angle_std{0};
+   std::string m_achieve_by_point{};
+   std::string m_planned_termination_point{};
+   std::string m_traffic_reference_point{};
+   double m_assigned_spacing_goal{-INFINITY};
+   int m_target_id{IMUtils::UNINITIALIZED_AIRCRAFT_ID};
+   bool m_is_vector_aircraft{false};
+   bool m_is_coincident_route_pairing{false};
+   bool m_valid{false};
 };
 
 inline const bool IMClearance::AbpAndPtpAreColocated() const {

@@ -22,9 +22,9 @@
 #include "public/SimulationTime.h"
 #include "public/CustomMath.h"
 #include "public/CoreUtils.h"
-#include "public/AircraftCalculations.h"
 
 using namespace interval_management::open_source;
+using namespace aaesim::open_source;
 
 log4cplus::Logger IMDistBasedAchieve::m_logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("IMDistBasedAchieve"));
 const Units::Length IMDistBasedAchieve::DEFAULT_DISTANCE_BASED_ASSIGNED_SPACING_GOAL = Units::NegInfinity();
@@ -49,6 +49,14 @@ void IMDistBasedAchieve::Copy(const IMDistBasedAchieve &obj) {
 }
 
 IMDistBasedAchieve::~IMDistBasedAchieve() = default;
+
+void IMDistBasedAchieve::Initialize(const OwnshipPredictionParameters &ownship_prediction_parameters,
+                                    const AircraftIntent &ownship_aircraft_intent,
+                                    aaesim::open_source::WeatherPrediction &weather_prediction,
+                                    std::shared_ptr<TangentPlaneSequence> &position_converter) {
+   SetTangentPlaneSequence(position_converter);
+   Initialize(ownship_prediction_parameters, ownship_aircraft_intent, weather_prediction);
+}
 
 void IMDistBasedAchieve::Initialize(const OwnshipPredictionParameters &ownship_prediction_parameters,
                                     const AircraftIntent &ownship_aircraft_intent,
@@ -387,7 +395,7 @@ aaesim::open_source::Guidance IMDistBasedAchieve::Update(
             // Get target's along path position on ownship's path as an AircraftState object
             const Units::Length target_distance_with_asg =
                   target_distance_along_ownships_path + m_assigned_spacing_goal;
-            Units::FeetLength target_projected_position_with_asg_x, target_projected_position_with_asg_y;
+            Units::FeetLength target_projected_position_with_asg_x(0), target_projected_position_with_asg_y(0);
             Units::UnsignedAngle course;
             m_position_calculator_target_on_ownship_hpath.CalculatePositionFromAlongPathDistance(
                   target_distance_with_asg, target_projected_position_with_asg_x, target_projected_position_with_asg_y,
@@ -402,6 +410,20 @@ aaesim::open_source::Guidance IMDistBasedAchieve::Update(
             m_target_state_projected_on_ownships_path_at_adjusted_distance.m_zd = current_target_state.m_zd;
 
             if (!m_transitioned_to_maintain) {
+               // Copy Atmosphere to maintain algorithm if it doesn't have one
+               if (!m_im_kinematic_dist_based_maintain->GetAtmosphere()) {
+                  m_im_kinematic_dist_based_maintain->SetAtmosphere(
+                        std::shared_ptr<Atmosphere>(GetAtmosphere()->Clone()));
+               }
+               if (m_im_kinematic_dist_based_maintain->GetAtmosphere()->GetTemperatureOffset() !=
+                   GetAtmosphere()->GetTemperatureOffset()) {
+                  LOG4CPLUS_WARN(m_logger,
+                                 "Different atmospheric temperature offsets in Achieve ("
+                                       << GetAtmosphere()->GetTemperatureOffset() << ") vs Maintain ("
+                                       << m_im_kinematic_dist_based_maintain->GetAtmosphere()->GetTemperatureOffset()
+                                       << ").");
+               }
+
                m_im_kinematic_dist_based_maintain->Prepare(
                      m_previous_reference_im_speed_command_tas, m_previous_im_speed_command_ias, m_speed_limiter,
                      m_previous_reference_im_speed_command_mach, m_ownship_kinematic_trajectory_predictor,

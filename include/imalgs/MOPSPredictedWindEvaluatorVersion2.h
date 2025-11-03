@@ -23,7 +23,7 @@
 
 namespace interval_management {
 namespace open_source {
-class MOPSPredictedWindEvaluatorVersion2 : public aaesim::open_source::PredictedWindEvaluator {
+class MOPSPredictedWindEvaluatorVersion2 final : public aaesim::open_source::PredictedWindEvaluator {
   public:
    static Units::KnotsSpeed MAX_PERMITTED_GROUNDSPEED_ERROR;
 
@@ -42,7 +42,7 @@ class MOPSPredictedWindEvaluatorVersion2 : public aaesim::open_source::Predicted
    virtual bool ArePredictedWindsAccurate(const aaesim::open_source::AircraftState &state,
                                           const aaesim::open_source::WeatherPrediction &weatherPrediction,
                                           const Units::Speed reference_cas, const Units::Length reference_altitude,
-                                          const Atmosphere *sensed_atmosphere) const;
+                                          const std::shared_ptr<Atmosphere> &sensed_atmosphere) const;
 
   private:
    static log4cplus::Logger m_logger;

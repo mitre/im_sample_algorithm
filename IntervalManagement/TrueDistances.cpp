@@ -70,20 +70,18 @@ const Units::Length TrueDistances::ComputeTrueDtgToPtpAtTime(const Units::Time &
       }
    }
 
-   if (ix >= 0) {
-      // We have found a bounding pair.
-      if (time_in == m_times[ix - 1]) {
-         return m_true_distances[ix - 1];
-      } else if (time_in == m_times[ix]) {
-         return m_true_distances[ix];
-      } else {
-         // Interpolate
-         double ratio = (time_in - m_times[ix - 1]) / (m_times[ix] - m_times[ix - 1]);
-         return ((1.0 - ratio) * m_true_distances[ix - 1]) + (ratio * m_true_distances[ix]);
-      }
+   if (ix < 0) return Units::NegInfinity();
+   if (ix >= 1 && time_in == m_times[ix - 1]) {
+      return m_true_distances[ix - 1];
    }
+   if (ix >= 0 && time_in == m_times[ix]) {
+      return m_true_distances[ix];
+   }
+   if (ix == 0) return Units::NegInfinity();
 
-   return Units::NegInfinity();
+   // Otherwise, interpolate...
+   double ratio = (time_in - m_times[ix - 1]) / (m_times[ix] - m_times[ix - 1]);
+   return ((1.0 - ratio) * m_true_distances[ix - 1]) + (ratio * m_true_distances[ix]);
 }
 
 void TrueDistances::Clear() {

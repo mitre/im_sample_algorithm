@@ -19,14 +19,14 @@
 
 #pragma once
 
-#include "imalgs/IMMaintain.h"
-#include "public/KinematicTrajectoryPredictor.h"
-#include "imalgs/TrueDistances.h"
 #include "imalgs/AchievePointCalcs.h"
+#include "imalgs/IMMaintain.h"
+#include "imalgs/TrueDistances.h"
+#include "public/KinematicTrajectoryPredictor.h"
 
 namespace interval_management {
 namespace open_source {
-class IMKinematicDistBasedMaintain : public IMMaintain {
+class IMKinematicDistBasedMaintain final : public IMMaintain {
   public:
    IMKinematicDistBasedMaintain();
 
@@ -47,7 +47,7 @@ class IMKinematicDistBasedMaintain : public IMMaintain {
          const std::vector<interval_management::open_source::AircraftState> &target_aircraft_state_history,
          const interval_management::open_source::AchievePointCalcs &ownship_achieve_point_calcs,
          const interval_management::open_source::AchievePointCalcs &traffic_reference_point_calcs,
-         PilotDelay &pilot_delay);
+         aaesim::open_source::StatisticalPilotDelay &pilot_delay);
 
    virtual const double GetMsi() const;
 
@@ -60,13 +60,13 @@ class IMKinematicDistBasedMaintain : public IMMaintain {
                      const Units::Length target_kinematic_dtg_to_end_of_route,
                      const aaesim::open_source::DynamicsState &dynamics_state,
                      const aaesim::open_source::KinematicTrajectoryPredictor &ownship_kinematic_trajectory_predictor,
-                     PilotDelay &pilot_delay);
+                     aaesim::open_source::StatisticalPilotDelay &pilot_delay);
 
    void CalculateMach(const Units::Length current_ownship_altitude,
                       const Units::Length target_kinematic_dtg_to_end_of_route,
                       const Units::Speed true_airspeed_command,
                       const aaesim::open_source::KinematicTrajectoryPredictor &ownship_kinematic_trajectory_predictor,
-                      PilotDelay &pilot_delay, const Units::Mass current_mass);
+                      aaesim::open_source::StatisticalPilotDelay &pilot_delay, const Units::Mass current_mass);
 
    void RecordInternalObserverData(
          const interval_management::open_source::AircraftState &ownship_aircraft_state,

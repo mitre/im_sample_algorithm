@@ -19,7 +19,6 @@
 
 #include "imalgs/IMAchieve.h"
 
-#include "public/AircraftCalculations.h"
 #include "public/Environment.h"
 #include "imalgs/MOPSPredictedWindEvaluatorVersion1.h"
 #include "imalgs/MOPSPredictedWindEvaluatorVersion2.h"

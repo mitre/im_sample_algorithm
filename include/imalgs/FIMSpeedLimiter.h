@@ -17,17 +17,17 @@
 // 2023 The MITRE Corporation. All Rights Reserved.
 // ****************************************************************************
 
-#include "utility/BoundedValue.h"
-#include "scalar/Speed.h"
-#include "scalar/Length.h"
-#include "public/WeatherPrediction.h"
 #include "imalgs/FIMSpeedQuantizer.h"
 #include "public/BadaUtils.h"
 #include "public/SpeedCommandLimiter.h"
+#include "public/WeatherPrediction.h"
+#include "scalar/Length.h"
+#include "scalar/Speed.h"
+#include "utility/BoundedValue.h"
 
 namespace interval_management {
 namespace open_source {
-class FIMSpeedLimiter : public aaesim::open_source::SpeedCommandLimiter {
+class FIMSpeedLimiter final : public aaesim::open_source::SpeedCommandLimiter {
   public:
    struct RfLegLimit {
       RfLegLimit(Units::Length distance_to_go, Units::Speed upper_ias_limit)

@@ -17,11 +17,13 @@
 // 2023 The MITRE Corporation. All Rights Reserved.
 // ****************************************************************************
 
-#include <stdexcept>
-#include <cfloat>
 #include "imalgs/IMUtils.h"
-#include "public/ScenarioUtils.h"
+
+#include <cfloat>
+#include <stdexcept>
+
 #include "public/AircraftCalculations.h"
+#include "public/ScenarioUtils.h"
 #include "public/SimulationTime.h"
 
 using namespace std;
@@ -37,6 +39,7 @@ const Units::KnotsSpeed IMUtils::SPEED_QUANTIZE_1_DEFAULT_5_KNOTS(5);
 const Units::KnotsSpeed IMUtils::SPEED_QUANTIZE_2_DEFAULT(5);
 const Units::KnotsSpeed IMUtils::SPEED_QUANTIZE_3_DEFAULT(10);
 const bool IMUtils::LIMIT_FLAG_DEFAULT(true);
+const bool IMUtils::WIND_BLENDING_FLAG_DEFAULT(true);
 const bool IMUtils::QUANTIZE_FLAG_DEFAULT(true);
 
 std::map<IMUtils::IMAlgorithmTypes, std::string> IMUtils::algorithm_type_dictionary = {
@@ -85,7 +88,6 @@ bool IMUtils::GetCrossingTime(
 void IMUtils::CalculateMergePoint(const Units::Length x1, const Units::Length y1, const Units::Length x2,
                                   const Units::Length y2, const Units::Length x3, const Units::Length y3,
                                   Units::Length &x_merge, Units::Length &y_merge, const Units::Angle theta_merge) {
-
    LOG4CPLUS_TRACE(m_logger,
                    "Pos of AC on final:  (" << Units::MetersLength(x1) << "," << Units::MetersLength(y1) << ")");
    LOG4CPLUS_TRACE(m_logger,
@@ -722,8 +724,6 @@ bool IMUtils::CalculateTargetStateAtTime(const interval_management::open_source:
                                          const std::vector<HorizontalPath> &ownship_horizontal_traj,
                                          const Units::Time extrapolation_time, const Units::Angle ownship_true_heading,
                                          interval_management::open_source::AircraftState &extrapolation_state) {
-
-   interval_management::open_source::AircraftState projstate(target_state), stateattime;
    Units::FeetLength projx, projy, projdtg;
    const bool b0 =
          IMUtils::ProjectTargetPosition(Units::FeetLength(target_state.m_x), Units::FeetLength(target_state.m_y),
@@ -764,7 +764,6 @@ bool IMUtils::CalculateTargetStateAtTime(const interval_management::open_source:
 bool IMUtils::GetPathLengthFromPosition(const Units::Length x, const Units::Length y,
                                         const std::vector<HorizontalPath> &horizontal_path,
                                         Units::Length &distance_to_go, Units::Angle &track) {
-
    try {
       /*
        * Note: Do not attempt to replace this call with an instance of AlongPathDistanceCalculator. The caller's
@@ -882,8 +881,6 @@ void IMUtils::CalculateTargetStateAtDistance(const interval_management::open_sou
                                              const Units::Length extrapolation_distance,
                                              const Units::Angle ownship_true_heading,
                                              interval_management::open_source::AircraftState &extrapstate) {
-
-   interval_management::open_source::AircraftState projstate(target_state);
    interval_management::open_source::AircraftState stateattime;
    Units::FeetLength projx, projy, projdtg;
    const bool b0 =
@@ -1111,8 +1108,7 @@ interval_management::open_source::AircraftState IMUtils::GetProjectedTargetState
    return target_state;
 }
 
-Units::SignedAngle IMUtils::CalculateTrackAngle(const std::list<Units::Angle> angle_history) {
-
+Units::SignedAngle IMUtils::CalculateTrackAngle(const std::list<Units::Angle> &angle_history) {
    // Average the track angles
    // The tricky part is avoiding a wrap effect.
    // Compute total using both signed and unsigned,
@@ -1154,33 +1150,27 @@ interval_management::open_source::AircraftState IMUtils::ConvertToIntervalManage
       const aaesim::open_source::AircraftState &aircraft_state) {
    interval_management::open_source::AircraftState new_state;
    return new_state.Create(
-         aircraft_state.m_id, Units::SecondsTime(aircraft_state.m_time),
-         EarthModel::LocalPositionEnu::Of(aircraft_state.GetPositionX(), aircraft_state.GetPositionY(),
-                                          aircraft_state.GetPositionZ()),
-         aircraft_state.GetSpeedXd(), aircraft_state.GetSpeedYd(), aircraft_state.GetSpeedZd(),
-         Units::RadiansAngle(aircraft_state.m_gamma), Units::MetersPerSecondSpeed(aircraft_state.m_Vwx),
-         Units::MetersPerSecondSpeed(aircraft_state.m_Vwy), Units::MetersPerSecondSpeed(aircraft_state.m_Vw_para),
-         Units::MetersPerSecondSpeed(aircraft_state.m_Vw_perp), aircraft_state.m_sensed_temperature,
-         aircraft_state.m_psi);
+         aircraft_state.GetUniqueId(), aircraft_state.GetTime(),
+         EarthModel::LocalPositionEnu::Of(aircraft_state.GetPositionEnuX(), aircraft_state.GetPositionEnuY(),
+                                          aircraft_state.GetAltitudeMsl()),
+         aircraft_state.GetSpeedEnuX(), aircraft_state.GetSpeedEnuY(), aircraft_state.GetVerticalSpeed(),
+         aircraft_state.GetFlightPathAngle(), aircraft_state.GetSensedWindEast(), aircraft_state.GetSensedWindNorth(),
+         aircraft_state.GetSensedWindParallel(), aircraft_state.GetSensedWindPerpendicular(),
+         aircraft_state.GetSensedTemperature(), aircraft_state.GetPsi());
 }
 
 aaesim::open_source::AircraftState IMUtils::ConvertToAaesimAircraftState(
-      const interval_management::open_source::AircraftState &aircraft_state) {
-   aaesim::open_source::AircraftState return_state;
-   return_state.m_x = Units::FeetLength(aircraft_state.GetPositionX()).value();
-   return_state.m_y = Units::FeetLength(aircraft_state.GetPositionY()).value();
-   return_state.m_z = Units::FeetLength(aircraft_state.GetPositionZ()).value();
-   return_state.m_xd = Units::FeetPerSecondSpeed(aircraft_state.m_xd).value();
-   return_state.m_yd = Units::FeetPerSecondSpeed(aircraft_state.m_yd).value();
-   return_state.m_zd = Units::FeetPerSecondSpeed(aircraft_state.m_zd).value();
-   return_state.m_id = aircraft_state.GetId();
-   return_state.m_time = aircraft_state.GetTimeStamp().value();
-   return_state.m_psi = aircraft_state.GetPsi();
-   return_state.m_gamma = aircraft_state.GetGamma().value();
-   return_state.m_Vwx = Units::MetersPerSecondSpeed(aircraft_state.GetSensedWindEastComponent()).value();
-   return_state.m_Vwy = Units::MetersPerSecondSpeed(aircraft_state.GetSensedWindNorthComponent()).value();
-   return_state.m_Vw_para = Units::MetersPerSecondSpeed(aircraft_state.GetSensedWindParallelComponent()).value();
-   return_state.m_Vw_perp = Units::MetersPerSecondSpeed(aircraft_state.GetSensedWindPerpendicularComponent()).value();
-   return_state.m_sensed_temperature = aircraft_state.GetSensedTemperature();
-   return return_state;
+      const interval_management::open_source::AircraftState &im_state) {
+   return aaesim::open_source::AircraftState::Builder(im_state.GetId(), im_state.GetTimeStamp())
+         .Position(im_state.GetPositionX(), im_state.GetPositionY())
+         ->AltitudeMsl(im_state.GetPositionZ())
+         ->GroundSpeed(im_state.GetSpeedXd(), im_state.GetSpeedYd())
+         ->AltitudeRate(im_state.GetSpeedZd())
+         ->Psi(im_state.GetPsi())
+         ->FlightPathAngle(im_state.GetGamma())
+         ->SensedWindComponents(im_state.GetSensedWindEastComponent(), im_state.GetSensedWindNorthComponent())
+         ->SensedWindsParallel(im_state.GetSensedWindParallelComponent())
+         ->SensedWindsPerpendicular(im_state.GetSensedWindPerpendicularComponent())
+         ->SensedTemperature(im_state.GetSensedTemperature())
+         ->Build();
 }

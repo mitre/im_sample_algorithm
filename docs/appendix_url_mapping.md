@@ -6,8 +6,8 @@
 
 * Appendix C: SAMPLE ALGORITHM provides detailed technical documentation of a "sample" algorithm that meets the requirements in DO-361A. The software in this git repo is our own implementation of Appendix C.
 * Appendix H: MOPS Aircraft and Control Model is an overview of a 3-degree-of-freedom aircraft dynamics & control model which we've used for our research.
-    * Detailed documentation is found in [this published paper](https://www.mitre.org/publications/technical-papers/derivation-of-a-point-mass-aircraft-model-used-for-fast-time).
-    * An implementation of Appendix H is [also available](https://mitre.github.io/FMACM)
+  * Detailed documentation is found in [this published paper](https://www.mitre.org/publications/technical-papers/derivation-of-a-point-mass-aircraft-model-used-for-fast-time).
+  * An implementation of Appendix H is [also available](https://mitre.github.io/FMACM)
 
 These appendices have been written by [MITRE](https://www.mitre.org) and are the copyright of RTCA. In this git repo, and our related [FIM MOPS Aircraft & Control Model](https://mitre.github.io/FMACM), are provided our software implementations of the algorithms and models. Below is a general mapping between each section of DO-361A Appendix C/H and our open source code.
 
