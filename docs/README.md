@@ -68,8 +68,6 @@ Living, developer-level documentation is provided on this GitHub site. Here the 
 
 - **Big Picture** of this codebase -- read [the context](context.md) overview
 
-- **Developer Talk**: [Does it compile & pass tests?](dev_talk.md)
-
 - **Modeling Topics**
 
   - Mapping DO-361A [Appendix C to published code](appendix_url_mapping.md)
@@ -94,8 +92,6 @@ Living, developer-level documentation is provided on this GitHub site. Here the 
 Not seeing what you need to know about? [Post an issue](https://github.com/mitre/im_sample_algorithm/issues). We gladly prioritize specific requests. Thanks!
 
 ## EUROCONTROL BADA Development -- Necessary?
-
-As discussed in the [DevTalk](dev_talk.md) documentation, this code uses [EUROCONTROL's BADA](https://eurocontrol.int/services/bada) for aircraft performance data. However, our BADA functionality and code cannot be provided due to licensing restrictions imposed by EUROCONTROL.
 
 Do you need a full BADA implementation to use this code base? **Nope**. Take a look at [the BADA usage guide](bada_usage_guide.md) to get more details.
 

@@ -2,7 +2,7 @@
 
 [Back to Landing Page](/README.md)
 
-In order to understand this code, what it can (or can't) do, and why it has been publicly released there needs to be a discussion of the context in which this code came about. 
+In order to understand this code, what it can (or can't) do, and why it has been publicly released there needs to be a discussion of the context in which this code came about.
 
 ## What Is This Code?
 
@@ -28,7 +28,7 @@ The first paradigm is a fast-time, parametric simulation environment developed t
 
 ![cartoon graphic of parametric simulation architecture](images/parametric_simulation_cartoon.png)
 
-A core part of this fast-time simulation has also been publicly released as the [FIM MOPS Aircraft Dynamics & Control Model](https://mitre.github.io/FMACM). Review the [dev-talk discussion](dev_talk.md) for more information.
+A core part of this fast-time simulation has also been publicly released as the [FIM MOPS Aircraft Dynamics & Control Model](https://mitre.github.io/FMACM).
 
 ### Human-In-The-Loop Simulations
 
