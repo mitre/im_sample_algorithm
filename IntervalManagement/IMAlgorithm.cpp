@@ -14,15 +14,19 @@
 // For further information, please contact The MITRE Corporation, Contracts Management
 // Office, 7515 Colshire Drive, McLean, VA 22102-7539, (703) 983-6000.
 //
-// 2023 The MITRE Corporation. All Rights Reserved.
+// (c) 2026 The MITRE Corporation. All Rights Reserved.
 // ****************************************************************************
 
-#include <iomanip>
-#include <utility>
-#include "public/CustomMath.h"
-#include "public/CoreUtils.h"
 #include "imalgs/IMAlgorithm.h"
+
+#include <iomanip>
+#include <string>
+#include <utility>
+#include <vector>
+
 #include "imalgs/InternalObserver.h"
+#include "public/CoreUtils.h"
+#include "public/CustomMath.h"
 
 using namespace aaesim::open_source;
 using namespace interval_management::open_source;
@@ -81,15 +85,25 @@ IMAlgorithm::IMAlgorithm()
    IterClearIMAlg();
 }
 
-IMAlgorithm::IMAlgorithm(const IMAlgorithm &obj) : m_initiate_signal_receipt_time(Units::Infinity()) {
-   m_total_number_of_im_speed_changes = 0;
-   m_target_reference_lookup_index = 0;
-   m_ownship_reference_lookup_index = 0;
-   m_reference_precalc_index = 0;
-   m_previous_reference_im_speed_command_mach = 0.0;
-   m_loaded = false;
-   m_im_operation_is_complete = false;
-   m_ownship_kinematic_dtg_to_ptp = Units::Infinity();
+IMAlgorithm::IMAlgorithm(const IMAlgorithm &obj)
+   : m_initiate_signal_receipt_time(Units::Infinity()),
+     m_total_number_of_im_speed_changes(0),
+     m_target_reference_lookup_index(0),
+     m_ownship_reference_lookup_index(0),
+     m_reference_precalc_index(0),
+     m_previous_reference_im_speed_command_mach(0.0),
+     m_loaded(false),
+     m_im_operation_is_complete(false),
+     m_has_maintain_stage(false),
+     m_ownship_kinematic_dtg_to_ptp(Units::Infinity()),
+     m_loaded_middle_to_final_quantize_transition_distance(IMUtils::DIST_QUANTIZE_1_DEFAULT),
+     m_loaded_first_to_middle_quantize_transition_distance(IMUtils::DIST_QUANTIZE_2_DEFAULT),
+     m_loaded_speed_quantize_final_phase(IMUtils::SPEED_QUANTIZE_1_DEFAULT_1_KNOT),
+     m_loaded_speed_quantize_middle_phase(IMUtils::SPEED_QUANTIZE_2_DEFAULT),
+     m_loaded_speed_quantize_first_phase(IMUtils::SPEED_QUANTIZE_3_DEFAULT),
+     m_loaded_use_speed_limiting(IMUtils::LIMIT_FLAG_DEFAULT),
+     m_loaded_use_wind_blending(IMUtils::WIND_BLENDING_FLAG_DEFAULT),
+     m_loaded_use_speed_quantization(IMUtils::QUANTIZE_FLAG_DEFAULT) {
    Copy(obj);
 }
 
@@ -203,7 +217,6 @@ aaesim::open_source::Guidance IMAlgorithm::Update(
       const interval_management::open_source::AircraftState &owntruthstate,
       const interval_management::open_source::AircraftState &targettruthstate,
       const std::vector<interval_management::open_source::AircraftState> &targethistory) {
-
    return prevguidance;
 }
 
@@ -270,8 +283,7 @@ void IMAlgorithm::UpdatePositionMetrics(const interval_management::open_source::
 void IMAlgorithm::DumpParameters(const std::string &parameters_to_print) {
    LOG4CPLUS_DEBUG(IMAlgorithm::m_logger, "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++" << std::endl);
 
-   LOG4CPLUS_DEBUG(IMAlgorithm::m_logger, "IMAlgorithm parms for " << parameters_to_print.c_str() << std::endl
-                                                                   << std::endl);
+   LOG4CPLUS_DEBUG(IMAlgorithm::m_logger, "IMAlgorithm parms for " << parameters_to_print << std::endl << std::endl);
 
    LOG4CPLUS_DEBUG(IMAlgorithm::m_logger, "mLoaded " << m_loaded << std::endl);
 

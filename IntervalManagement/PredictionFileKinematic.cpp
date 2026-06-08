@@ -14,15 +14,20 @@
 // For further information, please contact The MITRE Corporation, Contracts Management
 // Office, 7515 Colshire Drive, McLean, VA 22102-7539, (703) 983-6000.
 //
-// 2023 The MITRE Corporation. All Rights Reserved.
+// (c) 2026 The MITRE Corporation. All Rights Reserved.
 // ****************************************************************************
 
 #include "imalgs/PredictionFileKinematic.h"
 
-#include "imalgs/IMKinematicAchieve.h"
-#include "imalgs/FIMAlgorithmAdapter.h"
-#include "public/CoreUtils.h"
 #include <cmath>
+#include <memory>
+#include <string>
+#include <utility>
+#include <vector>
+
+#include "imalgs/FIMAlgorithmAdapter.h"
+#include "imalgs/IMKinematicAchieve.h"
+#include "public/CoreUtils.h"
 
 using namespace interval_management::open_source;
 
@@ -166,7 +171,6 @@ void PredictionFileKinematic::Gather(
 const bool PredictionFileKinematic::TrajectoryWasRegenerated(
       const std::vector<PredictionData> &prediction_data_single_acid, const VerticalPath &vertical_path,
       const int iteration, const PredictionData::DataSource source) const {
-
    if (!prediction_data_single_acid.empty()) {
       bool trajectory_was_regenerated = prediction_data_single_acid.back().iteration_number != iteration;
       trajectory_was_regenerated = trajectory_was_regenerated || prediction_data_single_acid.back().source != source;

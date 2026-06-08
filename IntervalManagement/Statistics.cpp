@@ -14,12 +14,15 @@
 // For further information, please contact The MITRE Corporation, Contracts Management
 // Office, 7515 Colshire Drive, McLean, VA 22102-7539, (703) 983-6000.
 //
-// 2023 The MITRE Corporation. All Rights Reserved.
+// (c) 2026 The MITRE Corporation. All Rights Reserved.
 // ****************************************************************************
 
 #include "imalgs/Statistics.h"
+
 #include <math.h>
+
 #include <algorithm>
+#include <vector>
 
 using namespace interval_management::open_source;
 
@@ -45,7 +48,6 @@ double Statistics::ComputeStandardDeviation() const {
    double sDev = -1.0;
 
    if (!m_samples.empty()) {
-
       double variance_sum = 0.0;
       for (int loop = 0; loop < static_cast<int>(m_samples.size()); loop++) {
          if (loop != 0) {

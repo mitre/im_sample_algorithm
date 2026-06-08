@@ -14,17 +14,19 @@
 // For further information, please contact The MITRE Corporation, Contracts Management
 // Office, 7515 Colshire Drive, McLean, VA 22102-7539, (703) 983-6000.
 //
-// 2023 The MITRE Corporation. All Rights Reserved.
+// (c) 2026 The MITRE Corporation. All Rights Reserved.
 // ****************************************************************************
 
 #include "imalgs/IMKinematicTimeBasedMaintain.h"
 
 #include <numeric>
+#include <string>
+#include <vector>
 
+#include "imalgs/InternalObserver.h"
+#include "public/CoreUtils.h"
 #include "public/CustomMath.h"
 #include "public/SimulationTime.h"
-#include "public/CoreUtils.h"
-#include "imalgs/InternalObserver.h"
 
 using namespace interval_management::open_source;
 
@@ -140,7 +142,7 @@ aaesim::open_source::Guidance IMKinematicTimeBasedMaintain::Update(
                   ownship_kinematic_trajectory_predictor.GetVerticalPathVelocities().back());
             m_previous_reference_im_speed_command_mach =
                   Units::MetersPerSecondSpeed(m_previous_reference_im_speed_command_tas).value() /
-                  sqrt(GAMMA * R.value() *
+                  sqrt(kGamma * R.value() *
                        m_weather_prediction.getAtmosphere()
                              ->GetTemperature(Units::MetersLength(
                                    ownship_kinematic_trajectory_predictor.GetVerticalPathAltitudes().back()))
@@ -279,7 +281,6 @@ void IMKinematicTimeBasedMaintain::CalculateMach(
       const Units::Length current_ownship_altitude, const Units::Speed true_airspeed_command,
       const aaesim::open_source::KinematicTrajectoryPredictor &ownship_kinematic_trajectory_predictor,
       aaesim::open_source::StatisticalPilotDelay &pilot_delay, const Units::Mass current_mass) {
-
    // Make sure velocity is within nominal limits (AAES-694)
    Units::Speed nominal_profile_ias = Units::MetersPerSecondSpeed(
          ownship_kinematic_trajectory_predictor.GetVerticalPathVelocityByIndex(m_ownship_reference_lookup_index));
@@ -288,12 +289,12 @@ void IMKinematicTimeBasedMaintain::CalculateMach(
 
    BoundedValue<double, 0, 2> estimated_mach = BoundedValue<double, 0, 2>(
          Units::MetersPerSecondSpeed(true_airspeed_command).value() /
-         sqrt(GAMMA * R.value() *
+         sqrt(kGamma * R.value() *
               m_weather_prediction.getAtmosphere()->GetTemperature(current_ownship_altitude).value()));
 
    BoundedValue<double, 0, 2> nominal_mach = BoundedValue<double, 0, 2>(
          Units::MetersPerSecondSpeed(nominal_profile_tas).value() /
-         sqrt(GAMMA * R.value() *
+         sqrt(kGamma * R.value() *
               m_weather_prediction.getAtmosphere()->GetTemperature(current_ownship_altitude).value()));
 
    estimated_mach = m_speed_limiter.LimitMachCommand(

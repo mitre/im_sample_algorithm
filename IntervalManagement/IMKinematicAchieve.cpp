@@ -14,22 +14,27 @@
 // For further information, please contact The MITRE Corporation, Contracts Management
 // Office, 7515 Colshire Drive, McLean, VA 22102-7539, (703) 983-6000.
 //
-// 2023 The MITRE Corporation. All Rights Reserved.
+// (c) 2026 The MITRE Corporation. All Rights Reserved.
 // ****************************************************************************
 
 #include "imalgs/IMKinematicAchieve.h"
 
+#include <algorithm>
 #include <iomanip>
+#include <memory>
+#include <string>
+#include <utility>
+#include <vector>
 
 #include "MiniCSV/minicsv.h"
-#include "public/Atmosphere.h"
 #include "imalgs/IMClearanceLoader.h"
-#include "public/CustomMath.h"
 #include "public/AircraftCalculations.h"
+#include "public/Atmosphere.h"
 #include "public/CoreUtils.h"
+#include "public/CustomMath.h"
 #include "public/Environment.h"
-#include "public/Wind.h"
 #include "public/ScenarioUtils.h"
+#include "public/Wind.h"
 
 using namespace interval_management::open_source;
 using namespace aaesim::open_source;
@@ -314,7 +319,7 @@ void IMKinematicAchieve::HandleTrajectoryPrediction(
          const Units::FeetLength estimated_cruise_altitude(target_adsb_history.front().m_z);
          const Units::Speed targetvtas = Units::sqrt(Units::sqr(targetgroundspeed - Vw_para) + Units::sqr(Vw_perp));
          double estimated_cruise_mach = Units::MetersPerSecondSpeed(targetvtas).value() /
-                                        sqrt(GAMMA * R.value() *
+                                        sqrt(kGamma * R.value() *
                                              m_weather_prediction.getAtmosphere()
                                                    ->GetTemperature(Units::FeetLength(targetsyncstate.m_z))
                                                    .value());
@@ -412,7 +417,6 @@ void IMKinematicAchieve::HandleTrajectoryPrediction(
 void IMKinematicAchieve::CheckPredictionAccuracy(
       const interval_management::open_source::AircraftState &owntruthstate,
       const interval_management::open_source::AircraftState &targettruthstate) {
-
    if (IsBlendWind() && !m_compute_ownship_kinematic_trajectory) {
       CalculateOwnshipDtgToPlannedTerminationPoint(owntruthstate);
 
@@ -450,7 +454,6 @@ void IMKinematicAchieve::CheckPredictionAccuracy(
       if (!m_predicted_wind_evaluator->ArePredictedWindsAccurate(  //
                 IMUtils::ConvertToAaesimAircraftState(owntruthstate), m_weather_prediction, m_ownship_reference_cas,
                 m_ownship_reference_altitude, sensed_atmosphere)) {
-
          m_wind_blender->BlendSensedWithPredicted(IMUtils::ConvertToAaesimAircraftState(owntruthstate),
                                                   m_weather_prediction);
          m_compute_ownship_kinematic_trajectory = true;
@@ -504,7 +507,6 @@ void IMKinematicAchieve::CheckPredictionAccuracy(
 
 void IMKinematicAchieve::CalculateOwnshipDtgToPlannedTerminationPoint(
       const interval_management::open_source::AircraftState &current_ownship_state) {
-
    m_ownship_distance_calculator.CalculateAlongPathDistanceFromPosition(
          current_ownship_state.GetPositionX(), current_ownship_state.GetPositionY(), m_ownship_kinematic_dtg_to_ptp);
 }
@@ -790,7 +792,6 @@ void IMKinematicAchieve::CalculateRFLegPhase(const std::vector<PrecalcWaypoint> 
 void IMKinematicAchieve::ComputeFASTrajectories(
       const interval_management::open_source::AircraftState &owntruthstate,
       const interval_management::open_source::AircraftState &targettruthstate) {
-
    using namespace std;
 
    LOG4CPLUS_TRACE(logger, "Calculating FAS trajectories on AC " << owntruthstate.GetId() << " at "
@@ -981,7 +982,6 @@ const Units::SignedAngle IMKinematicAchieve::CalculateTargetTrackAngle(
 void IMKinematicAchieve::SetTrafficReferencePointConstraints(
       const interval_management::open_source::AircraftState &owntruthstate,
       const interval_management::open_source::AircraftState &targetsyncstate) {
-
    // adjust TRP speed and altitude constraints
 
    LOG4CPLUS_TRACE(logger, "Old TRP constraints:  " << m_traffic_reference_point);

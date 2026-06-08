@@ -14,26 +14,31 @@
 // For further information, please contact The MITRE Corporation, Contracts Management
 // Office, 7515 Colshire Drive, McLean, VA 22102-7539, (703) 983-6000.
 //
-// 2023 The MITRE Corporation. All Rights Reserved.
+// (c) 2026 The MITRE Corporation. All Rights Reserved.
 // ****************************************************************************
 
 #pragma once
 
-#include "imalgs/FIMConfiguration.h"
-#include "public/Guidance.h"
-#include "public/AircraftIntent.h"
-#include "imalgs/AircraftState.h"
-#include "public/Logging.h"
-#include "public/StatisticalPilotDelay.h"
-#include "public/ThreeDOFDynamics.h"
-#include "public/TangentPlaneSequence.h"
-#include <scalar/Time.h>
-#include <scalar/Speed.h>
-#include <scalar/Length.h>
 #include <scalar/Frequency.h>
-#include "public/BadaUtils.h"
-#include "imalgs/IMClearance.h"
+#include <scalar/Length.h>
+#include <scalar/Speed.h>
+#include <scalar/Time.h>
+
+#include <memory>
+#include <string>
+#include <vector>
+
+#include "imalgs/AircraftState.h"
+#include "imalgs/FIMConfiguration.h"
 #include "imalgs/FIMSpeedLimiter.h"
+#include "imalgs/IMClearance.h"
+#include "loader/Logging.h"
+#include "public/AircraftIntent.h"
+#include "public/BadaUtils.h"
+#include "public/Guidance.h"
+#include "public/StatisticalPilotDelay.h"
+#include "public/TangentPlaneSequence.h"
+#include "public/ThreeDOFDynamics.h"
 
 namespace interval_management {
 namespace open_source {
@@ -46,15 +51,15 @@ class IMAlgorithm {
    enum FlightStage { UNSET = -1, NONE = 0, ACHIEVE = 1, MAINTAIN = 2 };
 
    struct OwnshipPredictionParameters {
-      Units::Angle maximum_allowable_bank_angle;
-      Units::Speed transition_ias;
-      double transition_mach;
-      Units::Length transition_altitude;
-      Units::Length expected_cruise_altitude;
-      aaesim::open_source::bada_utils::FlapSpeeds flap_speeds;
-      aaesim::open_source::bada_utils::FlightEnvelope flight_envelope;
-      aaesim::open_source::bada_utils::Mass mass_data;
-      aaesim::open_source::bada_utils::Aerodynamics aerodynamics;
+      Units::Angle maximum_allowable_bank_angle{};
+      Units::Speed transition_ias{};
+      double transition_mach{0};
+      Units::Length transition_altitude{};
+      Units::Length expected_cruise_altitude{};
+      aaesim::open_source::bada_utils::FlapSpeeds flap_speeds{};
+      aaesim::open_source::bada_utils::FlightEnvelope flight_envelope{};
+      aaesim::open_source::bada_utils::Mass mass_data{};
+      aaesim::open_source::bada_utils::Aerodynamics aerodynamics{};
    };
 
    IMAlgorithm();
@@ -273,7 +278,7 @@ class IMAlgorithm {
    Units::Frequency m_achieve_control_gain;
    Units::Frequency m_maintain_control_gain;
    Units::Time m_time_threshold;
-   bool m_threshold_flag;
+   bool m_threshold_flag{false};
 
   private:
    void IterClearIMAlg();

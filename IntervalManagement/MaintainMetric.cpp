@@ -14,10 +14,11 @@
 // For further information, please contact The MITRE Corporation, Contracts Management
 // Office, 7515 Colshire Drive, McLean, VA 22102-7539, (703) 983-6000.
 //
-// 2023 The MITRE Corporation. All Rights Reserved.
+// (c) 2026 The MITRE Corporation. All Rights Reserved.
 // ****************************************************************************
 
 #include "imalgs/MaintainMetric.h"
+
 #include <math.h>
 
 using namespace interval_management::open_source;
@@ -25,7 +26,6 @@ using namespace interval_management::open_source;
 MaintainMetric::MaintainMetric() = default;
 
 void MaintainMetric::AddSpacingErrorSec(double err) {
-
    // Adds data to be added for each pass through an IM::update method.
    // Also increments number of cycles if outside of threshold.
    //
@@ -41,7 +41,6 @@ void MaintainMetric::AddSpacingErrorSec(double err) {
 }
 
 void MaintainMetric::SetTimeAtAbp(double aTime) {
-
    // Sets time aircraft went by achieve by point.
    //
    // aTime:achieve by time.
@@ -50,7 +49,6 @@ void MaintainMetric::SetTimeAtAbp(double aTime) {
 }
 
 void MaintainMetric::ComputeTotalMaintainTime(double cTime) {
-
    // Computes total maintain time subtracting the achieveByTime
    // from the current time.
    //
@@ -60,7 +58,6 @@ void MaintainMetric::ComputeTotalMaintainTime(double cTime) {
 }
 
 bool MaintainMetric::TimeAtAbpRecorded() {
-
    // Boolean to determine if achieveBy set.
    //
    // return:true if achieve by has valid time.
@@ -70,7 +67,6 @@ bool MaintainMetric::TimeAtAbpRecorded() {
 }
 
 double MaintainMetric::getMeanErr() {
-
    // Gets mean spacing error.
    //
    // returns mean error.
@@ -79,7 +75,6 @@ double MaintainMetric::getMeanErr() {
 }
 
 double MaintainMetric::getStdErr() {
-
    // Gets standard deviation of spacing error.
    //
    // returns standard deviation of error.
@@ -88,7 +83,6 @@ double MaintainMetric::getStdErr() {
 }
 
 double MaintainMetric::getBound95() {
-
    // Gets 95th bound of spacing error.
    //
    // returns 95th bound of spacing error.
@@ -97,7 +91,6 @@ double MaintainMetric::getBound95() {
 }
 
 double MaintainMetric::getTotMaintain() {
-
    // Gets total maintain time.
    //
    // returns total maintain time.
@@ -106,7 +99,6 @@ double MaintainMetric::getTotMaintain() {
 }
 
 int MaintainMetric::getNumCycles() {
-
    // Gets number of cycles with spacing errors > cycle threshold
    //
    // returns number of cycles.
@@ -115,7 +107,6 @@ int MaintainMetric::getNumCycles() {
 }
 
 bool MaintainMetric::hasSamples() {
-
    // Determines whether there are any samples collected.
    //
    // returns true if there are samples

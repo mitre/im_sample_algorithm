@@ -14,12 +14,16 @@
 // For further information, please contact The MITRE Corporation, Contracts Management
 // Office, 7515 Colshire Drive, McLean, VA 22102-7539, (703) 983-6000.
 //
-// 2023 The MITRE Corporation. All Rights Reserved.
+// (c) 2026 The MITRE Corporation. All Rights Reserved.
 // ****************************************************************************
 
 #include "imalgs/MergePointMetric.h"
-#include "public/AircraftCalculations.h"
+
 #include <stdexcept>
+#include <string>
+#include <utility>
+
+#include "public/AircraftCalculations.h"
 
 using namespace std;
 using namespace interval_management::open_source;
@@ -30,7 +34,6 @@ MergePointMetric::MergePointMetric() = default;
 MergePointMetric::~MergePointMetric() = default;
 
 void MergePointMetric::determineMergePoint(const AircraftIntent &imintent, const AircraftIntent &targintent) {
-
    // Determines and sets the merge point between the IM and target aircraft.
    // The merge point is defined as the first waypoint in the route where the
    // remainder of the IM and target route match
@@ -65,7 +68,6 @@ void MergePointMetric::determineMergePoint(const AircraftIntent &imintent, const
 }
 
 void MergePointMetric::update(double imXNew, double imYNew, double targXNew, double targYNew) {
-
    // Replaces the current IM and target position if the new IM position is closer to the
    // merge point than the current IM point.  Distances are computed in nmi.
    //
@@ -92,8 +94,7 @@ void MergePointMetric::update(double imXNew, double imYNew, double targXNew, dou
    }
 }
 
-string MergePointMetric::getMergePoint() {
-
+const string &MergePointMetric::getMergePoint() {
    // Gets merge point.
    //
    // returns name of waypoint which is the merge point.
@@ -102,7 +103,6 @@ string MergePointMetric::getMergePoint() {
 }
 
 Units::Length MergePointMetric::getDist() {
-
    // Gets computed distance when IM aircraft was at merge point.
    //
    // returns distance in nmi.
@@ -111,7 +111,6 @@ Units::Length MergePointMetric::getDist() {
 }
 
 bool MergePointMetric::newPointCloser(double x, double y) {
-
    // Checks if newest IM position closer to waypoint than the stored IM position.
    //
    // x,y:new IM position in feet.
@@ -124,7 +123,6 @@ bool MergePointMetric::newPointCloser(double x, double y) {
 }
 
 bool MergePointMetric::mergePointFound() {
-
    // Determines whether merge point already found.
    //
    // returns true if merge point found.

@@ -14,23 +14,26 @@
 // For further information, please contact The MITRE Corporation, Contracts Management
 // Office, 7515 Colshire Drive, McLean, VA 22102-7539, (703) 983-6000.
 //
-// 2023 The MITRE Corporation. All Rights Reserved.
+// (c) 2026 The MITRE Corporation. All Rights Reserved.
 // ****************************************************************************
 
 #pragma once
 
-#include <vector>
-#include <string>
+#include <map>
+#include <memory>
 #include <stdexcept>
+#include <string>
+#include <vector>
+
+#include "imalgs/AchieveObserver.h"
+#include "imalgs/ClosestPointMetric.h"
+#include "imalgs/CrossTrackObserver.h"
+#include "imalgs/MaintainMetric.h"
+#include "imalgs/MergePointMetric.h"
+#include "imalgs/NMObserver.h"
 #include "public/AircraftState.h"
 #include "public/Guidance.h"
 #include "public/WeatherPrediction.h"
-#include "imalgs/NMObserver.h"
-#include "imalgs/MergePointMetric.h"
-#include "imalgs/CrossTrackObserver.h"
-#include "imalgs/AchieveObserver.h"
-#include "imalgs/MaintainMetric.h"
-#include "imalgs/ClosestPointMetric.h"
 
 namespace interval_management {
 namespace open_source {
@@ -54,8 +57,9 @@ class InternalObserver final {
    void outputClosestPointMetric();
    void addPredictedWind(int id, const aaesim::open_source::WeatherPrediction &weatherPrediction);
    std::string predWindsHeading(int lastIx);
-   std::string predWindsData(int id, int row, std::string field, const aaesim::open_source::WindStack &mat);
-   std::string predTempData(int id, std::string field, const aaesim::open_source::WeatherPrediction &weatherPrediction);
+   std::string predWindsData(int id, int row, const std::string &field, const aaesim::open_source::WindStack &mat);
+   std::string predTempData(int id, const std::string &field,
+                            const aaesim::open_source::WeatherPrediction &weatherPrediction);
    void addAchieveRcd(size_t aircraftId, double tm, double target_ttg_to_ach, double own_ttg_to_ach,
                       double curr_distance, double reference_distance);
    NMObserver &GetNMObserver(int id);

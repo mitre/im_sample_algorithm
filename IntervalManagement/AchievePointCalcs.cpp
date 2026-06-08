@@ -14,15 +14,18 @@
 // For further information, please contact The MITRE Corporation, Contracts Management
 // Office, 7515 Colshire Drive, McLean, VA 22102-7539, (703) 983-6000.
 //
-// 2023 The MITRE Corporation. All Rights Reserved.
+// (c) 2026 The MITRE Corporation. All Rights Reserved.
 // ****************************************************************************
 
 #include "imalgs/AchievePointCalcs.h"
-#include "utility/CustomUnits.h"
-#include "public/CustomMath.h"
 
-#include <string>
 #include <iomanip>
+#include <memory>
+#include <string>
+#include <vector>
+
+#include "public/CustomMath.h"
+#include "utility/CustomUnits.h"
 
 using namespace std;
 using namespace aaesim::open_source;
@@ -89,7 +92,6 @@ AchievePointCalcs::AchievePointCalcs(const string &waypoint, const AircraftInten
 }
 
 void AchievePointCalcs::Clear() {
-
    m_waypoint_name = "";
    m_waypoint_is_set = false;
 
@@ -110,7 +112,6 @@ void AchievePointCalcs::ComputeDefaultTRP(const AchievePointCalcs &ownship_calcs
                                           const vector<HorizontalPath> &target_horizontal_path,
                                           Waypoint &traffic_reference_point, Units::Length &waypoint_x,
                                           Units::Length &waypoint_y, size_t &waypoint_index_in_target_intent) {
-
    // Get ABP index from ownship
    int ix0 = ownship_intent.GetWaypointIndexByName(ownship_calcs.GetWaypointName());
    if (ix0 < 0) {
@@ -317,7 +318,7 @@ void AchievePointCalcs::ComputeDefaultTRP(const AchievePointCalcs &ownship_calcs
                throw logic_error("Failed to calculate circular arc intersection.");
             }
          }  // end if turn
-      }     // end if not first
+      }  // end if not first
       x0 = x1;
       y0 = y1;
       d0 = d1;
@@ -390,9 +391,7 @@ void AchievePointCalcs::ComputeDefaultTRP(const AchievePointCalcs &ownship_calcs
 }
 
 void AchievePointCalcs::ComputePositions(const AircraftIntent &intent) {
-
    if (this->HasWaypoint()) {
-
       int ix = intent.GetWaypointIndexByName(m_waypoint_name);
 
       if (ix > -1) {
@@ -410,7 +409,6 @@ void AchievePointCalcs::ComputePositions(const AircraftIntent &intent) {
 }
 
 void AchievePointCalcs::ComputeAlongPathDistanceFromWaypointToEnd() {
-
    if (this->HasWaypoint()) {
       Units::Length distance_from_waypoint_to_end;
       m_distance_calculator.CalculateAlongPathDistanceFromPosition(this->m_waypoint_x, this->m_waypoint_y,
@@ -422,7 +420,6 @@ void AchievePointCalcs::ComputeAlongPathDistanceFromWaypointToEnd() {
 }
 
 void AchievePointCalcs::ComputeEndValues(const VerticalPath &vertical_path) {
-
    if (this->HasWaypoint()) {
       // compute achieve by distance
       ComputeAlongPathDistanceFromWaypointToEnd();
@@ -433,7 +430,6 @@ void AchievePointCalcs::ComputeEndValues(const VerticalPath &vertical_path) {
 
          m_time_to_go_to_waypoint = Units::ZERO_TIME;
       } else {
-
          // compute time to go from achieve point to the end.
 
          // get index at achieve by distance from end of route (beginning of our search).
@@ -449,7 +445,6 @@ void AchievePointCalcs::ComputeEndValues(const VerticalPath &vertical_path) {
          // Compute the time to go from the achieve by point to the end.
 
          if (ix < firsttimeix) {
-
             // ttg:time to go at points 1 and 0.
             // dtg:distance to go at points 1 and 0.
             const double ttg0 = vertical_path.time_to_go_sec[ix];

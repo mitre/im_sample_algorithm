@@ -14,10 +14,12 @@
 // For further information, please contact The MITRE Corporation, Contracts Management
 // Office, 7515 Colshire Drive, McLean, VA 22102-7539, (703) 983-6000.
 //
-// 2023 The MITRE Corporation. All Rights Reserved.
+// (c) 2026 The MITRE Corporation. All Rights Reserved.
 // ****************************************************************************
 
 #pragma once
+
+#include <memory>
 
 #include "imalgs/FIMAlgorithmAdapter.h"
 #include "imalgs/IMDistBasedAchieve.h"
@@ -26,6 +28,7 @@
 #include "imalgs/IMTimeBasedAchieveMutableASG.h"
 #include "public/FlightDeckApplication.h"
 #include "public/PassThroughAssap.h"
+
 namespace interval_management {
 namespace open_source {
 class FIMAlgorithmInitializer final : public aaesim::open_source::FlightDeckApplicationInitializer {
@@ -48,15 +51,15 @@ class FIMAlgorithmInitializer final : public aaesim::open_source::FlightDeckAppl
       ~Builder() = default;
       const interval_management::open_source::FIMAlgorithmInitializer Build() const;
       Builder *AddOwnshipPerformanceParameters(
-            aaesim::open_source::OwnshipPerformanceParameters performance_parameters);
+            const aaesim::open_source::OwnshipPerformanceParameters &performance_parameters);
       Builder *AddOwnshipFmsPredictionParameters(
-            aaesim::open_source::OwnshipFmsPredictionParameters prediction_parameters);
+            const aaesim::open_source::OwnshipFmsPredictionParameters &prediction_parameters);
       Builder *AddSurveillanceProcessor(std::shared_ptr<const aaesim::open_source::ASSAP> processor);
 
-      aaesim::open_source::OwnshipPerformanceParameters GetPerformanceParameters() const {
+      const aaesim::open_source::OwnshipPerformanceParameters &GetPerformanceParameters() const {
          return m_performance_parameters;
       };
-      aaesim::open_source::OwnshipFmsPredictionParameters GetFmsPredictionParameters() const {
+      const aaesim::open_source::OwnshipFmsPredictionParameters &GetFmsPredictionParameters() const {
          return m_prediction_parameters;
       };
       std::shared_ptr<const aaesim::open_source::ASSAP> GetSurveillanceProcessor() const {

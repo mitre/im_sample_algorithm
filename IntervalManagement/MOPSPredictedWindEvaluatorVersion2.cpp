@@ -14,10 +14,13 @@
 // For further information, please contact The MITRE Corporation, Contracts Management
 // Office, 7515 Colshire Drive, McLean, VA 22102-7539, (703) 983-6000.
 //
-// 2023 The MITRE Corporation. All Rights Reserved.
+// (c) 2026 The MITRE Corporation. All Rights Reserved.
 // ****************************************************************************
 
 #include "imalgs/MOPSPredictedWindEvaluatorVersion2.h"
+
+#include <memory>
+
 #include "public/Environment.h"
 
 using namespace interval_management::open_source;
@@ -45,7 +48,6 @@ bool MOPSPredictedWindEvaluatorVersion2::ArePredictedWindsAccurate(
       const aaesim::open_source::AircraftState &state, const aaesim::open_source::WeatherPrediction &weather_prediction,
       const Units::Speed reference_cas, const Units::Length reference_altitude,
       const std::shared_ptr<Atmosphere> &sensed_atmosphere) const {
-
    Units::FeetLength true_altitude{state.GetAltitudeMsl()};
    Units::KnotsSpeed tas1 = weather_prediction.CAS2TAS(reference_cas, reference_altitude);
    Units::KnotsSpeed tas2 = sensed_atmosphere->CAS2TAS(reference_cas, true_altitude);

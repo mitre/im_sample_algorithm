@@ -14,17 +14,20 @@
 // For further information, please contact The MITRE Corporation, Contracts Management
 // Office, 7515 Colshire Drive, McLean, VA 22102-7539, (703) 983-6000.
 //
-// 2023 The MITRE Corporation. All Rights Reserved.
+// (c) 2026 The MITRE Corporation. All Rights Reserved.
 // ****************************************************************************
 
 #include "imalgs/FIMAlgorithmAdapter.h"
 
-#include <nlohmann/json.hpp>
+#include <memory>
+#include <string>
+#include <vector>
 
-#include "imalgs/IMUtils.h"
 #include "imalgs/FIMAlgorithmInitializer.h"
-#include "public/SingleTangentPlaneSequence.h"
+#include "imalgs/IMUtils.h"
+#include "nlohmann/json.hpp"
 #include "public/CoreUtils.h"
+#include "public/SingleTangentPlaneSequence.h"
 
 using namespace interval_management::open_source;
 using json = nlohmann::json;
@@ -65,7 +68,6 @@ aaesim::open_source::Guidance interval_management::open_source::FIMAlgorithmAdap
       const aaesim::open_source::SimulationTime &simtime, const aaesim::open_source::Guidance &current_guidance,
       const aaesim::open_source::DynamicsState &dynamics_state,
       const aaesim::open_source::AircraftState &own_truth_state) {
-
    aaesim::open_source::Guidance im_algorithm_guidance = current_guidance;
    im_algorithm_guidance.SetValid(false);
    if (current_guidance.m_active_guidance_phase != aaesim::open_source::GuidanceFlightPhase::CRUISE_DESCENT)

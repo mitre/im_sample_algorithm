@@ -14,10 +14,13 @@
 // For further information, please contact The MITRE Corporation, Contracts Management
 // Office, 7515 Colshire Drive, McLean, VA 22102-7539, (703) 983-6000.
 //
-// 2023 The MITRE Corporation. All Rights Reserved.
+// (c) 2026 The MITRE Corporation. All Rights Reserved.
 // ****************************************************************************
 
 #include "imalgs/FIMAlgorithmDataWriter.h"
+
+#include <memory>
+#include <string>
 
 #include "imalgs/FIMAlgorithmAdapter.h"
 #include "imalgs/IMKinematicAchieve.h"
@@ -129,9 +132,8 @@ void interval_management::open_source::FIMAlgorithmDataWriter::Finish() {
 }
 
 void interval_management::open_source::FIMAlgorithmDataWriter::Gather(
-      const int iteration_number, const aaesim::open_source::SimulationTime &time, std::string aircraft_id,
+      const int iteration_number, const aaesim::open_source::SimulationTime &time, const std::string &aircraft_id,
       std::shared_ptr<const aaesim::open_source::FlightDeckApplication> application) {
-
    const bool is_fim_application =
          CoreUtils::InstanceOf<interval_management::open_source::FIMAlgorithmAdapter>(application.get());
    if (!is_fim_application) {

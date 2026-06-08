@@ -14,15 +14,18 @@
 // For further information, please contact The MITRE Corporation, Contracts Management
 // Office, 7515 Colshire Drive, McLean, VA 22102-7539, (703) 983-6000.
 //
-// 2023 The MITRE Corporation. All Rights Reserved.
+// (c) 2026 The MITRE Corporation. All Rights Reserved.
 // ****************************************************************************
 
 #include "imalgs/IMTimeBasedAchieve.h"
 
+#include <memory>
 #include <stdexcept>
+#include <string>
+#include <vector>
 
-#include "public/CustomMath.h"
 #include "public/CoreUtils.h"
+#include "public/CustomMath.h"
 
 using namespace std;
 using namespace aaesim::open_source;
@@ -246,7 +249,7 @@ aaesim::open_source::Guidance IMTimeBasedAchieve::HandleAchieveStage(
 
       m_previous_reference_im_speed_command_mach =
             Units::MetersPerSecondSpeed(m_previous_reference_im_speed_command_tas).value() /
-            sqrt(GAMMA * R.value() *
+            sqrt(kGamma * R.value() *
                  m_weather_prediction.getAtmosphere()
                        ->GetTemperature(Units::MetersLength(
                              m_ownship_kinematic_trajectory_predictor.GetVerticalPathAltitudes().back()))
@@ -527,10 +530,8 @@ aaesim::open_source::Guidance IMTimeBasedAchieve::HandleMaintainStage(
 const Units::Time IMTimeBasedAchieve::CalculateMeasuredSpacingInterval(
       const interval_management::open_source::AircraftState &current_ownship_state,
       const interval_management::open_source::AircraftState &current_target_state) {
-
    if (m_target_kinematic_traffic_reference_point_calcs.IsWaypointSet() &&
        GetTargetKinematicDtgToTrp() > Units::zero()) {
-
       // special calculation if target has not passed TRP
       Units::Length target_dtg_trp =
             m_target_kinematic_traffic_reference_point_calcs.ComputeDistanceToWaypoint(current_target_state);
@@ -594,7 +595,7 @@ void IMTimeBasedAchieve::CalculateMach(const Units::Time reference_ttg, const Un
 
    double unbounded_estimated_mach =
          Units::MetersPerSecondSpeed(temptrue).value() /
-         sqrt(GAMMA * R.value() *
+         sqrt(kGamma * R.value() *
               m_weather_prediction.getAtmosphere()->GetTemperature(current_ownship_altitude).value());
 
    BoundedValue<double, 0, 2> estimated_mach(0);
@@ -608,7 +609,7 @@ void IMTimeBasedAchieve::CalculateMach(const Units::Time reference_ttg, const Un
    Units::Speed nominal_tas = m_weather_prediction.getAtmosphere()->CAS2TAS(nominal_ias, current_ownship_altitude);
    BoundedValue<double, 0, 2> nominal_mach(
          Units::MetersPerSecondSpeed(nominal_tas).value() /
-         sqrt(GAMMA * R.value() *
+         sqrt(kGamma * R.value() *
               m_weather_prediction.getAtmosphere()->GetTemperature(current_ownship_altitude).value()));
 
    estimated_mach = m_speed_limiter.LimitMachCommand(
@@ -680,7 +681,7 @@ void IMTimeBasedAchieve::RecordInternalObserverMetrics(
 void IMTimeBasedAchieve::DumpParameters(const string &parameters_to_print) {
    LOG4CPLUS_DEBUG(IMTimeBasedAchieve::m_logger,
                    "--------------------------------------------------------------------" << endl);
-   LOG4CPLUS_DEBUG(IMTimeBasedAchieve::m_logger, parameters_to_print.c_str() << endl << endl);
+   LOG4CPLUS_DEBUG(IMTimeBasedAchieve::m_logger, parameters_to_print << endl << endl);
 
    IMKinematicAchieve::DumpParameters(parameters_to_print);
 

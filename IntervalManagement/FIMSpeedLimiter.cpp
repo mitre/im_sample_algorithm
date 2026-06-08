@@ -14,12 +14,15 @@
 // For further information, please contact The MITRE Corporation, Contracts Management
 // Office, 7515 Colshire Drive, McLean, VA 22102-7539, (703) 983-6000.
 //
-// 2023 The MITRE Corporation. All Rights Reserved.
+// (c) 2026 The MITRE Corporation. All Rights Reserved.
 // ****************************************************************************
 
 #include "imalgs/FIMSpeedLimiter.h"
-#include "public/CustomMath.h"
+
+#include <algorithm>
+
 #include "imalgs/IMUtils.h"
+#include "public/CustomMath.h"
 
 using namespace interval_management::open_source;
 
@@ -31,16 +34,19 @@ FIMSpeedLimiter::FIMSpeedLimiter(bool use_speed_quantization, bool use_speed_lim
                                  aaesim::open_source::bada_utils::FlapSpeeds flap_speeds,
                                  aaesim::open_source::bada_utils::FlightEnvelope flight_envelope,
                                  aaesim::open_source::bada_utils::Mass mass_data,
-                                 aaesim::open_source::bada_utils::Aerodynamics aerodynamics,
+                                 const aaesim::open_source::bada_utils::Aerodynamics &aerodynamics,
                                  const FIMSpeedQuantizer &speed_quantizer)
-   : m_rf_leg_limits(), m_active_filter_flag(0L), m_low_speed_coef(0), m_high_speed_coef(0) {
-   m_limit_flag = use_speed_limiting;
-   m_quantize_flag = use_speed_quantization;
-   m_fim_quantizer = speed_quantizer;
-   m_flap_speeds = flap_speeds;
-   m_aircraft_flight_envelope = flight_envelope;
-   m_aerodynamics = aerodynamics;
-   m_mass_data = mass_data;
+   : m_rf_leg_limits(),
+     m_active_filter_flag(0L),
+     m_limit_flag(use_speed_limiting),
+     m_quantize_flag(use_speed_quantization),
+     m_low_speed_coef(0),
+     m_high_speed_coef(0),
+     m_fim_quantizer(speed_quantizer),
+     m_flap_speeds(flap_speeds),
+     m_aircraft_flight_envelope(flight_envelope),
+     m_mass_data(mass_data),
+     m_aerodynamics(aerodynamics) {
    SetMaxSpeedDeviationPercentage(DEFAULT_SPEED_DEVIATION_PERCENTAGE);
 }
 
@@ -58,7 +64,6 @@ Units::Speed FIMSpeedLimiter::LimitSpeedCommand(
       const Units::Speed nominal_reference_speed, const Units::Length distance_to_go_to_abp,
       const Units::Length distance_to_end_of_route, const Units::Length ownship_altitude,
       const aaesim::open_source::bada_utils::FlapConfiguration flap_configuration) {
-
    Units::Speed limitedspeed = current_ias_speed_command;
    Units::Speed llim = Units::ZERO_SPEED;
    Units::Speed hlim = Units::ZERO_SPEED;
@@ -180,7 +185,6 @@ BoundedValue<double, 0, 2> FIMSpeedLimiter::LimitMachCommand(
       const BoundedValue<double, 0, 2> &current_mach_command, const BoundedValue<double, 0, 2> &nominal_mach,
       const Units::Mass &current_mass, const Units::Length &current_ownship_altitude,
       const aaesim::open_source::WeatherPrediction &weather_prediction) {
-
    BoundedValue<double, 0, 2> limited_mach = current_mach_command;
    BoundedValue<double, 0, 2> maximum_mach(m_aircraft_flight_envelope.M_mo);
    m_active_filter_flag = 0L;
@@ -195,7 +199,7 @@ BoundedValue<double, 0, 2> FIMSpeedLimiter::LimitMachCommand(
    const Units::Speed tasmin = weather_prediction.getAtmosphere()->CAS2TAS(casmin, current_ownship_altitude);
    const BoundedValue<double, 0, 2> minimum_mach = BoundedValue<double, 0, 2>(
          Units::MetersPerSecondSpeed(tasmin).value() /
-         sqrt(GAMMA * R.value() *
+         sqrt(kGamma * R.value() *
               weather_prediction.getAtmosphere()->GetTemperature(current_ownship_altitude).value()));
 
    double mach(nominal_mach);

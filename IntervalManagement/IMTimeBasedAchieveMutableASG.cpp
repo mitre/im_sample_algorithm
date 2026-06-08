@@ -14,14 +14,18 @@
 // For further information, please contact The MITRE Corporation, Contracts Management
 // Office, 7515 Colshire Drive, McLean, VA 22102-7539, (703) 983-6000.
 //
-// 2023 The MITRE Corporation. All Rights Reserved.
+// (c) 2026 The MITRE Corporation. All Rights Reserved.
 // ****************************************************************************
 
-#include <stdexcept>
 #include <imalgs/IMTimeBasedAchieveMutableASG.h>
 
-#include "public/CustomMath.h"
+#include <memory>
+#include <stdexcept>
+#include <string>
+#include <vector>
+
 #include "public/CoreUtils.h"
+#include "public/CustomMath.h"
 #include "public/SimulationTime.h"
 
 using namespace std;
@@ -118,7 +122,7 @@ aaesim::open_source::Guidance IMTimeBasedAchieveMutableASG::Update(
 void IMTimeBasedAchieveMutableASG::DumpParameters(const string &parameters_to_print) {
    LOG4CPLUS_DEBUG(IMTimeBasedAchieveMutableASG::logger,
                    "--------------------------------------------------------------------" << endl);
-   LOG4CPLUS_DEBUG(IMTimeBasedAchieveMutableASG::logger, parameters_to_print.c_str() << endl << endl);
+   LOG4CPLUS_DEBUG(IMTimeBasedAchieveMutableASG::logger, parameters_to_print << endl << endl);
    LOG4CPLUS_DEBUG(logger, "dtg_trigger_nm = " << m_dtg_trigger);
    LOG4CPLUS_DEBUG(logger, "new_asg_sec = " << m_next_assigned_spacing_goal);
    LOG4CPLUS_DEBUG(logger, "asg_change_duration_sec = " << m_asg_change_duration);

@@ -14,10 +14,12 @@
 // For further information, please contact The MITRE Corporation, Contracts Management
 // Office, 7515 Colshire Drive, McLean, VA 22102-7539, (703) 983-6000.
 //
-// 2023 The MITRE Corporation. All Rights Reserved.
+// (c) 2026 The MITRE Corporation. All Rights Reserved.
 // ****************************************************************************
 
 #include "imalgs/TrueDistances.h"
+
+#include <cstddef>
 
 using namespace interval_management::open_source;
 
@@ -56,13 +58,14 @@ const Units::Length TrueDistances::ComputeTrueDtgToPtpAtTime(const Units::Time &
 
    // Find time in vector.
 
-   int ix = -1;
+   const auto not_found = m_times.size();
+   auto ix = not_found;
 
    if (!m_times.empty()) {
       if ((time_in > m_times.back()) && Units::abs(time_in - m_times.back()) < END_OF_ROUTE_CROSSING_TIME_TOLERANCE) {
-         ix = static_cast<int>(m_times.size() - 1);
+         ix = m_times.size() - 1;
       } else {
-         for (int i = 1; (i < m_times.size()) && (ix == -1); ++i) {
+         for (std::size_t i = 1; (i < m_times.size()) && (ix == not_found); ++i) {
             if ((time_in >= m_times[i - 1]) && (time_in <= m_times[i])) {
                ix = i;
             }
@@ -70,11 +73,11 @@ const Units::Length TrueDistances::ComputeTrueDtgToPtpAtTime(const Units::Time &
       }
    }
 
-   if (ix < 0) return Units::NegInfinity();
+   if (ix == not_found) return Units::NegInfinity();
    if (ix >= 1 && time_in == m_times[ix - 1]) {
       return m_true_distances[ix - 1];
    }
-   if (ix >= 0 && time_in == m_times[ix]) {
+   if (time_in == m_times[ix]) {
       return m_true_distances[ix];
    }
    if (ix == 0) return Units::NegInfinity();

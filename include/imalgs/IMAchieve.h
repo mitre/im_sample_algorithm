@@ -14,20 +14,24 @@
 // For further information, please contact The MITRE Corporation, Contracts Management
 // Office, 7515 Colshire Drive, McLean, VA 22102-7539, (703) 983-6000.
 //
-// 2023 The MITRE Corporation. All Rights Reserved.
+// (c) 2026 The MITRE Corporation. All Rights Reserved.
 // ****************************************************************************
 
 #pragma once
 
-#include "imalgs/IMAlgorithm.h"
 #include <scalar/Frequency.h>
+
+#include <memory>
+#include <string>
+#include <vector>
+
+#include "imalgs/IMAlgorithm.h"
 #include "public/PredictedWindEvaluator.h"
 
 namespace interval_management {
 namespace open_source {
 
 class IMAchieve : public IMAlgorithm {
-
   public:
    static const Units::Angle TOLERANCE_ANGLE;
 
@@ -57,8 +61,6 @@ class IMAchieve : public IMAlgorithm {
 
    virtual const bool InAchieveStage() const;
 
-   const Units::Length GetTargetKinematicDtgToTrp() const;
-
    const bool IsWithinErrorThreshold() const;
 
    void SetBlendWind(bool wind_blending_enabled) override;
@@ -87,10 +89,10 @@ class IMAchieve : public IMAlgorithm {
 
    static const std::shared_ptr<aaesim::open_source::PredictedWindEvaluator> m_predicted_wind_evaluator;
 
-   bool m_transitioned_to_maintain;
-   bool m_within_error_threshold;
-   bool m_received_one_valid_target_state;
-   std::string m_achieve_by_point;
+   bool m_transitioned_to_maintain{false};
+   bool m_within_error_threshold{false};
+   bool m_received_one_valid_target_state{false};
+   std::string m_achieve_by_point{};
 
   private:
    void IterClearIMAch();
@@ -105,8 +107,6 @@ inline const bool IMAchieve::IsTargetPassedTrp() const { return m_target_kinemat
 inline const bool IMAchieve::IsTargetPassedLastWaypoint() const {
    return m_target_kinematic_dtg_to_last_waypoint <= Units::zero();
 }
-
-inline const Units::Length IMAchieve::GetTargetKinematicDtgToTrp() const { return m_target_kinematic_dtg_to_trp; }
 
 inline const bool IMAchieve::IsWithinErrorThreshold() const { return m_within_error_threshold; }
 
