@@ -14,12 +14,15 @@
 // For further information, please contact The MITRE Corporation, Contracts Management
 // Office, 7515 Colshire Drive, McLean, VA 22102-7539, (703) 983-6000.
 //
-// 2023 The MITRE Corporation. All Rights Reserved.
+// (c) 2026 The MITRE Corporation. All Rights Reserved.
 // ****************************************************************************
 
 #include "imalgs/IMClearance.h"
 
+#include <cstdio>
 #include <stdexcept>
+#include <string>
+#include <utility>
 
 #include "imalgs/IMClearanceLoader.h"
 #include "imalgs/IMUtils.h"

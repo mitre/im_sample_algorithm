@@ -14,7 +14,7 @@
 // For further information, please contact The MITRE Corporation, Contracts Management
 // Office, 7515 Colshire Drive, McLean, VA 22102-7539, (703) 983-6000.
 //
-// 2023 The MITRE Corporation. All Rights Reserved.
+// (c) 2026 The MITRE Corporation. All Rights Reserved.
 // ****************************************************************************
 
 #pragma once
@@ -25,14 +25,15 @@
 #include <scalar/Temperature.h>
 #include <scalar/Time.h>
 
+#include <memory>
 #include <string>
 #include <vector>
 
 #include "imalgs/AircraftState.h"
 #include "imalgs/IMAlgorithm.h"
+#include "loader/Logging.h"
 #include "public/FlightDeckApplication.h"
 #include "public/Guidance.h"
-#include "public/Logging.h"
 #include "public/OutputHandler.h"
 #include "public/SimulationTime.h"
 
@@ -45,7 +46,8 @@ class FIMAlgorithmDataWriter final : public OutputHandler {
 
    virtual void Finish();
 
-   void Gather(const int iteration_number, const aaesim::open_source::SimulationTime &time, std::string aircraft_id,
+   void Gather(const int iteration_number, const aaesim::open_source::SimulationTime &time,
+               const std::string &aircraft_id,
                std::shared_ptr<const aaesim::open_source::FlightDeckApplication> application);
 
   private:

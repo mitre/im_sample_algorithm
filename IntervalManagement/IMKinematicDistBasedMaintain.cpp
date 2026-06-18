@@ -14,14 +14,18 @@
 // For further information, please contact The MITRE Corporation, Contracts Management
 // Office, 7515 Colshire Drive, McLean, VA 22102-7539, (703) 983-6000.
 //
-// 2023 The MITRE Corporation. All Rights Reserved.
+// (c) 2026 The MITRE Corporation. All Rights Reserved.
 // ****************************************************************************
 
 #include "imalgs/IMKinematicDistBasedMaintain.h"
 
-#include "public/CustomMath.h"
-#include "public/CoreUtils.h"
+#include <algorithm>
+#include <string>
+#include <vector>
+
 #include "imalgs/InternalObserver.h"
+#include "public/CoreUtils.h"
+#include "public/CustomMath.h"
 
 using namespace interval_management::open_source;
 
@@ -51,7 +55,6 @@ aaesim::open_source::Guidance IMKinematicDistBasedMaintain::Update(
       const interval_management::open_source::AchievePointCalcs &ownship_achieve_point_calcs,
       const interval_management::open_source::AchievePointCalcs &traffic_reference_point_calcs,
       aaesim::open_source::StatisticalPilotDelay &pilot_delay) {
-
    /*
     * Developer's note: In this level of the algorithm, all uses of the /target state/
     * must be projected onto ownship's route prior to use. This includes all items
@@ -81,7 +84,7 @@ aaesim::open_source::Guidance IMKinematicDistBasedMaintain::Update(
                Units::MetersPerSecondSpeed(ownship_kinematic_trajectory_predictor.GetVerticalPathVelocities().back());
          m_previous_reference_im_speed_command_mach =
                Units::MetersPerSecondSpeed(m_previous_reference_im_speed_command_tas).value() /
-               sqrt(GAMMA * R.value() *
+               sqrt(kGamma * R.value() *
                     m_weather_prediction.getAtmosphere()
                           ->GetTemperature(Units::MetersLength(
                                 ownship_kinematic_trajectory_predictor.GetVerticalPathAltitudes().back()))
@@ -185,7 +188,6 @@ void IMKinematicDistBasedMaintain::CalculateMach(
       const Units::Speed true_airspeed_command,
       const aaesim::open_source::KinematicTrajectoryPredictor &ownship_kinematic_trajectory_predictor,
       aaesim::open_source::StatisticalPilotDelay &pilot_delay, const Units::Mass current_mass) {
-
    Units::Speed nominal_profile_ias = Units::MetersPerSecondSpeed(
          ownship_kinematic_trajectory_predictor.GetVerticalPathVelocityByIndex(m_ownship_reference_lookup_index));
    Units::Speed nominal_profile_tas =
@@ -193,12 +195,12 @@ void IMKinematicDistBasedMaintain::CalculateMach(
 
    BoundedValue<double, 0, 2> nominal_mach(
          Units::MetersPerSecondSpeed(nominal_profile_tas).value() /
-         sqrt(GAMMA * R.value() *
+         sqrt(kGamma * R.value() *
               m_weather_prediction.getAtmosphere()->GetTemperature(current_ownship_altitude).value()));
 
    BoundedValue<double, 0, 2> temp_mach(
          Units::MetersPerSecondSpeed(true_airspeed_command).value() /
-         sqrt(GAMMA * R.value() *
+         sqrt(kGamma * R.value() *
               m_weather_prediction.getAtmosphere()->GetTemperature(current_ownship_altitude).value()));
 
    if (target_kinematic_dtg_to_end_of_route > Units::zero()) {
@@ -234,7 +236,6 @@ void IMKinematicDistBasedMaintain::RecordInternalObserverData(
       const Units::Length target_true_dtg, const Units::Length ownship_true_dtg,
       const std::vector<interval_management::open_source::AircraftState> &target_aircraft_state_history,
       const aaesim::open_source::KinematicTrajectoryPredictor &ownship_kinematic_trajectory_predictor) {
-
    InternalObserver::getInstance()->updateFinalGS(
          target_aircraft_state.GetId(),
          Units::MetersPerSecondSpeed(target_aircraft_state_history.back().GetGroundSpeed()).value());

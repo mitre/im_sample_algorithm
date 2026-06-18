@@ -14,33 +14,36 @@
 // For further information, please contact The MITRE Corporation, Contracts Management
 // Office, 7515 Colshire Drive, McLean, VA 22102-7539, (703) 983-6000.
 //
-// 2023 The MITRE Corporation. All Rights Reserved.
+// (c) 2026 The MITRE Corporation. All Rights Reserved.
 // ****************************************************************************
 
 #include "imalgs/AchieveObserver.h"
 
 #include <cstdio>
+#include <string>
 
 using namespace std;
 using namespace interval_management::open_source;
 
-AchieveObserver::AchieveObserver() : m_iteration(-1), m_id(-1) {
-   m_time = Units::SecondsTime(-99999.0);
-   m_targ_ttg_to_ach = Units::SecondsTime(-99999.0);
-   m_own_ttg_to_ach = Units::SecondsTime(-99999.0);
-   m_curr_dist = Units::MetersLength(-99999.0);
-   m_ref_dist = Units::MetersLength(-99999.0);
-}
+AchieveObserver::AchieveObserver()
+   : m_iteration(-1),
+     m_id(-1),
+     m_time(Units::SecondsTime(-99999.0)),
+     m_targ_ttg_to_ach(Units::SecondsTime(-99999.0)),
+     m_own_ttg_to_ach(Units::SecondsTime(-99999.0)),
+     m_curr_dist(Units::MetersLength(-99999.0)),
+     m_ref_dist(Units::MetersLength(-99999.0)) {}
 
 AchieveObserver::AchieveObserver(const int iter, const int aircraft_id, const double tm, const double target_ttg_to_ach,
                                  const double own_ttg_to_ach, const double curr_distance,
                                  const double reference_distance)
-   : m_iteration(iter), m_id(aircraft_id), m_time(tm) {
-   m_targ_ttg_to_ach = Units::SecondsTime(target_ttg_to_ach);
-   m_own_ttg_to_ach = Units::SecondsTime(own_ttg_to_ach);
-   m_curr_dist = Units::MetersLength(curr_distance);
-   m_ref_dist = Units::MetersLength(reference_distance);
-}
+   : m_iteration(iter),
+     m_id(aircraft_id),
+     m_time(tm),
+     m_targ_ttg_to_ach(Units::SecondsTime(target_ttg_to_ach)),
+     m_own_ttg_to_ach(Units::SecondsTime(own_ttg_to_ach)),
+     m_curr_dist(Units::MetersLength(curr_distance)),
+     m_ref_dist(Units::MetersLength(reference_distance)) {}
 
 AchieveObserver::~AchieveObserver() {
    // Destructor.
@@ -59,15 +62,13 @@ string AchieveObserver::ToString() {
 
    string str;
 
-   char *txt = new char[301];
+   char txt[301];
 
-   snprintf(txt, 301, "%d,%d,%lf,%lf,%lf,%lf,%lf", m_iteration, m_id, Units::SecondsTime(m_time).value(),
+   snprintf(txt, sizeof(txt), "%d,%d,%lf,%lf,%lf,%lf,%lf", m_iteration, m_id, Units::SecondsTime(m_time).value(),
             Units::SecondsTime(m_targ_ttg_to_ach).value(), Units::SecondsTime(m_own_ttg_to_ach).value(),
             Units::MetersLength(m_curr_dist).value(), Units::MetersLength(m_ref_dist).value());
 
    str = txt;
-
-   delete[] txt;
 
    return str;
 }

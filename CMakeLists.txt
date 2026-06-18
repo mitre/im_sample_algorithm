@@ -1,5 +1,5 @@
-cmake_minimum_required(VERSION 3.26...4.1.2)
-project(im_sample_algorithm VERSION 5.2.0.0) # the nano value is a boolean. 1 == SNAPSHOT, 0 == release
+cmake_minimum_required(VERSION 3.26...4.2)
+project(im_sample_algorithm VERSION 5.3.0.0) # the nano value is a boolean. 1 == SNAPSHOT, 0 == release
 
 set (CMAKE_CXX_STANDARD 20)
 
@@ -32,18 +32,11 @@ set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -Wall -Wno-unused-functi
 CPMAddPackage(
     NAME fmacm
     GITHUB_REPOSITORY mitre/FMACM
-    GIT_TAG v5.2.0
+    GIT_TAG v5.3.0
     OPTIONS
      "BUILD_SHARED_LIBS FALSE"
      "BUILD_TESTING ${BUILD_TESTING}"
 )
-
-# CPMAddPackage(
-#     NAME unitslib
-#     GIT_REPOSITORY https://mustache.mitre.org/scm/aaes/cpp-uom.git # FIXME use external repo when available
-#     GIT_TAG 07445f7ec0f98b55cdd6e6188083145a293415a7
-#     DOWNLOAD_ONLY TRUE
-# )
 
 CPMAddPackage(
     NAME log4cplus

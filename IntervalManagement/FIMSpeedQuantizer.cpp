@@ -14,13 +14,14 @@
 // For further information, please contact The MITRE Corporation, Contracts Management
 // Office, 7515 Colshire Drive, McLean, VA 22102-7539, (703) 983-6000.
 //
-// 2023 The MITRE Corporation. All Rights Reserved.
+// (c) 2026 The MITRE Corporation. All Rights Reserved.
 // ****************************************************************************
 
 #include "imalgs/FIMSpeedQuantizer.h"
-#include "utility/CustomUnits.h"
-#include "public/CustomMath.h"
+
 #include "imalgs/IMUtils.h"
+#include "public/CustomMath.h"
+#include "utility/CustomUnits.h"
 
 using namespace interval_management::open_source;
 
@@ -34,18 +35,17 @@ FIMSpeedQuantizer::FIMSpeedQuantizer()
      m_first_to_middle_quantize_transition_distance(IMUtils::DIST_QUANTIZE_2_DEFAULT),
      m_speed_quantize_final_phase(IMUtils::SPEED_QUANTIZE_1_DEFAULT_1_KNOT),
      m_speed_quantize_middle_phase(IMUtils::SPEED_QUANTIZE_2_DEFAULT),
-     m_speed_quantize_first_phase(IMUtils::SPEED_QUANTIZE_3_DEFAULT){};
+     m_speed_quantize_first_phase(IMUtils::SPEED_QUANTIZE_3_DEFAULT) {};
 
 FIMSpeedQuantizer::FIMSpeedQuantizer(Units::Length middle_to_final_quantize_transition_distance,
                                      Units::Length first_to_middle_quantize_transition_distance,
                                      Units::Speed speed_quantize_final_phase, Units::Speed speed_quantize_middle_phase,
-                                     Units::Speed speed_quantize_first_phase) {
-   m_middle_to_final_quantize_transition_distance = middle_to_final_quantize_transition_distance;
-   m_first_to_middle_quantize_transition_distance = first_to_middle_quantize_transition_distance;
-   m_speed_quantize_final_phase = speed_quantize_final_phase;
-   m_speed_quantize_middle_phase = speed_quantize_middle_phase;
-   m_speed_quantize_first_phase = speed_quantize_first_phase;
-}
+                                     Units::Speed speed_quantize_first_phase)
+   : m_middle_to_final_quantize_transition_distance(middle_to_final_quantize_transition_distance),
+     m_first_to_middle_quantize_transition_distance(first_to_middle_quantize_transition_distance),
+     m_speed_quantize_final_phase(speed_quantize_final_phase),
+     m_speed_quantize_middle_phase(speed_quantize_middle_phase),
+     m_speed_quantize_first_phase(speed_quantize_first_phase) {}
 
 Units::Speed FIMSpeedQuantizer::QuantizeForDistanceToGo(const Units::Length dtg_to_abp_in,
                                                         const Units::Speed computed_ias_command,

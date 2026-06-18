@@ -14,12 +14,16 @@
 // For further information, please contact The MITRE Corporation, Contracts Management
 // Office, 7515 Colshire Drive, McLean, VA 22102-7539, (703) 983-6000.
 //
-// 2023 The MITRE Corporation. All Rights Reserved.
+// (c) 2026 The MITRE Corporation. All Rights Reserved.
 // ****************************************************************************
 
 #include "imalgs/IMClearanceLoader.h"
-#include "utility/CustomUnits.h"
+
+#include <map>
+#include <string>
+
 #include "loader/LoadError.h"
+#include "utility/CustomUnits.h"
 
 using namespace interval_management;
 using namespace interval_management::open_source;
@@ -53,7 +57,6 @@ IMClearanceLoader::IMClearanceLoader(void) {
 IMClearanceLoader::~IMClearanceLoader(void) {}
 
 bool IMClearanceLoader::load(DecodedStream *strm) {
-
    // Loads clearance data from input file and returns status.
    //
    // strm:input data stream.
@@ -115,7 +118,6 @@ bool IMClearanceLoader::load(DecodedStream *strm) {
 }
 
 const IMClearance IMClearanceLoader::BuildClearance(void) {
-
    // Builds clearance object.
    if (!m_loaded) return m_empty_clearance;
 

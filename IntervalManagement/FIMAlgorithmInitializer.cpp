@@ -14,10 +14,12 @@
 // For further information, please contact The MITRE Corporation, Contracts Management
 // Office, 7515 Colshire Drive, McLean, VA 22102-7539, (703) 983-6000.
 //
-// 2023 The MITRE Corporation. All Rights Reserved.
+// (c) 2026 The MITRE Corporation. All Rights Reserved.
 // ****************************************************************************
 
 #include "imalgs/FIMAlgorithmInitializer.h"
+
+#include <memory>
 
 using namespace interval_management::open_source;
 
@@ -94,14 +96,14 @@ const interval_management::open_source::FIMAlgorithmInitializer
 
 interval_management::open_source::FIMAlgorithmInitializer::Builder *
       interval_management::open_source::FIMAlgorithmInitializer::Builder::AddOwnshipPerformanceParameters(
-            aaesim::open_source::OwnshipPerformanceParameters performance_parameters) {
+            const aaesim::open_source::OwnshipPerformanceParameters &performance_parameters) {
    m_performance_parameters = performance_parameters;
    return this;
 }
 
 interval_management::open_source::FIMAlgorithmInitializer::Builder *
       interval_management::open_source::FIMAlgorithmInitializer::Builder::AddOwnshipFmsPredictionParameters(
-            aaesim::open_source::OwnshipFmsPredictionParameters prediction_parameters) {
+            const aaesim::open_source::OwnshipFmsPredictionParameters &prediction_parameters) {
    m_prediction_parameters = prediction_parameters;
    return this;
 }

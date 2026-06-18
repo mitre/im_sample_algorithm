@@ -14,12 +14,17 @@
 // For further information, please contact The MITRE Corporation, Contracts Management
 // Office, 7515 Colshire Drive, McLean, VA 22102-7539, (703) 983-6000.
 //
-// 2023 The MITRE Corporation. All Rights Reserved.
+// (c) 2026 The MITRE Corporation. All Rights Reserved.
 // ****************************************************************************
 
 #include "imalgs/InternalObserver.h"
 
+#include <cstdio>
 #include <iomanip>
+#include <memory>
+#include <string>
+#include <utility>
+#include <vector>
 
 #include "public/StereographicProjection.h"
 
@@ -80,12 +85,11 @@ void InternalObserver::process_NM_aircraft() {
          NMObserver &nm_observer = ix->second.m_nm_observer;
 
          if (!nm_observer.entry_list.empty()) {
-            char *temp = new char[10];
+            char temp[10];
 
-            snprintf(temp, 10, "%d", ix->first);
+            snprintf(temp, sizeof(temp), "%d", ix->first);
 
             string output_file_name = scenario_name + "_aircraft_" + temp + "_nm_output.csv";
-            delete[] temp;
 
             ofstream out;
 
@@ -150,13 +154,11 @@ void InternalObserver::process_NM_stats() {
          NMObserver &nm_observer = ix->second.m_nm_observer;
 
          if (nm_observer.predictedDistance.size() > 0) {
-            char *temp = new char[10];
+            char temp[10];
 
-            snprintf(temp, 10, "%d", ix->first);
+            snprintf(temp, sizeof(temp), "%d", ix->first);
 
             string output_file_name = scenario_name + "_aircraft_" + temp + "_stats_nm_output.csv";
-
-            delete[] temp;
 
             ofstream out;
 
@@ -419,12 +421,14 @@ string InternalObserver::predWindsHeading(int numVals) {
    return hdr;
 }
 
-string InternalObserver::predWindsData(int id, int col, string field, const aaesim::open_source::WindStack &mat) {
+string InternalObserver::predWindsData(int id, int col, const string &field,
+                                       const aaesim::open_source::WindStack &mat) {
    string str;
 
-   char *txt = new char[31];
+   auto buffer_size = 31;
+   char *txt = new char[buffer_size];
 
-   snprintf(txt, 301, "%d", id);
+   snprintf(txt, buffer_size, "%d", id);
    str = txt;
    str += ",";
    str += field.c_str();
@@ -432,10 +436,10 @@ string InternalObserver::predWindsData(int id, int col, string field, const aaes
    for (int i = 1; i <= mat.GetMaxRow(); i++) {
       switch (col) {
          case 1:
-            snprintf(txt, 301, ",%lf", mat.GetAltitude(i).value());
+            snprintf(txt, buffer_size, ",%lf", mat.GetAltitude(i).value());
             break;
          case 2:
-            snprintf(txt, 301, ",%lf", mat.GetSpeed(i).value());
+            snprintf(txt, buffer_size, ",%lf", mat.GetSpeed(i).value());
       }
       str += txt;
    }
@@ -445,13 +449,13 @@ string InternalObserver::predWindsData(int id, int col, string field, const aaes
    return str;
 }
 
-string InternalObserver::predTempData(int id, string field,
+string InternalObserver::predTempData(int id, const string &field,
                                       const aaesim::open_source::WeatherPrediction &weatherPrediction) {
    string str;
 
-   char *txt = new char[31];
+   char txt[31];
 
-   snprintf(txt, 31, "%d", id);
+   snprintf(txt, sizeof(txt), "%d", id);
    str = txt;
 
    str += ",";
@@ -461,11 +465,9 @@ string InternalObserver::predTempData(int id, string field,
    for (int i = 1; i <= mat.GetMaxRow(); i++) {
       Units::Length alt = mat.GetAltitude(i);
       Units::KelvinTemperature temperature = weatherPrediction.GetForecastAtmosphere()->GetTemperature(alt);
-      snprintf(txt, 31, ",%lf", temperature.value() - 273.15);
+      snprintf(txt, sizeof(txt), ",%lf", temperature.value() - 273.15);
       str += txt;
    }
-
-   delete[] txt;
 
    return str;
 }

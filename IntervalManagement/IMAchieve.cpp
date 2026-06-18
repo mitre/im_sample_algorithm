@@ -14,14 +14,18 @@
 // For further information, please contact The MITRE Corporation, Contracts Management
 // Office, 7515 Colshire Drive, McLean, VA 22102-7539, (703) 983-6000.
 //
-// 2023 The MITRE Corporation. All Rights Reserved.
+// (c) 2026 The MITRE Corporation. All Rights Reserved.
 // ****************************************************************************
 
 #include "imalgs/IMAchieve.h"
 
-#include "public/Environment.h"
+#include <memory>
+#include <string>
+#include <vector>
+
 #include "imalgs/MOPSPredictedWindEvaluatorVersion1.h"
 #include "imalgs/MOPSPredictedWindEvaluatorVersion2.h"
+#include "public/Environment.h"
 
 using namespace std;
 using namespace interval_management::open_source;
@@ -103,7 +107,7 @@ aaesim::open_source::Guidance IMAchieve::Update(
 void IMAchieve::DumpParameters(const string &parameters_to_print) {
    LOG4CPLUS_DEBUG(IMAchieve::m_logger, "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" << endl);
 
-   LOG4CPLUS_DEBUG(IMAchieve::m_logger, "IMAlgorithm parms for " << parameters_to_print.c_str() << endl << endl);
+   LOG4CPLUS_DEBUG(IMAchieve::m_logger, "IMAlgorithm parms for " << parameters_to_print << endl << endl);
 
    IMAlgorithm::DumpParameters(parameters_to_print);
 
@@ -114,14 +118,13 @@ void IMAchieve::DumpParameters(const string &parameters_to_print) {
    LOG4CPLUS_DEBUG(IMAchieve::m_logger, "mBlendWind " << IsBlendWind() << endl);
    LOG4CPLUS_DEBUG(IMAchieve::m_logger, "threshold flag " << m_threshold_flag << endl);
    LOG4CPLUS_DEBUG(IMAchieve::m_logger, "time threshold " << Units::SecondsTime(m_time_threshold).value() << endl);
-   LOG4CPLUS_DEBUG(IMAchieve::m_logger, "ownship achieve-by waypoint " << m_achieve_by_point.c_str() << std::endl);
+   LOG4CPLUS_DEBUG(IMAchieve::m_logger, "ownship achieve-by waypoint " << m_achieve_by_point << std::endl);
    LOG4CPLUS_DEBUG(IMAchieve::m_logger, "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" << endl);
 }
 
 void IMAchieve::Initialize(const OwnshipPredictionParameters &ownship_prediction_parameters,
                            const AircraftIntent &ownship_aircraft_intent,
                            aaesim::open_source::WeatherPrediction &weather_prediction) {
-
    IMAlgorithm::Initialize(ownship_prediction_parameters, ownship_aircraft_intent, weather_prediction);
 
    m_achieve_by_point.assign(m_im_clearance.GetAchieveByPoint());

@@ -14,10 +14,11 @@
 // For further information, please contact The MITRE Corporation, Contracts Management
 // Office, 7515 Colshire Drive, McLean, VA 22102-7539, (703) 983-6000.
 //
-// 2023 The MITRE Corporation. All Rights Reserved.
+// (c) 2026 The MITRE Corporation. All Rights Reserved.
 // ****************************************************************************
 
 #include "imalgs/ClosestPointMetric.h"
+
 #include "public/AircraftCalculations.h"
 
 using namespace interval_management::open_source;
@@ -25,7 +26,6 @@ using namespace interval_management::open_source;
 ClosestPointMetric::ClosestPointMetric() = default;
 
 void ClosestPointMetric::update(double imx, double imy, double targx, double targy) {
-
    // Computes the distance between im and target aircraft based on the input
    // positions and replaces the minimum distance if the new distance closer.
    // Distance is in nmi.
@@ -42,7 +42,6 @@ void ClosestPointMetric::update(double imx, double imy, double targx, double tar
 }
 
 Units::Length ClosestPointMetric::getMinDist() {
-
    // Gets minimum distance.
    //
    // returns minimum distance.

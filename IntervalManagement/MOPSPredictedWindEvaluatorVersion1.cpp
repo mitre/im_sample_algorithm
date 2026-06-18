@@ -14,7 +14,7 @@
 // For further information, please contact The MITRE Corporation, Contracts Management
 // Office, 7515 Colshire Drive, McLean, VA 22102-7539, (703) 983-6000.
 //
-// 2023 The MITRE Corporation. All Rights Reserved.
+// (c) 2026 The MITRE Corporation. All Rights Reserved.
 // ****************************************************************************
 
 /*
@@ -25,6 +25,9 @@
  */
 
 #include "imalgs/MOPSPredictedWindEvaluatorVersion1.h"
+
+#include <memory>
+
 #include "public/Environment.h"
 
 using namespace interval_management::open_source;
@@ -51,7 +54,6 @@ bool MOPSPredictedWindEvaluatorVersion1::ArePredictedWindsAccurate(
       const aaesim::open_source::AircraftState &state, const aaesim::open_source::WeatherPrediction &weatherPrediction,
       const Units::Speed reference_cas, const Units::Length reference_altitude,
       const std::shared_ptr<Atmosphere> &sensed_atmosphere) const {
-
    Units::MetersPerSecondSpeed windeastcomp, windnorthcomp;
    Units::Frequency NOT_USED;
    weatherPrediction.east_west().CalculateWindGradientAtAltitude(state.GetAltitudeMsl(), windeastcomp, NOT_USED);

@@ -14,7 +14,7 @@
 // For further information, please contact The MITRE Corporation, Contracts Management
 // Office, 7515 Colshire Drive, McLean, VA 22102-7539, (703) 983-6000.
 //
-// 2023 The MITRE Corporation. All Rights Reserved.
+// (c) 2026 The MITRE Corporation. All Rights Reserved.
 // ****************************************************************************
 
 #pragma once
@@ -27,8 +27,8 @@
 #include <string>
 
 #include "imalgs/IMUtils.h"
+#include "loader/Logging.h"
 #include "public/AircraftIntent.h"
-#include "public/Logging.h"
 
 namespace interval_management {
 namespace open_source {
@@ -93,13 +93,13 @@ class IMClearance final {
 
       ClearanceType GetClearanceType() const { return m_builder_clearance_type; };
       SpacingGoalType GetSpacingGoalType() const { return m_builder_assigned_spacing_goal_type; };
-      AircraftIntent GetTargetAircraftIntent() const { return m_builder_target_aircraft_intent; };
-      AircraftIntent GetOwnshipAircraftIntent() const { return m_builder_ownship_intent; };
+      const AircraftIntent &GetTargetAircraftIntent() const { return m_builder_target_aircraft_intent; };
+      const AircraftIntent &GetOwnshipAircraftIntent() const { return m_builder_ownship_intent; };
       Units::RadiansAngle GetMergeAngleMean() const { return m_builder_final_approach_spacing_merge_angle_mean; };
       Units::RadiansAngle GetMergeAngleStd() const { return m_builder_final_approach_spacing_merge_angle_std; };
-      std::string GetAchieveByPoint() const { return m_builder_achieve_by_point; };
-      std::string GetPlannedTerminationPoint() const { return m_builder_planned_termination_point; };
-      std::string GetTrafficReferencePoint() const { return m_builder_traffic_reference_point; };
+      const std::string &GetAchieveByPoint() const { return m_builder_achieve_by_point; };
+      const std::string &GetPlannedTerminationPoint() const { return m_builder_planned_termination_point; };
+      const std::string &GetTrafficReferencePoint() const { return m_builder_traffic_reference_point; };
       double GetAssignedSpacingGoal() const { return m_builder_assigned_spacing_goal; };
       int GetTargetId() const { return m_builder_target_id; };
       bool IsVectorAircraft() const { return m_builder_is_vector_aircraft; };

@@ -14,8 +14,10 @@
 // For further information, please contact The MITRE Corporation, Contracts Management
 // Office, 7515 Colshire Drive, McLean, VA 22102-7539, (703) 983-6000.
 //
-// 2023 The MITRE Corporation. All Rights Reserved.
+// (c) 2026 The MITRE Corporation. All Rights Reserved.
 // ****************************************************************************
+
+#include <vector>
 
 #include "imalgs/FIMSpeedQuantizer.h"
 #include "public/BadaUtils.h"
@@ -48,7 +50,7 @@ class FIMSpeedLimiter final : public aaesim::open_source::SpeedCommandLimiter {
                    aaesim::open_source::bada_utils::FlapSpeeds flap_speeds,
                    aaesim::open_source::bada_utils::FlightEnvelope flight_envelope,
                    aaesim::open_source::bada_utils::Mass mass_data,
-                   aaesim::open_source::bada_utils::Aerodynamics aerodynamics,
+                   const aaesim::open_source::bada_utils::Aerodynamics &aerodynamics,
                    const FIMSpeedQuantizer &speed_quantizer);
 
    ~FIMSpeedLimiter();
@@ -110,16 +112,16 @@ class FIMSpeedLimiter final : public aaesim::open_source::SpeedCommandLimiter {
 
    std::vector<RfLegLimit> m_rf_leg_limits;
 
-   unsigned long int m_active_filter_flag;
-   bool m_limit_flag;
-   bool m_quantize_flag;
-   double m_low_speed_coef;
-   double m_high_speed_coef;
+   unsigned long int m_active_filter_flag{0L};
+   bool m_limit_flag{false};
+   bool m_quantize_flag{false};
+   double m_low_speed_coef{0};
+   double m_high_speed_coef{0};
    FIMSpeedQuantizer m_fim_quantizer;
-   aaesim::open_source::bada_utils::FlapSpeeds m_flap_speeds;
-   aaesim::open_source::bada_utils::FlightEnvelope m_aircraft_flight_envelope;
-   aaesim::open_source::bada_utils::Mass m_mass_data;
-   aaesim::open_source::bada_utils::Aerodynamics m_aerodynamics;
+   aaesim::open_source::bada_utils::FlapSpeeds m_flap_speeds{};
+   aaesim::open_source::bada_utils::FlightEnvelope m_aircraft_flight_envelope{};
+   aaesim::open_source::bada_utils::Mass m_mass_data{};
+   aaesim::open_source::bada_utils::Aerodynamics m_aerodynamics{};
 };
 
 inline const interval_management::open_source::FIMSpeedQuantizer &FIMSpeedLimiter::GetSpeedQuantizer() const {

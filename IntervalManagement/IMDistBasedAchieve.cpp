@@ -14,14 +14,19 @@
 // For further information, please contact The MITRE Corporation, Contracts Management
 // Office, 7515 Colshire Drive, McLean, VA 22102-7539, (703) 983-6000.
 //
-// 2023 The MITRE Corporation. All Rights Reserved.
+// (c) 2026 The MITRE Corporation. All Rights Reserved.
 // ****************************************************************************
 
 #include "imalgs/IMDistBasedAchieve.h"
 
-#include "public/SimulationTime.h"
-#include "public/CustomMath.h"
+#include <algorithm>
+#include <memory>
+#include <string>
+#include <vector>
+
 #include "public/CoreUtils.h"
+#include "public/CustomMath.h"
+#include "public/SimulationTime.h"
 
 using namespace interval_management::open_source;
 using namespace aaesim::open_source;
@@ -31,7 +36,6 @@ const Units::Length IMDistBasedAchieve::DEFAULT_DISTANCE_BASED_ASSIGNED_SPACING_
 
 IMDistBasedAchieve::IMDistBasedAchieve()
    : m_true_distances(nullptr), m_assigned_spacing_goal(DEFAULT_DISTANCE_BASED_ASSIGNED_SPACING_GOAL) {
-
    if (m_im_kinematic_dist_based_maintain == nullptr) {
       m_im_kinematic_dist_based_maintain = std::make_shared<IMKinematicDistBasedMaintain>();
    }
@@ -191,7 +195,7 @@ aaesim::open_source::Guidance IMDistBasedAchieve::Update(
                   m_ownship_kinematic_trajectory_predictor.GetVerticalPathVelocities().back());
             m_previous_reference_im_speed_command_mach =
                   Units::MetersPerSecondSpeed(m_previous_reference_im_speed_command_tas).value() /
-                  sqrt(GAMMA * R.value() *
+                  sqrt(kGamma * R.value() *
                        m_weather_prediction.getAtmosphere()
                              ->GetTemperature(Units::MetersLength(
                                    m_ownship_kinematic_trajectory_predictor.GetVerticalPathAltitudes().back()))
@@ -263,7 +267,6 @@ aaesim::open_source::Guidance IMDistBasedAchieve::Update(
                                            m_ownship_kinematic_trajectory_predictor.GetVerticalPathTimes());
 
          if (m_reference_precalc_index >= m_ownship_kinematic_trajectory_predictor.GetVerticalPathTimes().size() - 1) {
-
             m_reference_precalc_index =
                   static_cast<int>(m_ownship_kinematic_trajectory_predictor.GetVerticalPathTimes().size() - 1);
 
@@ -284,7 +287,6 @@ aaesim::open_source::Guidance IMDistBasedAchieve::Update(
             m_ownship_reference_altitude =
                   Units::MetersLength(m_ownship_kinematic_trajectory_predictor.GetVerticalPathAltitudeByIndex(0));
          } else {
-
             ownship_reference_dtg_to_ptp = Units::MetersLength(
                   -CoreUtils::LinearlyInterpolate(m_reference_precalc_index, Units::SecondsTime(ownrefttgtoend).value(),
                                                   m_ownship_kinematic_trajectory_predictor.GetVerticalPathTimes(),
@@ -516,7 +518,7 @@ void IMDistBasedAchieve::CalculateMach(const Units::Time reference_ttg, const Un
 
          highbound_estimated_mach =
                BoundedValue<double, 0, 3>(Units::MetersPerSecondSpeed(estimated_true_airspeed).value() /
-                                          sqrt(GAMMA * R.value() *
+                                          sqrt(kGamma * R.value() *
                                                m_weather_prediction.getAtmosphere()
                                                      ->GetTemperature(Units::FeetLength(current_ownship_altitude))
                                                      .value()));
@@ -529,7 +531,7 @@ void IMDistBasedAchieve::CalculateMach(const Units::Time reference_ttg, const Un
                m_weather_prediction.getAtmosphere()->CAS2TAS(nominal_indicated_airspeed, current_ownship_altitude);
          BoundedValue<double, 0, 2> nominal_mach =
                BoundedValue<double, 0, 2>(Units::MetersPerSecondSpeed(nominal_true_airspeed).value() /
-                                          sqrt(GAMMA * R.value() *
+                                          sqrt(kGamma * R.value() *
                                                m_weather_prediction.getAtmosphere()
                                                      ->GetTemperature(Units::FeetLength(current_ownship_altitude))
                                                      .value()));
@@ -553,7 +555,7 @@ void IMDistBasedAchieve::CalculateMach(const Units::Time reference_ttg, const Un
       Units::Speed nominal_true_airspeed =
             m_weather_prediction.getAtmosphere()->CAS2TAS(nominal_indicated_airspeed, current_ownship_altitude);
       double nominal_mach = Units::MetersPerSecondSpeed(nominal_true_airspeed).value() /
-                            sqrt(GAMMA * R.value() *
+                            sqrt(kGamma * R.value() *
                                  m_weather_prediction.getAtmosphere()
                                        ->GetTemperature(Units::FeetLength(current_ownship_altitude))
                                        .value());
@@ -688,7 +690,7 @@ IMDistBasedAchieve &IMDistBasedAchieve::operator=(const IMDistBasedAchieve &obj)
 
 void IMDistBasedAchieve::DumpParameters(const std::string &parameters_to_print) {
    LOG4CPLUS_DEBUG(IMDistBasedAchieve::m_logger, "\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\" << std::endl);
-   LOG4CPLUS_DEBUG(IMDistBasedAchieve::m_logger, parameters_to_print.c_str() << std::endl << std::endl);
+   LOG4CPLUS_DEBUG(IMDistBasedAchieve::m_logger, parameters_to_print << std::endl << std::endl);
 
    IMKinematicAchieve::DumpParameters(parameters_to_print);
 

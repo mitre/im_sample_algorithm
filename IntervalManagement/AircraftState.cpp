@@ -14,13 +14,14 @@
 // For further information, please contact The MITRE Corporation, Contracts Management
 // Office, 7515 Colshire Drive, McLean, VA 22102-7539, (703) 983-6000.
 //
-// 2023 The MITRE Corporation. All Rights Reserved.
+// (c) 2026 The MITRE Corporation. All Rights Reserved.
 // ****************************************************************************
 
 #include "imalgs/AircraftState.h"
+
+#include "imalgs/IMUtils.h"
 #include "public/CustomMath.h"
 #include "utility/CustomUnits.h"
-#include "imalgs/IMUtils.h"
 
 log4cplus::Logger interval_management::open_source::AircraftState::m_logger =
       log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("AircraftState"));
@@ -55,7 +56,6 @@ const Units::Speed interval_management::open_source::AircraftState::GetGroundSpe
 
 interval_management::open_source::AircraftState &interval_management::open_source::AircraftState::Interpolate(
       const AircraftState &a, const AircraftState &b, const Units::SecondsTime time) {
-
    const double dt = Units::SecondsTime(b.GetTimeStamp() - a.GetTimeStamp()).value();
    double weight_a, weight_b;
    if (a.GetTimeStamp() == b.GetTimeStamp()) {
@@ -107,7 +107,6 @@ interval_management::open_source::AircraftState &interval_management::open_sourc
       const Units::Speed &sensed_wind_north, const Units::Speed &sensed_wind_parallel,
       const Units::Speed &sensed_wind_perpendicular, const Units::Temperature &sensed_temperature,
       const Units::Angle &psi_enu) {
-
    this->m_id = id;
    this->m_time = time;
    this->m_x = Units::FeetLength(enu_position.x).value();
