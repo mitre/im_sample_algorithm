@@ -26,7 +26,7 @@
 #include <string>
 
 #include "imalgs/IMClearance.h"
-#include "public/AircraftIntentLoader.h"
+#include "imalgs/AircraftIntentLoader.h"
 
 namespace interval_management {
 
@@ -64,8 +64,8 @@ class IMClearanceLoader final : public Loadable {
 
    double m_assigned_spacing_goal;
    int m_target_id;
-   aaesim::loaders::AircraftIntentLoader m_target_aircraft_intent_loader;
-   aaesim::loaders::AircraftIntentLoader m_ownship_aircraft_intent_loader;
+   interval_management::loaders::AircraftIntentLoader m_target_aircraft_intent_loader;
+   interval_management::loaders::AircraftIntentLoader m_ownship_aircraft_intent_loader;
 
    bool m_loaded;
    static log4cplus::Logger m_logger;

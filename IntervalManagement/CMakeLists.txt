@@ -25,6 +25,7 @@ set(OBSERVER_SOURCE_FILES
 )
 set(IMALGS_SOURCE_FILES
         AircraftState.cpp
+        AircraftIntentLoader.cpp
         FIMAlgorithmDataWriter.cpp
         FIMAlgorithmAdapter.cpp
         FIMAlgorithmInitializer.cpp
@@ -50,6 +51,7 @@ set(IMALGS_SOURCE_FILES
         TrueDistances.cpp
         PredictionFileKinematic.cpp
         InternalObserverScenarioWriter.cpp
+        WaypointLoader.cpp
 )
 
 add_library(imalgs STATIC ${IMALGS_SOURCE_FILES} ${OBSERVER_SOURCE_FILES})
