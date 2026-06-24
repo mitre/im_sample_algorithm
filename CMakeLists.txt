@@ -31,7 +31,7 @@ message(STATUS "${PROJECT_NAME}: Generating build version ${msg_VERSION}")
 # Begin project dependencies ------------------------------------------------------
 option(IM_SAMPLE_ALGORITHM_FETCH_FMACM "Fetch FMACM when the pub target is not already available" ON)
 set(IM_SAMPLE_ALGORITHM_FMACM_TAG "v5.3.1" CACHE STRING "FMACM tag used for standalone builds")
-set(IM_SAMPLE_ALGORITHM_FSLOADER_TAG "1.1.0" CACHE STRING "fsloader tag required by FMACM ${IM_SAMPLE_ALGORITHM_FMACM_TAG}")
+set(IM_SAMPLE_ALGORITHM_FSLOADER_TAG "1.1.0" CACHE STRING "fsloader tag used for im_sample_algorithm builds")
 set(IM_SAMPLE_ALGORITHM_NLOHMANN_JSON_VERSION "3.11.3" CACHE STRING "nlohmann_json version used for standalone builds")
 set(IM_SAMPLE_ALGORITHM_LOG4CPLUS_TAG "REL_2_1_2" CACHE STRING "log4cplus tag used for standalone builds")
 
@@ -67,6 +67,27 @@ if(NOT TARGET log4cplus::log4cplusS)
     message(FATAL_ERROR "${PROJECT_NAME}: static log4cplus target log4cplus::log4cplusS is required.")
 endif()
 
+if(NOT TARGET log4cplus::log4cplus)
+    if(TARGET log4cplusS)
+        add_library(log4cplus::log4cplus ALIAS log4cplusS)
+    else()
+        add_library(im_sample_algorithm_log4cplus_compat INTERFACE)
+        target_link_libraries(im_sample_algorithm_log4cplus_compat INTERFACE log4cplus::log4cplusS)
+        add_library(log4cplus::log4cplus ALIAS im_sample_algorithm_log4cplus_compat)
+    endif()
+endif()
+
+if(NOT TARGET mitre::fsloader)
+    CPMAddPackage(
+        NAME fsloader
+        GIT_REPOSITORY https://github.com/mitre/fsloader.git
+        GIT_TAG ${IM_SAMPLE_ALGORITHM_FSLOADER_TAG}
+        OPTIONS
+            "FSLOADER_BUILD_EXAMPLE OFF"
+            "BUILD_SHARED_LIBS FALSE"
+    )
+endif()
+
 if(NOT TARGET pub)
     if(NOT IM_SAMPLE_ALGORITHM_FETCH_FMACM)
         message(FATAL_ERROR "${PROJECT_NAME}: target pub is required. Add FMACM first or enable IM_SAMPLE_ALGORITHM_FETCH_FMACM.")
@@ -78,17 +99,6 @@ if(NOT TARGET pub)
         GIT_TAG ${IM_SAMPLE_ALGORITHM_FMACM_TAG}
         DOWNLOAD_ONLY TRUE
     )
-
-    if(NOT TARGET mitre::fsloader)
-        CPMAddPackage(
-            NAME fsloader
-            GIT_REPOSITORY https://github.com/mitre/fsloader.git
-            GIT_TAG ${IM_SAMPLE_ALGORITHM_FSLOADER_TAG}
-            OPTIONS
-                "FSLOADER_BUILD_EXAMPLE OFF"
-                "BUILD_SHARED_LIBS FALSE"
-        )
-    endif()
 
     # FMACM's Public CMake expects this variable from the FMACM root project.
     set(aaesim_INCLUDE_DIRS ${fmacm_SOURCE_DIR}/include)

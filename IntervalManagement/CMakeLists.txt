@@ -4,6 +4,9 @@ cmake_minimum_required(VERSION 3.14)
 if(NOT TARGET pub)
     message(FATAL_ERROR "imalgs requires the FMACM pub target. Configure from the repository root or add FMACM before this directory.")
 endif()
+if(NOT TARGET mitre::fsloader)
+    message(FATAL_ERROR "imalgs requires the mitre::fsloader target. Configure from the repository root or add fsloader before this directory.")
+endif()
 if(NOT TARGET nlohmann_json::nlohmann_json)
     message(FATAL_ERROR "imalgs requires the nlohmann_json::nlohmann_json target. Configure from the repository root or add nlohmann_json before this directory.")
 endif()
@@ -75,5 +78,6 @@ target_include_directories(imalgs
 target_link_libraries(imalgs
         PUBLIC
         pub
+        mitre::fsloader
         nlohmann_json::nlohmann_json
         log4cplus::log4cplusS)
