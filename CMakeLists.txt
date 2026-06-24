@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.26...4.2)
-project(im_sample_algorithm VERSION 5.3.0.0) # the nano value is a boolean. 1 == SNAPSHOT, 0 == release
+project(im_sample_algorithm VERSION 5.3.1.0) # the nano value is a boolean. 1 == SNAPSHOT, 0 == release
 
 set (CMAKE_CXX_STANDARD 20)
 
@@ -32,7 +32,7 @@ set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -Wall -Wno-unused-functi
 CPMAddPackage(
     NAME fmacm
     GITHUB_REPOSITORY mitre/FMACM
-    GIT_TAG v5.3.0
+    GIT_TAG v5.3.1
     OPTIONS
      "BUILD_SHARED_LIBS FALSE"
      "BUILD_TESTING ${BUILD_TESTING}"

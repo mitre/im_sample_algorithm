@@ -19,6 +19,9 @@
 
 #include "imalgs/IMClearance.h"
 
+#include <loader/LoadError.h>
+#include <log4cplus/loggingmacros.h>
+
 #include <cstdio>
 #include <stdexcept>
 #include <string>
@@ -26,7 +29,6 @@
 
 #include "imalgs/IMClearanceLoader.h"
 #include "imalgs/IMUtils.h"
-#include "loader/LoadError.h"
 #include "utility/CustomUnits.h"
 
 using namespace std;

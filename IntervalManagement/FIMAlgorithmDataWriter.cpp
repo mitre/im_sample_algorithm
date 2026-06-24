@@ -19,6 +19,8 @@
 
 #include "imalgs/FIMAlgorithmDataWriter.h"
 
+#include <log4cplus/loggingmacros.h>
+
 #include <memory>
 #include <string>
 

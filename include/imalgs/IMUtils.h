@@ -19,6 +19,7 @@
 
 #pragma once
 
+#include <log4cplus/logger.h>
 #include <scalar/Length.h>
 #include <scalar/Time.h>
 
@@ -28,7 +29,6 @@
 #include <vector>
 
 #include "imalgs/AircraftState.h"
-#include "loader/Logging.h"
 #include "public/AircraftIntent.h"
 #include "public/AircraftState.h"
 #include "public/AlongPathDistanceCalculator.h"

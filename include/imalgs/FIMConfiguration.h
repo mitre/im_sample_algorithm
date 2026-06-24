@@ -19,10 +19,11 @@
 
 #pragma once
 
+#include <loader/DecodedStream.h>
+#include <loader/Loadable.h>
+#include <log4cplus/logger.h>
+
 #include "imalgs/IMUtils.h"
-#include "loader/DecodedStream.h"
-#include "loader/Loadable.h"
-#include "loader/Logging.h"
 
 namespace interval_management {
 namespace open_source {

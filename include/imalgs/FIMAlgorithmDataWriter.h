@@ -19,6 +19,7 @@
 
 #pragma once
 
+#include <log4cplus/logger.h>
 #include <scalar/Angle.h>
 #include <scalar/Length.h>
 #include <scalar/Speed.h>
@@ -31,7 +32,6 @@
 
 #include "imalgs/AircraftState.h"
 #include "imalgs/IMAlgorithm.h"
-#include "loader/Logging.h"
 #include "public/FlightDeckApplication.h"
 #include "public/Guidance.h"
 #include "public/OutputHandler.h"

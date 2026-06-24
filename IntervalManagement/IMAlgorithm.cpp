@@ -19,6 +19,8 @@
 
 #include "imalgs/IMAlgorithm.h"
 
+#include <log4cplus/loggingmacros.h>
+
 #include <iomanip>
 #include <string>
 #include <utility>
@@ -87,6 +89,7 @@ IMAlgorithm::IMAlgorithm()
 
 IMAlgorithm::IMAlgorithm(const IMAlgorithm &obj)
    : m_initiate_signal_receipt_time(Units::Infinity()),
+     m_ownship_kinematic_dtg_to_ptp(Units::Infinity()),
      m_total_number_of_im_speed_changes(0),
      m_target_reference_lookup_index(0),
      m_ownship_reference_lookup_index(0),
@@ -95,7 +98,6 @@ IMAlgorithm::IMAlgorithm(const IMAlgorithm &obj)
      m_loaded(false),
      m_im_operation_is_complete(false),
      m_has_maintain_stage(false),
-     m_ownship_kinematic_dtg_to_ptp(Units::Infinity()),
      m_loaded_middle_to_final_quantize_transition_distance(IMUtils::DIST_QUANTIZE_1_DEFAULT),
      m_loaded_first_to_middle_quantize_transition_distance(IMUtils::DIST_QUANTIZE_2_DEFAULT),
      m_loaded_speed_quantize_final_phase(IMUtils::SPEED_QUANTIZE_1_DEFAULT_1_KNOT),
