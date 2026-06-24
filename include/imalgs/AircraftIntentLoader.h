@@ -44,7 +44,7 @@ class AircraftIntentLoader final : public LoggingLoadable {
    static inline log4cplus::Logger logger_{log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("AircraftIntentLoader"))};
 
    AircraftIntent aircraft_intent_{};
-   bool m_is_loaded{false};
+   bool is_loaded_{false};
 };
 
 inline const AircraftIntent &AircraftIntentLoader::BuildAircraftIntent() const { return aircraft_intent_; }
@@ -53,7 +53,7 @@ inline AircraftIntent &AircraftIntentLoader::GetAircraftIntent() { return aircra
 
 inline const AircraftIntent &AircraftIntentLoader::GetAircraftIntent() const { return aircraft_intent_; }
 
-inline bool AircraftIntentLoader::IsLoaded() const { return aircraft_intent_.IsLoaded(); }
+inline bool AircraftIntentLoader::IsLoaded() const { return is_loaded_; }
 
 }  // namespace loaders
 }  // namespace interval_management

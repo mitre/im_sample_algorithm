@@ -42,21 +42,14 @@ bool AircraftIntentLoader::load(DecodedStream *input) {
 
    std::list<WaypointLoader> descent_waypoint_loaders;
    std::list<WaypointLoader> ascent_waypoint_loaders, cruise_waypoint_loaders;
-   // double cruise_mach_loaded;
-   // Units::FeetLength cruise_alt_loaded(0);
 
    // register all the variables used by the Aircraft Intent
-   // register_var("planned_cruise_mach", &cruise_mach_loaded, true);
-   // register_var("planned_cruise_altitude", &cruise_alt_loaded, true);
    register_named_list("descent_waypoints", &descent_waypoint_loaders, false);
    register_named_list("cruise_waypoints", &cruise_waypoint_loaders, false);
    register_named_list("ascent_waypoints", &ascent_waypoint_loaders, false);
 
    // do the actual reading:
-   m_is_loaded = complete();
-
-   // aircraft_intent_.m_planned_cruise_altitude = cruise_alt_loaded;
-   // aircraft_intent_.planned_cruise_mach_ = cruise_mach_loaded;
+   is_loaded_ = complete();
 
    const auto descent_waypoints = BuildWaypointList(descent_waypoint_loaders);
    const auto ascent_waypoints = BuildWaypointList(ascent_waypoint_loaders);
@@ -70,7 +63,7 @@ bool AircraftIntentLoader::load(DecodedStream *input) {
       aircraft_intent_.LoadWaypointsFromList(ascent_waypoints, cruise_waypoints, descent_waypoints);
    }
 
-   return m_is_loaded;
+   return is_loaded_;
 }
 
 }  // namespace loaders
