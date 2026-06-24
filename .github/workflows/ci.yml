@@ -30,7 +30,7 @@ jobs:
 
       - name: Configure and Build
         run: |
-          cmake -S. -Bbuild -DCMAKE_BUILD_TYPE=Release
+          cmake -S. -Bbuild -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=OFF
           cmake --build build --target imalgs -j
  
 
@@ -57,14 +57,15 @@ jobs:
       - name: Upload test results
         uses: actions/upload-artifact@v4
         with:
-          name: public-test-results
-          path: unittest/*results.xml
+          name: imalgs-test-results
+          path: build/unittest/*results.xml
+          if-no-files-found: error
 
       # - name: Publish JUnit test results
       #   uses: dorny/test-reporter@v2
       #   if: always()
       #   with:
-      #     name: Public Library Tests
-      #     path: unittest/*results.xml
+      #     name: IM Algorithms Tests
+      #     path: build/unittest/*results.xml
       #     reporter: jest-junit
       #     fail-on-error: true

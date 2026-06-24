@@ -18,7 +18,7 @@
 // ****************************************************************************
 
 #include "gtest/gtest.h"
-#include "loader/Logging.h"
+#include "public/Log4cplusSetup.h"
 #include <log4cplus/initializer.h>
 
 GTEST_API_ int main(int argc, char **argv) {
