@@ -19,10 +19,12 @@
 
 #include "imalgs/IMClearanceLoader.h"
 
+#include <loader/LoadError.h>
+#include <log4cplus/loggingmacros.h>
+
 #include <map>
 #include <string>
 
-#include "loader/LoadError.h"
 #include "utility/CustomUnits.h"
 
 using namespace interval_management;
@@ -80,8 +82,8 @@ bool IMClearanceLoader::load(DecodedStream *strm) {
    register_var("FAS_merge_angle", &m_final_approach_spacing_merge_angle_mean, false);
    register_var("FAS_merge_angle_std", &m_final_approach_spacing_merge_angle_std, false);
    register_var("FAS_is_vectored", &m_is_vector_aircraft, false);
-   register_loadable_with_brackets("target_intent", &m_target_aircraft_intent, false);
-   register_loadable_with_brackets("ownship_intent", &m_ownship_aircraft_intent, false);
+   register_loadable_with_brackets("target_intent", &m_target_aircraft_intent_loader, false);
+   register_loadable_with_brackets("ownship_intent", &m_ownship_aircraft_intent_loader, false);
 
    m_loaded = complete();
 
@@ -121,16 +123,17 @@ const IMClearance IMClearanceLoader::BuildClearance(void) {
    // Builds clearance object.
    if (!m_loaded) return m_empty_clearance;
 
-   if (m_target_aircraft_intent.IsLoaded()) {
-      m_target_aircraft_intent.SetId(m_target_id);
+   if (m_target_aircraft_intent_loader.IsLoaded()) {
+      m_target_aircraft_intent_loader.GetAircraftIntent().SetId(m_target_id);
    }
 
-   IMClearance::Builder builder(m_clearance_type, m_target_id, m_target_aircraft_intent, m_achieve_by_point,
-                                m_planned_termination_point, m_assigned_spacing_goal_type, m_assigned_spacing_goal);
+   IMClearance::Builder builder(m_clearance_type, m_target_id, m_target_aircraft_intent_loader.GetAircraftIntent(),
+                                m_achieve_by_point, m_planned_termination_point, m_assigned_spacing_goal_type,
+                                m_assigned_spacing_goal);
    builder.TrafficReferencePoint(m_traffic_reference_point);
 
-   if (m_ownship_aircraft_intent.IsLoaded()) {
-      builder.OwnshipIntent(m_ownship_aircraft_intent);
+   if (m_ownship_aircraft_intent_loader.IsLoaded()) {
+      builder.OwnshipIntent(m_ownship_aircraft_intent_loader.GetAircraftIntent());
    }
 
    if (m_clearance_type == IMClearance::ClearanceType::FAS) {

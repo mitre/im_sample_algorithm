@@ -19,6 +19,7 @@
 
 #pragma once
 
+#include <log4cplus/logger.h>
 #include <scalar/Length.h>
 #include <scalar/Speed.h>
 #include <scalar/Time.h>
@@ -27,7 +28,6 @@
 #include <string>
 
 #include "imalgs/IMUtils.h"
-#include "loader/Logging.h"
 #include "public/AircraftIntent.h"
 
 namespace interval_management {

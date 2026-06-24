@@ -19,6 +19,8 @@
 
 #include "imalgs/IMUtils.h"
 
+#include <log4cplus/loggingmacros.h>
+
 #include <cfloat>
 #include <list>
 #include <map>

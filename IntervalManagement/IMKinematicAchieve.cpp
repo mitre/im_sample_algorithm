@@ -26,7 +26,6 @@
 #include <utility>
 #include <vector>
 
-#include "MiniCSV/minicsv.h"
 #include "imalgs/IMClearanceLoader.h"
 #include "public/AircraftCalculations.h"
 #include "public/Atmosphere.h"

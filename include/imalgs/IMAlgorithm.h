@@ -19,6 +19,7 @@
 
 #pragma once
 
+#include <log4cplus/logger.h>
 #include <scalar/Frequency.h>
 #include <scalar/Length.h>
 #include <scalar/Speed.h>
@@ -32,7 +33,6 @@
 #include "imalgs/FIMConfiguration.h"
 #include "imalgs/FIMSpeedLimiter.h"
 #include "imalgs/IMClearance.h"
-#include "loader/Logging.h"
 #include "public/AircraftIntent.h"
 #include "public/BadaUtils.h"
 #include "public/Guidance.h"

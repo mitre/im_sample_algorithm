@@ -19,6 +19,8 @@
 
 #include "imalgs/AchievePointCalcs.h"
 
+#include <log4cplus/loggingmacros.h>
+
 #include <iomanip>
 #include <memory>
 #include <string>

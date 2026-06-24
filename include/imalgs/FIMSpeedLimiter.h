@@ -17,14 +17,15 @@
 // (c) 2026 The MITRE Corporation. All Rights Reserved.
 // ****************************************************************************
 
+#include <scalar/Length.h>
+#include <scalar/Speed.h>
+
 #include <vector>
 
 #include "imalgs/FIMSpeedQuantizer.h"
 #include "public/BadaUtils.h"
 #include "public/SpeedCommandLimiter.h"
 #include "public/WeatherPrediction.h"
-#include "scalar/Length.h"
-#include "scalar/Speed.h"
 #include "utility/BoundedValue.h"
 
 namespace interval_management {

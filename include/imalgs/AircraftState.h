@@ -19,6 +19,7 @@
 
 #pragma once
 
+#include <log4cplus/logger.h>
 #include <scalar/Density.h>
 #include <scalar/Frequency.h>
 #include <scalar/Pressure.h>
@@ -26,7 +27,6 @@
 #include <scalar/Temperature.h>
 #include <scalar/UnsignedAngle.h>
 
-#include "loader/Logging.h"
 #include "public/EarthModel.h"
 
 namespace interval_management {

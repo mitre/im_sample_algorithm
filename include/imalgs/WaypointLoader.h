@@ -14,19 +14,32 @@
 // For further information, please contact The MITRE Corporation, Contracts Management
 // Office, 7515 Colshire Drive, McLean, VA 22102-7539, (703) 983-6000.
 //
-// 2023 The MITRE Corporation. All Rights Reserved.
+// (c) 2026 The MITRE Corporation. All Rights Reserved.
 // ****************************************************************************
 
-#include "gtest/gtest.h"
-#include "public/Log4cplusSetup.h"
-#include <log4cplus/initializer.h>
+#pragma once
 
-GTEST_API_ int main(int argc, char **argv) {
-   log4cplus::Initializer initializer;
-   LoadLoggerProperties();
-   log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("main"));
-   LOG4CPLUS_INFO(logger, "Running main()");
-   testing::InitGoogleTest(&argc, argv);
-   (void)!RUN_ALL_TESTS();  // we ignore the return status here.
-   return 0;
-}
+#include <loader/LoggingLoadable.h>
+
+#include "public/Waypoint.h"
+
+namespace interval_management {
+namespace loaders {
+
+class WaypointLoader final : public LoggingLoadable {
+  public:
+   WaypointLoader() = default;
+   ~WaypointLoader() override = default;
+
+   bool load(DecodedStream *input) override;
+
+   const Waypoint &BuildWaypoint() const;
+
+  private:
+   Waypoint waypoint_{};
+};
+
+inline const Waypoint &WaypointLoader::BuildWaypoint() const { return waypoint_; }
+
+}  // namespace loaders
+}  // namespace interval_management

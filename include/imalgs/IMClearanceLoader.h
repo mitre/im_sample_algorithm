@@ -19,12 +19,14 @@
 
 #pragma once
 
+#include <loader/Loadable.h>
+#include <log4cplus/logger.h>
+
 #include <map>
 #include <string>
 
 #include "imalgs/IMClearance.h"
-#include "loader/Loadable.h"
-#include "loader/Logging.h"
+#include "imalgs/AircraftIntentLoader.h"
 
 namespace interval_management {
 
@@ -62,8 +64,8 @@ class IMClearanceLoader final : public Loadable {
 
    double m_assigned_spacing_goal;
    int m_target_id;
-   AircraftIntent m_target_aircraft_intent;
-   AircraftIntent m_ownship_aircraft_intent;
+   interval_management::loaders::AircraftIntentLoader m_target_aircraft_intent_loader;
+   interval_management::loaders::AircraftIntentLoader m_ownship_aircraft_intent_loader;
 
    bool m_loaded;
    static log4cplus::Logger m_logger;

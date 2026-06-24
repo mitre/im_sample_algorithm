@@ -17,9 +17,10 @@
 // (c) 2026 The MITRE Corporation. All Rights Reserved.
 // ****************************************************************************
 
-#include "loader/Logging.h"
-#include "scalar/Length.h"
-#include "scalar/Speed.h"
+#include <log4cplus/logger.h>
+#include <scalar/Length.h>
+#include <scalar/Speed.h>
+
 #include "utility/BoundedValue.h"
 
 namespace interval_management {

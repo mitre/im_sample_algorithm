@@ -1,7 +1,8 @@
 cmake_minimum_required(VERSION 3.26...4.1.2)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -fno-strict-aliasing -Wunused-result")
-set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Wall -Wno-sign-compare -O1 -g3 -Wunused-result")
+if(NOT COMMAND CPMAddPackage)
+    include(${CMAKE_CURRENT_LIST_DIR}/../.cmake/get_cpm.cmake)
+endif()
 
 CPMAddPackage(
       NAME googletest
@@ -13,4 +14,4 @@ CPMAddPackage(
       "BUILD_GMOCK ON"
 )
 
-set(LIBRARY_OUTPUT_PATH ${CMAKE_CURRENT_SOURCE_DIR}/lib)
+include(${CMAKE_CURRENT_LIST_DIR}/src/IntervalManagement/interval_management.cmake)

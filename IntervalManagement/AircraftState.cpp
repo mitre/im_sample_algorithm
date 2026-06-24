@@ -19,6 +19,8 @@
 
 #include "imalgs/AircraftState.h"
 
+#include <log4cplus/loggingmacros.h>
+
 #include "imalgs/IMUtils.h"
 #include "public/CustomMath.h"
 #include "utility/CustomUnits.h"
