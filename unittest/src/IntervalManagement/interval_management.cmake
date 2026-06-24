@@ -11,7 +11,7 @@ add_executable(imalgs_test
 target_link_libraries(imalgs_test
         PRIVATE
         GTest::gtest
-        im_sample_algorithm::imalgs
+        mitre::oss::fim_sample_algorithm
 )
 target_compile_options(imalgs_test
         PRIVATE

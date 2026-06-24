@@ -47,10 +47,11 @@ set(IMALGS_SOURCE_FILES
 )
 
 add_library(imalgs STATIC ${IMALGS_SOURCE_FILES} ${OBSERVER_SOURCE_FILES})
-add_library(im_sample_algorithm::imalgs ALIAS imalgs)
+add_library(mitre::oss::fim_sample_algorithm ALIAS imalgs)
 
 set_target_properties(imalgs PROPERTIES
         CXX_EXTENSIONS ON
+        EXPORT_NAME fim_sample_algorithm
         POSITION_INDEPENDENT_CODE ON)
 target_compile_features(imalgs PUBLIC cxx_std_20)
 target_compile_options(imalgs
