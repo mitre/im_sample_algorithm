@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.26...4.1.2)
 
-include(${CMAKE_CURRENT_LIST_DIR}/../.cmake/get_cpm.cmake)
+if(NOT COMMAND CPMAddPackage)
+    include(${CMAKE_CURRENT_LIST_DIR}/../.cmake/get_cpm.cmake)
+endif()
 
 CPMAddPackage(
       NAME googletest

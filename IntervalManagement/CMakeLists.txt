@@ -4,6 +4,12 @@ cmake_minimum_required(VERSION 3.14)
 if(NOT TARGET pub)
     message(FATAL_ERROR "imalgs requires the FMACM pub target. Configure from the repository root or add FMACM before this directory.")
 endif()
+if(NOT TARGET nlohmann_json::nlohmann_json)
+    message(FATAL_ERROR "imalgs requires the nlohmann_json::nlohmann_json target. Configure from the repository root or add nlohmann_json before this directory.")
+endif()
+if(NOT TARGET log4cplus::log4cplusS)
+    message(FATAL_ERROR "imalgs requires the static log4cplus::log4cplusS target. Configure from the repository root or add static log4cplus before this directory.")
+endif()
 
 get_filename_component(IM_SAMPLE_ALGORITHM_SOURCE_DIR "${CMAKE_CURRENT_LIST_DIR}/.." ABSOLUTE)
 
@@ -64,4 +70,8 @@ target_include_directories(imalgs
         PUBLIC
         $<BUILD_INTERFACE:${IM_SAMPLE_ALGORITHM_SOURCE_DIR}/include>
         $<INSTALL_INTERFACE:include>)
-target_link_libraries(imalgs PUBLIC pub)
+target_link_libraries(imalgs
+        PUBLIC
+        pub
+        nlohmann_json::nlohmann_json
+        log4cplus::log4cplusS)
