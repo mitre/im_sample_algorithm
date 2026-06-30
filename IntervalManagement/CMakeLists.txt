@@ -1,8 +1,8 @@
 # This file causes creation of the IM algorithms library (libimalgs.a).
 cmake_minimum_required(VERSION 3.14)
 
-if(NOT TARGET pub)
-    message(FATAL_ERROR "imalgs requires the FMACM pub target. Configure from the repository root or add FMACM before this directory.")
+if(NOT TARGET mitre::oss::simcore)
+    message(FATAL_ERROR "imalgs requires the mitre::oss::simcore target. Configure from the repository root or add aircraft_simulation_core before this directory.")
 endif()
 if(NOT TARGET mitre::fsloader)
     message(FATAL_ERROR "imalgs requires the mitre::fsloader target. Configure from the repository root or add fsloader before this directory.")
@@ -77,7 +77,11 @@ target_include_directories(imalgs
         $<INSTALL_INTERFACE:include>)
 target_link_libraries(imalgs
         PUBLIC
-        pub
-        mitre::fsloader
-        nlohmann_json::nlohmann_json
-        log4cplus::log4cplusS)
+        $<BUILD_LOCAL_INTERFACE:mitre::oss::simcore>
+        $<INSTALL_INTERFACE:$<TARGET_NAME_IF_EXISTS:mitre::oss::simcore>>
+        $<BUILD_LOCAL_INTERFACE:mitre::fsloader>
+        $<INSTALL_INTERFACE:$<TARGET_NAME_IF_EXISTS:mitre::fsloader>>
+        $<BUILD_LOCAL_INTERFACE:nlohmann_json::nlohmann_json>
+        $<INSTALL_INTERFACE:$<TARGET_NAME_IF_EXISTS:nlohmann_json::nlohmann_json>>
+        $<BUILD_LOCAL_INTERFACE:log4cplus::log4cplusS>
+        $<INSTALL_INTERFACE:$<TARGET_NAME_IF_EXISTS:log4cplus::log4cplusS>>)

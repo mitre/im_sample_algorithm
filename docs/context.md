@@ -38,4 +38,36 @@ The second simulation paradigm is MITRE's [Aviation IDEA Lab](https://www.mitre.
 
 ## How External Collaborators Can Use This Code
 
-In order to use this Sample Algorithm code, you'll need to provide your own simulation environment that hosts the Sample Algorithm. This code base does not propagate aircraft state nor does it provide equations-of-motion, so your simulation will in the very least need a way to produce states for ownship and traffic aircraft and dynamically respond to the speed guidance coming from the Sample Algorithm. One possibility is to use MITRE's parametric simulation core, made available as [FMACM](https://github.com/mitre/FMACM). But use of FMACM is not required; you can use any simulation paradigm that is appropriate to your research needs. 
+In order to use this Sample Algorithm code, you'll need to provide your own simulation environment that hosts the Sample Algorithm. This code base does not propagate aircraft state nor does it provide equations-of-motion, so your simulation will in the very least need a way to produce states for ownship and traffic aircraft and dynamically respond to the speed guidance coming from the Sample Algorithm. One possibility is to use MITRE's parametric simulation core, made available as [FMACM](https://github.com/mitre/FMACM). But use of FMACM is not required; you can use any simulation paradigm that is appropriate to your research needs.
+
+### Short Recommendation: CPM Integration
+
+For a CMake-based simulation framework, let the top-level simulation own dependency versions and bring this repository in as a library with [CPM.cmake](https://github.com/cpm-cmake/CPM.cmake). Pin released tags or known-good commits, add `aircraft_simulation_core` first if your framework already uses it, disable child-project tests in the parent build, and link your simulation target to `mitre::oss::fim_sample_algorithm`.
+
+```cmake
+include(cmake/CPM.cmake)
+
+CPMAddPackage(
+    NAME aircraft_simulation_core
+    GIT_REPOSITORY https://github.com/mitre/aircraft_simulation_core.git
+    GIT_TAG <simcore-release-tag-or-commit-sha>
+    OPTIONS
+        "SIMCORE_BUILD_TESTING OFF"
+)
+
+CPMAddPackage(
+    NAME im_sample_algorithm
+    GIT_REPOSITORY https://github.com/mitre/im_sample_algorithm.git
+    GIT_TAG <im-sample-release-tag-or-commit-sha>
+    OPTIONS
+        "IM_SAMPLE_ALGORITHM_BUILD_TESTING OFF"
+)
+
+target_link_libraries(my_simulation_framework
+    PRIVATE
+        mitre::oss::fim_sample_algorithm)
+```
+
+The Sample Algorithm target carries its public dependency on `mitre::oss::simcore`. If your framework creates `mitre::oss::simcore` before adding this repository, this repository will reuse that target instead of fetching its own `aircraft_simulation_core` copy. If your framework does not provide it, this repository will fetch `aircraft_simulation_core` for standalone and CPM builds.
+
+Prefer the namespaced target `mitre::oss::fim_sample_algorithm` in new integration code. Older target names such as `mitre::im_sample_algorithm` should be treated as legacy references when updating an existing framework.

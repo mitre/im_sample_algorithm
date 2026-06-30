@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.26...4.2)
-project(im_sample_algorithm VERSION 5.3.1.0 LANGUAGES CXX) # the nano value is a boolean. 1 == SNAPSHOT, 0 == release
+project(im_sample_algorithm VERSION 5.3.2 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -20,6 +20,9 @@ if(NOT COMMAND CPMAddPackage)
     include(${CMAKE_CURRENT_LIST_DIR}/.cmake/get_cpm.cmake)
 endif()
 
+include(CMakePackageConfigHelpers)
+include(GNUInstallDirs)
+
 if(${PROJECT_VERSION_TWEAK})
     # Append -SNAPSHOT to the version name if this is a pre-release version
     set(msg_VERSION ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}-SNAPSHOT)
@@ -29,8 +32,11 @@ endif()
 message(STATUS "${PROJECT_NAME}: Generating build version ${msg_VERSION}")
 
 # Begin project dependencies ------------------------------------------------------
-option(IM_SAMPLE_ALGORITHM_FETCH_FMACM "Fetch FMACM when the pub target is not already available" ON)
-set(IM_SAMPLE_ALGORITHM_FMACM_TAG "v5.3.1" CACHE STRING "FMACM tag used for standalone builds")
+set(
+    IM_SAMPLE_ALGORITHM_AIRCRAFT_SIMULATION_CORE_TAG
+    "1.0.0"
+    CACHE STRING "aircraft_simulation_core tag used for im_sample_algorithm builds"
+)
 set(IM_SAMPLE_ALGORITHM_FSLOADER_TAG "1.1.0" CACHE STRING "fsloader tag used for im_sample_algorithm builds")
 set(IM_SAMPLE_ALGORITHM_NLOHMANN_JSON_VERSION "3.11.3" CACHE STRING "nlohmann_json version used for standalone builds")
 set(IM_SAMPLE_ALGORITHM_LOG4CPLUS_TAG "REL_2_1_2" CACHE STRING "log4cplus tag used for standalone builds")
@@ -88,24 +94,55 @@ if(NOT TARGET mitre::fsloader)
     )
 endif()
 
-if(NOT TARGET pub)
-    if(NOT IM_SAMPLE_ALGORITHM_FETCH_FMACM)
-        message(FATAL_ERROR "${PROJECT_NAME}: target pub is required. Add FMACM first or enable IM_SAMPLE_ALGORITHM_FETCH_FMACM.")
-    endif()
-
+if(NOT TARGET mitre::oss::simcore)
     CPMAddPackage(
-        NAME fmacm
-        GITHUB_REPOSITORY mitre/FMACM
-        GIT_TAG ${IM_SAMPLE_ALGORITHM_FMACM_TAG}
-        DOWNLOAD_ONLY TRUE
+        NAME aircraft_simulation_core
+        GIT_REPOSITORY https://github.com/mitre/aircraft_simulation_core.git
+        GIT_TAG ${IM_SAMPLE_ALGORITHM_AIRCRAFT_SIMULATION_CORE_TAG}
+        OPTIONS
+            "SIMCORE_BUILD_TESTING OFF"
     )
+endif()
 
-    # FMACM's Public CMake expects this variable from the FMACM root project.
-    set(aaesim_INCLUDE_DIRS ${fmacm_SOURCE_DIR}/include)
-    add_subdirectory(${fmacm_SOURCE_DIR}/Public ${CMAKE_BINARY_DIR}/_deps/fmacm-public-build)
+if(NOT TARGET mitre::oss::simcore)
+    message(FATAL_ERROR "${PROJECT_NAME}: target mitre::oss::simcore is required.")
 endif()
 
 add_subdirectory(IntervalManagement)
+
+set(IM_SAMPLE_ALGORITHM_INSTALL_CMAKEDIR
+    "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}"
+    CACHE STRING "CMake package config install directory")
+
+install(
+    TARGETS imalgs
+    EXPORT im_sample_algorithm-targets
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+    INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+install(
+    DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/include/
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+install(
+    EXPORT im_sample_algorithm-targets
+    FILE im_sample_algorithm-targets.cmake
+    NAMESPACE mitre::oss::
+    DESTINATION ${IM_SAMPLE_ALGORITHM_INSTALL_CMAKEDIR})
+
+configure_package_config_file(
+    ${CMAKE_CURRENT_LIST_DIR}/cmake/im_sample_algorithm-config.cmake.in
+    ${CMAKE_CURRENT_BINARY_DIR}/im_sample_algorithm-config.cmake
+    INSTALL_DESTINATION ${IM_SAMPLE_ALGORITHM_INSTALL_CMAKEDIR})
+write_basic_package_version_file(
+    ${CMAKE_CURRENT_BINARY_DIR}/im_sample_algorithm-config-version.cmake
+    VERSION ${PROJECT_VERSION}
+    COMPATIBILITY SameMajorVersion)
+install(
+    FILES
+        ${CMAKE_CURRENT_BINARY_DIR}/im_sample_algorithm-config.cmake
+        ${CMAKE_CURRENT_BINARY_DIR}/im_sample_algorithm-config-version.cmake
+    DESTINATION ${IM_SAMPLE_ALGORITHM_INSTALL_CMAKEDIR})
 
 if(IM_SAMPLE_ALGORITHM_BUILD_TESTING)
     add_subdirectory(unittest)

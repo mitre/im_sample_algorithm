@@ -20,8 +20,7 @@ target_compile_options(imalgs_test
         $<$<CONFIG:Debug>:-Wall -Wno-sign-compare -O1 -g3>)
 target_include_directories(imalgs_test PRIVATE ${CMAKE_CURRENT_LIST_DIR}/..)
 set_target_properties(imalgs_test PROPERTIES
-        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
-        EXCLUDE_FROM_ALL TRUE)
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 add_test(
         NAME imalgs_test

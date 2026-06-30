@@ -6,66 +6,83 @@ on:
   pull_request:
     branches: [main, master]
 
+permissions:
+  contents: read
+
+env:
+  CMAKE_BUILD_TYPE: Release
+
 jobs:
-  build:
-    runs-on: ${{ matrix.os }}
-    container: ${{ matrix.container }}
-    strategy:
-      matrix:
-        include:
-          - os: macos-latest
-            container: ''
-            install: |
-              brew update
-              brew upgrade
-          - os: ubuntu-latest
-            container: rockylinux:9
-            install: |
-              dnf -y install gcc gcc-c++ make cmake git
+  build_macos:
+    name: Build (macOS)
+    runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Install dependencies
-        run: ${{ matrix.install }}
-
-      - name: Configure and Build
         run: |
-          cmake -S. -Bbuild -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=OFF
-          cmake --build build --target imalgs -j
- 
+          if ! command -v cmake >/dev/null 2>&1; then
+            brew install cmake
+          fi
+          cmake --version
+          c++ --version
 
-  run_all_tests:
+      - name: Configure
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DBUILD_TESTING=OFF
+
+      - name: Build imalgs
+        run: cmake --build build --target imalgs --parallel
+
+  build_rocky:
+    name: Build (Rocky Linux 9)
     runs-on: ubuntu-latest
     container:
       image: rockylinux:9
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
       - name: Install dependencies
         run: |
-          dnf -y install gcc gcc-c++ make cmake git
+          dnf -y install gcc gcc-c++ make git tar gzip python3-pip
+          python3 -m pip install --upgrade "cmake>=3.26,<4.3"
+          cmake --version
+          c++ --version
 
-      - name: Build project
-        run: |
-          cmake -S. -Bbuild -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=ON
+      - uses: actions/checkout@v7
 
-      - name: Run tests
+      - name: Configure
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DBUILD_TESTING=OFF
+
+      - name: Build imalgs
+        run: cmake --build build --target imalgs --parallel
+
+  run_all_tests:
+    name: Test (Rocky Linux 9)
+    runs-on: ubuntu-latest
+    container:
+      image: rockylinux:9
+    steps:
+      - name: Install dependencies
         run: |
-          cmake --build build --target run_imalgs_test -j
+          dnf -y install gcc gcc-c++ make git tar gzip python3-pip
+          python3 -m pip install --upgrade "cmake>=3.26,<4.3"
+          cmake --version
+          c++ --version
+
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Configure
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DIM_SAMPLE_ALGORITHM_BUILD_TESTING=ON
+
+      - name: Build
+        run: cmake --build build --parallel
+
+      - name: Run CTest
+        run: ctest --test-dir build --output-on-failure
 
       - name: Upload test results
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
+        if: always()
         with:
           name: imalgs-test-results
           path: build/unittest/*results.xml
           if-no-files-found: error
-
-      # - name: Publish JUnit test results
-      #   uses: dorny/test-reporter@v2
-      #   if: always()
-      #   with:
-      #     name: IM Algorithms Tests
-      #     path: build/unittest/*results.xml
-      #     reporter: jest-junit
-      #     fail-on-error: true
