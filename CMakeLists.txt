@@ -34,7 +34,7 @@ message(STATUS "${PROJECT_NAME}: Generating build version ${msg_VERSION}")
 # Begin project dependencies ------------------------------------------------------
 set(
     IM_SAMPLE_ALGORITHM_AIRCRAFT_SIMULATION_CORE_TAG
-    "26fa0e1194a82505ba1baba9576c4cb5274b2a4b" # FIXME Stuart switch to a tag when one is available
+    "e7409164173c0bb043a846bfeb952d5cf046d679" # FIXME Stuart switch to a tag when one is available
     CACHE STRING "aircraft_simulation_core tag used for im_sample_algorithm builds"
 )
 set(IM_SAMPLE_ALGORITHM_FSLOADER_TAG "1.1.0" CACHE STRING "fsloader tag used for im_sample_algorithm builds")
