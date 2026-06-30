@@ -85,3 +85,9 @@ target_link_libraries(imalgs
         $<INSTALL_INTERFACE:$<TARGET_NAME_IF_EXISTS:nlohmann_json::nlohmann_json>>
         $<BUILD_LOCAL_INTERFACE:log4cplus::log4cplusS>
         $<INSTALL_INTERFACE:$<TARGET_NAME_IF_EXISTS:log4cplus::log4cplusS>>)
+
+# simcore exposes geolib as a build-tree file path, so local consumers need
+# this target-level dependency before linking executables such as imalgs_test.
+if(TARGET geolib)
+    add_dependencies(imalgs geolib)
+endif()

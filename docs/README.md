@@ -90,7 +90,8 @@ Living, developer-level documentation is provided on this GitHub site. Here the 
   - Uh...Which algorithm is running? -- Review [the algorithm stages](which_algorithm.md) discussion
   - Are we missing some code? Review the [missing code table](missing_code.md)
 
-Not seeing what you need to know about? [Post an issue](https://github.com/mitre/im_sample_algorithm/issues). We gladly prioritize specific requests. Thanks!
+Not seeing what you need to know about? [Post an issue](https://github.com/mitre/im_sample_algorithm/issues).
+Thanks!
 
 ## EUROCONTROL BADA Development -- Necessary?
 
