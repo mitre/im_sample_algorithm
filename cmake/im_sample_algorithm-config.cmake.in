@@ -1,0 +1,12 @@
+@PACKAGE_INIT@
+
+include(CMakeFindDependencyMacro)
+
+find_dependency(aircraft_simulation_core REQUIRED)
+find_dependency(fsloader REQUIRED)
+find_dependency(nlohmann_json REQUIRED)
+find_dependency(log4cplus REQUIRED)
+
+include("${CMAKE_CURRENT_LIST_DIR}/im_sample_algorithm-targets.cmake")
+
+check_required_components(im_sample_algorithm)
