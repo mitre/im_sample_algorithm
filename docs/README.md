@@ -80,6 +80,7 @@ Living, developer-level documentation is provided on this GitHub site. Here the 
 
 - **Code Topics**
 
+  - Adding this library to a larger CMake simulation framework? Review the [recommended CPM integration](context.md#recommended-cpm-integration)
   - Who you gonna call? :ghosts: Read [code entry points](entry_points.md)
   - How does an algorithm receive IM Clearance details? Read [code entry points](entry_points.md)
   - How does an algorithm receive a new aircraft state? Read [code entry points](entry_points.md) and the [traffic data discussion](traffic_data.md)

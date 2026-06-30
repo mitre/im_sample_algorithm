@@ -77,7 +77,11 @@ target_include_directories(imalgs
         $<INSTALL_INTERFACE:include>)
 target_link_libraries(imalgs
         PUBLIC
-        mitre::oss::simcore
-        mitre::fsloader
-        nlohmann_json::nlohmann_json
-        log4cplus::log4cplusS)
+        $<BUILD_LOCAL_INTERFACE:mitre::oss::simcore>
+        $<INSTALL_INTERFACE:$<TARGET_NAME_IF_EXISTS:mitre::oss::simcore>>
+        $<BUILD_LOCAL_INTERFACE:mitre::fsloader>
+        $<INSTALL_INTERFACE:$<TARGET_NAME_IF_EXISTS:mitre::fsloader>>
+        $<BUILD_LOCAL_INTERFACE:nlohmann_json::nlohmann_json>
+        $<INSTALL_INTERFACE:$<TARGET_NAME_IF_EXISTS:nlohmann_json::nlohmann_json>>
+        $<BUILD_LOCAL_INTERFACE:log4cplus::log4cplusS>
+        $<INSTALL_INTERFACE:$<TARGET_NAME_IF_EXISTS:log4cplus::log4cplusS>>)

@@ -20,6 +20,9 @@ if(NOT COMMAND CPMAddPackage)
     include(${CMAKE_CURRENT_LIST_DIR}/.cmake/get_cpm.cmake)
 endif()
 
+include(CMakePackageConfigHelpers)
+include(GNUInstallDirs)
+
 if(${PROJECT_VERSION_TWEAK})
     # Append -SNAPSHOT to the version name if this is a pre-release version
     set(msg_VERSION ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}-SNAPSHOT)
@@ -106,6 +109,40 @@ if(NOT TARGET mitre::oss::simcore)
 endif()
 
 add_subdirectory(IntervalManagement)
+
+set(IM_SAMPLE_ALGORITHM_INSTALL_CMAKEDIR
+    "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}"
+    CACHE STRING "CMake package config install directory")
+
+install(
+    TARGETS imalgs
+    EXPORT im_sample_algorithm-targets
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+    INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+install(
+    DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/include/
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+install(
+    EXPORT im_sample_algorithm-targets
+    FILE im_sample_algorithm-targets.cmake
+    NAMESPACE mitre::oss::
+    DESTINATION ${IM_SAMPLE_ALGORITHM_INSTALL_CMAKEDIR})
+
+configure_package_config_file(
+    ${CMAKE_CURRENT_LIST_DIR}/cmake/im_sample_algorithm-config.cmake.in
+    ${CMAKE_CURRENT_BINARY_DIR}/im_sample_algorithm-config.cmake
+    INSTALL_DESTINATION ${IM_SAMPLE_ALGORITHM_INSTALL_CMAKEDIR})
+write_basic_package_version_file(
+    ${CMAKE_CURRENT_BINARY_DIR}/im_sample_algorithm-config-version.cmake
+    VERSION ${PROJECT_VERSION}
+    COMPATIBILITY SameMajorVersion)
+install(
+    FILES
+        ${CMAKE_CURRENT_BINARY_DIR}/im_sample_algorithm-config.cmake
+        ${CMAKE_CURRENT_BINARY_DIR}/im_sample_algorithm-config-version.cmake
+    DESTINATION ${IM_SAMPLE_ALGORITHM_INSTALL_CMAKEDIR})
 
 if(IM_SAMPLE_ALGORITHM_BUILD_TESTING)
     add_subdirectory(unittest)
