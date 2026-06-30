@@ -24,7 +24,7 @@ This [repository](https://github.com/mitre/im_sample_algorithm) contains a C++ l
 _It is not an application._
 GitHub [CI](../.github/workflows/ci.yml) is used to build & run tests.
 
-You should be familiar with the [FAA's Flight-deck Interval Management](https://www.faa.gov/about/office_org/headquarters_offices/ang/offices/tc/library/storyboard/detailedwebpages/im.html) concept. To understand any of this content at a techincal level, you need to also have [RTCA's DO-361A, Appendix C](https://my.rtca.org/).
+You should be familiar with the [FAA's Flight-deck Interval Management](https://www.faa.gov/about/office_org/headquarters_offices/ang/offices/tc/library/storyboard/detailedwebpages/im.html) concept. To understand any of this content at a technical level, you need to also have [RTCA's DO-361A, Appendix C](https://my.rtca.org/).
 
 For an application that can use this library, see the [FIM MOPS Aircraft & Control Model](https://mitre.github.io/FMACM/) (FMACM).
 
@@ -80,12 +80,12 @@ Living, developer-level documentation is provided on this GitHub site. Here the 
 
 - **Code Topics**
 
-  - Adding this library to a larger CMake simulation framework? Review the [recommended CPM integration](context.md#recommended-cpm-integration)
+  - Adding this library to a larger CMake simulation framework? Review the [short CPM integration recommendation](context.md#short-recommendation-cpm-integration)
   - Who you gonna call? :ghosts: Read [code entry points](entry_points.md)
   - How does an algorithm receive IM Clearance details? Read [code entry points](entry_points.md)
   - How does an algorithm receive a new aircraft state? Read [code entry points](entry_points.md) and the [traffic data discussion](traffic_data.md)
   - Find your own (shorter) path: [IM Turn Implementation](imturn.md)
-  - What are the ADS-B Data expectations? -- Reveiw the [traffic data discussion](traffic_data.md)
+  - What are the ADS-B Data expectations? -- Review the [traffic data discussion](traffic_data.md)
   - Where is the [IFPI defined](ifpi.md)? -- [Coming Soon](coming_soon.md)
   - Uh...Which algorithm is running? -- Review [the algorithm stages](which_algorithm.md) discussion
   - Are we missing some code? Review the [missing code table](missing_code.md)
