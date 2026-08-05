@@ -34,7 +34,7 @@ message(STATUS "${PROJECT_NAME}: Generating build version ${msg_VERSION}")
 # Begin project dependencies ------------------------------------------------------
 set(
     IM_SAMPLE_ALGORITHM_AIRCRAFT_SIMULATION_CORE_TAG
-    "2.0.0"
+    "73412470472c1eedf57b655045c9137d398861db" # TODO switch to "2.0.0" when released
     CACHE STRING "aircraft_simulation_core tag used for im_sample_algorithm builds"
 )
 set(IM_SAMPLE_ALGORITHM_FSLOADER_TAG "1.1.0" CACHE STRING "fsloader tag used for im_sample_algorithm builds")

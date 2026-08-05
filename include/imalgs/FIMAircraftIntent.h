@@ -19,6 +19,7 @@ class FIMAircraftIntent final : public aaesim::open_source::AircraftIntent {
  public:
    class Builder final {
     public:
+      Builder() = default;
       explicit Builder(const aaesim::open_source::DefaultAircraftIntent &intent) : intent_(intent) {}
       explicit Builder(const std::shared_ptr<const aaesim::open_source::AircraftIntent> &intent)
          : intent_(*aaesim::open_source::DefaultAircraftIntent::Builder(*intent).Build()) {}
@@ -46,6 +47,11 @@ class FIMAircraftIntent final : public aaesim::open_source::AircraftIntent {
          return *this;
       }
       Builder &UpdateWaypoint(const Waypoint &waypoint) { intent_.UpdateWaypoint(waypoint); return *this; }
+      Builder &LoadWaypoints(const std::vector<Waypoint> &ascent, const std::vector<Waypoint> &cruise,
+                             const std::vector<Waypoint> &descent) {
+         intent_.LoadWaypoints(ascent, cruise, descent);
+         return *this;
+      }
       FIMAircraftIntent Build() const { return FIMAircraftIntent(intent_, id_); }
 
     private:
