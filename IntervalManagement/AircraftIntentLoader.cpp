@@ -60,7 +60,9 @@ bool AircraftIntentLoader::load(DecodedStream *input) {
                       "No waypoints were found in the scenario file. Check the aircraft_intent{} input block.");
       throw std::runtime_error("Must provide waypoints.");
    } else {
-      aircraft_intent_.LoadWaypointsFromList(ascent_waypoints, cruise_waypoints, descent_waypoints);
+      aircraft_intent_.LoadWaypoints({ascent_waypoints.begin(), ascent_waypoints.end()},
+                                     {cruise_waypoints.begin(), cruise_waypoints.end()},
+                                     {descent_waypoints.begin(), descent_waypoints.end()});
    }
 
    return is_loaded_;

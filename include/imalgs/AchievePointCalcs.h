@@ -33,6 +33,7 @@
 
 #include "imalgs/AircraftState.h"
 #include "public/AircraftIntent.h"
+#include "public/TangentPlaneSequence.h"
 #include "public/AlongPathDistanceCalculator.h"
 #include "public/HorizontalPath.h"
 #include "public/VerticalPath.h"

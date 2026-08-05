@@ -202,7 +202,7 @@ void IMAlgorithm::Initialize(const OwnshipPredictionParameters &ownship_predicti
    SetAssignedSpacingGoal(m_im_clearance);
    // Check whether m_target_aircraft_intent was initialized by a subclass
    if (!m_target_aircraft_intent.IsLoaded()) {
-      m_target_aircraft_intent = m_im_clearance.GetTargetAircraftIntent();
+      m_target_aircraft_intent = FIMAircraftIntent::Builder(m_im_clearance.GetTargetAircraftIntent()).Build();
    }
    SetWeatherPrediction(weather_prediction);
 

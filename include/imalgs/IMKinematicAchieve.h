@@ -27,6 +27,7 @@
 #include "imalgs/IMAchieve.h"
 #include "imalgs/IMKinematicTimeBasedMaintain.h"
 #include "imalgs/InternalObserver.h"
+#include "imalgs/FIMAircraftIntent.h"
 #include "public/BlendWindsVerticallyByAltitude.h"
 #include "public/KinematicTrajectoryPredictor.h"
 #include "public/WindBlendingAlgorithm.h"
@@ -139,7 +140,7 @@ class IMKinematicAchieve : public IMAchieve, public Loadable {
    Waypoint m_traffic_reference_point;
    interval_management::open_source::AchievePointCalcs m_target_kinematic_traffic_reference_point_calcs;
 
-   AircraftIntent m_ownship_aircraft_intent;
+   FIMAircraftIntent m_ownship_aircraft_intent;
 
    aaesim::open_source::AlongPathDistanceCalculator m_ownship_distance_calculator;
    aaesim::open_source::AlongPathDistanceCalculator m_target_distance_calculator;

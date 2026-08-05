@@ -27,6 +27,7 @@
 #include "imalgs/IMUtils.h"
 #include "nlohmann/json.hpp"
 #include "public/CoreUtils.h"
+#include "public/DefaultAircraftIntent.h"
 #include "public/SingleTangentPlaneSequence.h"
 
 using namespace interval_management::open_source;
@@ -40,14 +41,16 @@ void interval_management::open_source::FIMAlgorithmAdapter::Initialize(
       aaesim::open_source::FlightDeckApplicationInitializer &initializer_visitor) {
    auto ownship_intent_from_clearance = m_im_algorithm->GetClearance().GetOwnshipIntent();
    if (ownship_intent_from_clearance.has_value()) {
-      initializer_visitor.fms_prediction_parameters.fms_intent = ownship_intent_from_clearance.value();
+      initializer_visitor.fms_prediction_parameters.fms_intent =
+            std::make_shared<FIMAircraftIntent>(ownship_intent_from_clearance.value());
    }
-   m_im_algorithm->ValidateClearance(initializer_visitor.fms_prediction_parameters.fms_intent, m_im_algorithm_type);
+   m_im_algorithm->ValidateClearance(*initializer_visitor.fms_prediction_parameters.fms_intent, m_im_algorithm_type);
    initializer_visitor.fms_prediction_parameters.fms_intent =
-         AircraftIntent::CopyAndTrimAfterNamedWaypoint(initializer_visitor.fms_prediction_parameters.fms_intent,
-                                                       m_im_algorithm->GetClearance().GetPlannedTerminationPoint());
-   auto waypoints =
-         CoreUtils::ShortenLongLegs(initializer_visitor.fms_prediction_parameters.fms_intent.GetWaypointList());
+         std::make_shared<DefaultAircraftIntent>(aaesim::open_source::AircraftIntentUtils::CopyAndTrimAfterNamedWaypoint(
+               *initializer_visitor.fms_prediction_parameters.fms_intent,
+               m_im_algorithm->GetClearance().GetPlannedTerminationPoint()));
+   const auto &intent_waypoints = initializer_visitor.fms_prediction_parameters.fms_intent->GetWaypoints();
+   auto waypoints = CoreUtils::ShortenLongLegs(std::list<Waypoint>(intent_waypoints.begin(), intent_waypoints.end()));
    m_position_converter = std::make_unique<SingleTangentPlaneSequence>(waypoints);
    initializer_visitor.position_converter = m_position_converter;
 

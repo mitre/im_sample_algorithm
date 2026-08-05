@@ -24,6 +24,8 @@
 #include <utility>
 
 #include "public/AircraftCalculations.h"
+#include "imalgs/IMUtils.h"
+#include "imalgs/FIMAircraftIntent.h"
 
 using namespace std;
 using namespace interval_management::open_source;
@@ -42,8 +44,10 @@ void MergePointMetric::determineMergePoint(const AircraftIntent &imintent, const
    // imintent:intent of IM aircraft containing the list of waypoints.
    // targintent:intent of target aircraft containing the list of waypoints.
 
-   m_im_ac_id = imintent.GetId();
-   m_target_ac_id = targintent.GetId();
+   const auto *ownship_intent = dynamic_cast<const FIMAircraftIntent *>(&imintent);
+   const auto *target_intent = dynamic_cast<const FIMAircraftIntent *>(&targintent);
+   m_im_ac_id = ownship_intent ? ownship_intent->GetId() : IMUtils::UNINITIALIZED_AIRCRAFT_ID;
+   m_target_ac_id = target_intent ? target_intent->GetId() : IMUtils::UNINITIALIZED_AIRCRAFT_ID;
 
    // overwrite these if merge point is found
    mReportMetrics = false;
@@ -56,13 +60,12 @@ void MergePointMetric::determineMergePoint(const AircraftIntent &imintent, const
       LOG4CPLUS_TRACE(logger,
                       "Target ID matches own for acid " << m_im_ac_id << ". No merge metrics will be reported.");
    } else if (index == -1) {
-      LOG4CPLUS_TRACE(logger, "No merge point found for im acid " << imintent.GetId() << " and target acid "
-                                                                  << targintent.GetId()
+      LOG4CPLUS_TRACE(logger, "No merge point found for the current ownship and target intents"
                                                                   << ". No merge metrics will be reported.");
    } else {
       mMergePointName = imintent.GetWaypointName(index);
-      mMergePointX = imintent.GetWaypointX(index);
-      mMergePointY = imintent.GetWaypointY(index);
+      mMergePointX = imintent.GetRouteData().m_x[index];
+      mMergePointY = imintent.GetRouteData().m_y[index];
       mReportMetrics = true;
    }
 }

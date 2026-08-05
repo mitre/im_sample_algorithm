@@ -52,25 +52,25 @@ void interval_management::open_source::FIMAlgorithmInitializer::Initialize(
 
 void interval_management::open_source::FIMAlgorithmInitializer::Initialize(
       interval_management::open_source::IMKinematicAchieve *kinematic_algorithm) {
-   kinematic_algorithm->Initialize(BuildOwnshipPredictionParameters(), fms_prediction_parameters.fms_intent,
+   kinematic_algorithm->Initialize(BuildOwnshipPredictionParameters(), *fms_prediction_parameters.fms_intent,
                                    fms_prediction_parameters.weather_prediction, position_converter);
 }
 
 void interval_management::open_source::FIMAlgorithmInitializer::Initialize(
       interval_management::open_source::IMTimeBasedAchieveMutableASG *test_vector_algorithm) {
-   test_vector_algorithm->Initialize(BuildOwnshipPredictionParameters(), fms_prediction_parameters.fms_intent,
+   test_vector_algorithm->Initialize(BuildOwnshipPredictionParameters(), *fms_prediction_parameters.fms_intent,
                                      fms_prediction_parameters.weather_prediction);
 }
 
 void interval_management::open_source::FIMAlgorithmInitializer::Initialize(
       interval_management::open_source::IMTimeBasedAchieve *time_achieve_algorithm) {
-   time_achieve_algorithm->Initialize(BuildOwnshipPredictionParameters(), fms_prediction_parameters.fms_intent,
+   time_achieve_algorithm->Initialize(BuildOwnshipPredictionParameters(), *fms_prediction_parameters.fms_intent,
                                       fms_prediction_parameters.weather_prediction, position_converter);
 }
 
 void interval_management::open_source::FIMAlgorithmInitializer::Initialize(
       interval_management::open_source::IMDistBasedAchieve *dist_achieve_algorithm) {
-   dist_achieve_algorithm->Initialize(BuildOwnshipPredictionParameters(), fms_prediction_parameters.fms_intent,
+   dist_achieve_algorithm->Initialize(BuildOwnshipPredictionParameters(), *fms_prediction_parameters.fms_intent,
                                       fms_prediction_parameters.weather_prediction, position_converter);
 }
 

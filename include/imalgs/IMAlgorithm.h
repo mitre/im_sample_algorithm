@@ -33,6 +33,7 @@
 #include "imalgs/FIMConfiguration.h"
 #include "imalgs/FIMSpeedLimiter.h"
 #include "imalgs/IMClearance.h"
+#include "imalgs/FIMAircraftIntent.h"
 #include "public/AircraftIntent.h"
 #include "public/BadaUtils.h"
 #include "public/Guidance.h"
@@ -216,7 +217,7 @@ class IMAlgorithm {
 
    void SetActiveFilter(unsigned long flag);
 
-   AircraftIntent m_target_aircraft_intent;
+   FIMAircraftIntent m_target_aircraft_intent;
    FlightStage m_stage_of_im_operation;
    IMClearance m_im_clearance;
    aaesim::open_source::StatisticalPilotDelay m_pilot_delay;

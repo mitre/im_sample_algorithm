@@ -114,14 +114,15 @@ void IMKinematicAchieve::Initialize(const OwnshipPredictionParameters &ownship_p
          ownship_prediction_parameters.aerodynamics, quantizer);
 
    // --- Prepare Ownship objects -------------
-   m_ownship_aircraft_intent = ownship_aircraft_intent;
+   m_ownship_aircraft_intent = FIMAircraftIntent::Builder(ownship_aircraft_intent).Build();
 
    // Create the kinematic trajectory predictors using ownship assumptions
    m_ownship_kinematic_trajectory_predictor = aaesim::open_source::KinematicTrajectoryPredictor(
          ownship_prediction_parameters.maximum_allowable_bank_angle, ownship_prediction_parameters.transition_ias,
          ownship_prediction_parameters.transition_mach, ownship_prediction_parameters.transition_altitude,
          ownship_prediction_parameters.expected_cruise_altitude);
-   m_ownship_kinematic_trajectory_predictor.CalculateWaypoints(m_ownship_aircraft_intent, weather_prediction);
+   m_ownship_kinematic_trajectory_predictor.CalculateWaypoints(
+         std::make_shared<FIMAircraftIntent>(m_ownship_aircraft_intent), weather_prediction);
 
    // Initialize these objects with an estimated horizontal path. The horizontal paths will be updated to a more precise
    // calculation during initial trajectory prediction.
@@ -144,7 +145,8 @@ void IMKinematicAchieve::Initialize(const OwnshipPredictionParameters &ownship_p
          ownship_prediction_parameters.transition_mach, ownship_prediction_parameters.transition_altitude,
          ownship_prediction_parameters.expected_cruise_altitude);
 
-   m_target_kinematic_trajectory_predictor.CalculateWaypoints(m_target_aircraft_intent, weather_prediction);
+   m_target_kinematic_trajectory_predictor.CalculateWaypoints(
+         std::make_shared<FIMAircraftIntent>(m_target_aircraft_intent), weather_prediction);
    m_target_distance_calculator = AlongPathDistanceCalculator(
          m_target_kinematic_trajectory_predictor.EstimateHorizontalTrajectory(weather_prediction),
          TrajectoryIndexProgressionDirection::DECREMENTING);
@@ -182,6 +184,13 @@ aaesim::open_source::Guidance IMKinematicAchieve::Update(
       const vector<interval_management::open_source::AircraftState> &targethistory) {
    aaesim::open_source::Guidance guidance_out =
          IMAchieve::Update(prevguidance, dynamicsstate, owntruthstate, targetsyncstate, targethistory);
+
+   m_ownship_aircraft_intent = FIMAircraftIntent::Builder(m_ownship_aircraft_intent)
+                                      .SetId(owntruthstate.GetId()).Build();
+   if (targetsyncstate.GetId() != IMUtils::UNINITIALIZED_AIRCRAFT_ID) {
+      m_target_aircraft_intent = FIMAircraftIntent::Builder(m_target_aircraft_intent)
+                                         .SetId(targetsyncstate.GetId()).Build();
+   }
 
    m_target_aircraft_exists = targetsyncstate.GetId() != IMUtils::UNINITIALIZED_AIRCRAFT_ID;
    m_target_history_exists = !targethistory.empty();
@@ -240,7 +249,8 @@ void IMKinematicAchieve::HandleTrajectoryPrediction(
 
    if (m_compute_ownship_kinematic_trajectory) {
       LOG4CPLUS_TRACE(logger, "compute ownship kinematic trajectory: " << owntruthstate.GetId());
-      m_ownship_kinematic_trajectory_predictor.CalculateWaypoints(m_ownship_aircraft_intent, m_weather_prediction);
+      m_ownship_kinematic_trajectory_predictor.CalculateWaypoints(
+            std::make_shared<FIMAircraftIntent>(m_ownship_aircraft_intent), m_weather_prediction);
 
       std::vector<HorizontalPath> ownship_horizontal_path =
             m_ownship_kinematic_trajectory_predictor.GetHorizontalPath();
@@ -351,7 +361,8 @@ void IMKinematicAchieve::HandleTrajectoryPrediction(
                   m_weather_prediction.getAtmosphere()->GetMachIASTransition(target_descent_cas,
                                                                              estimated_cruise_mach));
          }
-         m_target_kinematic_trajectory_predictor.CalculateWaypoints(m_target_aircraft_intent, m_weather_prediction);
+         m_target_kinematic_trajectory_predictor.CalculateWaypoints(
+               std::make_shared<FIMAircraftIntent>(m_target_aircraft_intent), m_weather_prediction);
 
          Units::RadiansAngle dummy_course = Units::RadiansAngle(0);
          std::vector<HorizontalPath>::size_type dummy_index = 0;
@@ -381,19 +392,22 @@ void IMKinematicAchieve::HandleTrajectoryPrediction(
             interval_management::open_source::AchievePointCalcs::ComputeDefaultTRP(
                   m_ownship_kinematic_achieve_by_calcs, m_ownship_aircraft_intent, m_target_aircraft_intent,
                   m_tangent_plane_sequence, target_horizontal_path, m_traffic_reference_point, x, y, index);
-            m_target_aircraft_intent.InsertWaypointAtIndex(m_traffic_reference_point, index);
+            m_target_aircraft_intent = FIMAircraftIntent::Builder(m_target_aircraft_intent)
+                                               .SetId(m_target_aircraft_intent.GetId())
+                                               .InsertWaypointAtIndex(m_traffic_reference_point, index).Build();
          } else {
             // retrieve TRP from target intent
             const size_t trp_index(m_target_aircraft_intent.GetWaypointIndexByName(trp_name));
             m_traffic_reference_point = m_target_aircraft_intent.GetWaypoint(trp_index);
          }
 
-         m_target_aircraft_intent = AircraftIntent::CopyAndTrimAfterNamedWaypoint(m_target_aircraft_intent,
+         m_target_aircraft_intent = FIMAircraftIntent::CopyAndTrimAfterNamedWaypoint(m_target_aircraft_intent,
                                                                                   m_traffic_reference_point.GetName());
 
          SetTrafficReferencePointConstraints(owntruthstate, targetsyncstate);
 
-         m_target_kinematic_trajectory_predictor.CalculateWaypoints(m_target_aircraft_intent, m_weather_prediction);
+         m_target_kinematic_trajectory_predictor.CalculateWaypoints(
+               std::make_shared<FIMAircraftIntent>(m_target_aircraft_intent), m_weather_prediction);
          m_target_kinematic_trajectory_predictor.BuildTrajectoryPrediction(
                m_weather_prediction, m_tangent_plane_sequence, target_start_altitude_msl, target_distance_to_go);
          m_target_kinematic_traffic_reference_point_calcs = interval_management::open_source::AchievePointCalcs(
@@ -847,15 +861,18 @@ void IMKinematicAchieve::ComputeFASTrajectories(
    // construct intents
    // final AC:  current_pos last_wp
    // vector AC:  current_pos merge_point last_wp
-   AircraftIntent own_intent(m_ownship_aircraft_intent), target_intent(m_target_aircraft_intent);
-   own_intent.ClearWaypoints();
-   target_intent.ClearWaypoints();
-   own_intent.SetPlannedCruiseAltitude(Units::FeetLength(owntruthstate.m_z));
-   target_intent.SetPlannedCruiseAltitude(Units::FeetLength(targettruthstate.m_z));
+   auto own_intent_builder = FIMAircraftIntent::Builder(m_ownship_aircraft_intent)
+                                   .SetId(m_ownship_aircraft_intent.GetId())
+                                   .ClearWaypoints()
+                                   .SetPlannedCruiseAltitude(Units::FeetLength(owntruthstate.m_z));
+   auto target_intent_builder = FIMAircraftIntent::Builder(m_target_aircraft_intent)
+                                      .SetId(m_target_aircraft_intent.GetId())
+                                      .ClearWaypoints()
+                                      .SetPlannedCruiseAltitude(Units::FeetLength(targettruthstate.m_z));
 
    Waypoint ptp_waypoint{m_ownship_aircraft_intent.GetWaypoint(achieve_by_waypoint_index)};
-   own_intent.InsertWaypointAtIndex(ptp_waypoint, 0);
-   target_intent.InsertWaypointAtIndex(target_end_waypoint, 0);
+   own_intent_builder.InsertWaypointAtIndex(ptp_waypoint, 0);
+   target_intent_builder.InsertWaypointAtIndex(target_end_waypoint, 0);
 
    pair<Units::Length, Units::Length> final_wpt_coords(x2, y2);
    pair<Units::Length, Units::Length> merge_coords(xMerge, yMerge);
@@ -878,9 +895,9 @@ void IMKinematicAchieve::ComputeFASTrajectories(
    LOG4CPLUS_TRACE(logger, "Merge to lastwpt = " << merge_to_lastwpt_distance);
 
    // convert states to waypoints, using ownship's sensed winds
-   own_intent.InsertWaypointAtIndex(MakeWaypointFromState(owntruthstate, owntruthstate.GetSensedWindEastComponent(),
-                                                          owntruthstate.GetSensedWindNorthComponent()),
-                                    0);
+   own_intent_builder.InsertWaypointAtIndex(
+         MakeWaypointFromState(owntruthstate, owntruthstate.GetSensedWindEastComponent(),
+                               owntruthstate.GetSensedWindNorthComponent()), 0);
 
    // Get predicted winds at target aircraft's current altitude & create waypoint
    Units::MetersPerSecondSpeed target_wind_x, target_wind_y;
@@ -889,7 +906,7 @@ void IMKinematicAchieve::ComputeFASTrajectories(
                                                                     target_wind_x, dVwx_dh);
    m_weather_prediction.north_south().CalculateWindGradientAtAltitude(Units::FeetLength(targettruthstate.m_z),
                                                                       target_wind_y, dVwy_dh);
-   target_intent.InsertWaypointAtIndex(MakeWaypointFromState(targettruthstate, target_wind_x, target_wind_y), 0);
+   target_intent_builder.InsertWaypointAtIndex(MakeWaypointFromState(targettruthstate, target_wind_x, target_wind_y), 0);
 
    const Units::DegreesAngle tolerance(10.0);
    const Units::NauticalMilesLength too_close(.85);  // see AAES-939, AAES-1061
@@ -906,16 +923,14 @@ void IMKinematicAchieve::ComputeFASTrajectories(
       LOG4CPLUS_WARN(logger, "Merge point discarded because it is near PTP.");
    } else {
       if (m_im_clearance.IsVectorAircraft()) {
-         own_intent.InsertPairAtIndex("merge", xMerge, yMerge, 1);
+         own_intent_builder.InsertPairAtIndex("merge", xMerge, yMerge, 1);
       } else {
-         target_intent.InsertPairAtIndex("merge", xMerge, yMerge, 1);
+         target_intent_builder.InsertPairAtIndex("merge", xMerge, yMerge, 1);
       }
    }
-   LOG4CPLUS_TRACE(logger, "Ownship AircraftIntent:" << endl << own_intent);
-   LOG4CPLUS_TRACE(logger, "Target AircraftIntent:" << endl << target_intent);
 
-   m_ownship_aircraft_intent = own_intent;
-   m_target_aircraft_intent = target_intent;
+   m_ownship_aircraft_intent = own_intent_builder.Build();
+   m_target_aircraft_intent = target_intent_builder.Build();
 
    m_compute_ownship_kinematic_trajectory = true;
    m_compute_target_kinematic_trajectory = true;
@@ -1087,5 +1102,7 @@ void IMKinematicAchieve::SetTrafficReferencePointConstraints(
    }
 
    LOG4CPLUS_TRACE(logger, "New TRP constraints:  " << m_traffic_reference_point);
-   m_target_aircraft_intent.UpdateWaypoint(m_traffic_reference_point);
+   m_target_aircraft_intent = FIMAircraftIntent::Builder(m_target_aircraft_intent)
+                                      .SetId(m_target_aircraft_intent.GetId())
+                                      .UpdateWaypoint(m_traffic_reference_point).Build();
 }

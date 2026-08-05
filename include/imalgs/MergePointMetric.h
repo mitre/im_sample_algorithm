@@ -19,6 +19,7 @@
 
 #pragma once
 
+#include <log4cplus/logger.h>
 #include <scalar/Length.h>
 
 #include <string>

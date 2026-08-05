@@ -124,7 +124,6 @@ const IMClearance IMClearanceLoader::BuildClearance(void) {
    if (!m_loaded) return m_empty_clearance;
 
    if (m_target_aircraft_intent_loader.IsLoaded()) {
-      m_target_aircraft_intent_loader.GetAircraftIntent().SetId(m_target_id);
    }
 
    IMClearance::Builder builder(m_clearance_type, m_target_id, m_target_aircraft_intent_loader.GetAircraftIntent(),

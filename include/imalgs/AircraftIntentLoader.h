@@ -23,7 +23,7 @@
 #include <log4cplus/logger.h>
 #include <log4cplus/loggingmacros.h>
 
-#include "public/AircraftIntent.h"
+#include "public/DefaultAircraftIntent.h"
 
 namespace interval_management {
 namespace loaders {
@@ -43,7 +43,7 @@ class AircraftIntentLoader final : public LoggingLoadable {
   private:
    static inline log4cplus::Logger logger_{log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("AircraftIntentLoader"))};
 
-   AircraftIntent aircraft_intent_{};
+   DefaultAircraftIntent aircraft_intent_{};
    bool is_loaded_{false};
 };
 

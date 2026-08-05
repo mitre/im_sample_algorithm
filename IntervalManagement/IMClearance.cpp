@@ -171,28 +171,24 @@ bool IMClearance::ValidateFinalApproachSpacingClearance(const AircraftIntent &ow
    if (m_is_vector_aircraft) {
       if (ownship_aircraft_intent.GetNumberOfWaypoints() < 2) {
          const string msg = "For FAS, The on-vector ownship intent is too small. It must be malformed.";
-         ownship_aircraft_intent.DumpParms("ownship intent:");
          LOG4CPLUS_FATAL(m_logger, msg);
          throw LoadError(msg);
       }
 
       if (m_target_aircraft_intent.GetNumberOfWaypoints() != 2) {
          const string msg = "For FAS, The on-final target intent is not 2. It must be malformed.";
-         m_target_aircraft_intent.DumpParms("target intent:");
          LOG4CPLUS_FATAL(m_logger, msg);
          throw LoadError(msg);
       }
    } else {
       if (ownship_aircraft_intent.GetNumberOfWaypoints() != 2) {
          const string msg = "For FAS, The on-final ownship intent is not 2. It must be malformed.";
-         ownship_aircraft_intent.DumpParms("ownship intent:");
          LOG4CPLUS_FATAL(m_logger, msg);
          throw LoadError(msg);
       }
 
       if (m_target_aircraft_intent.GetNumberOfWaypoints() < 2) {
          const string msg = "For FAS, The on-vector target intent is too small. It must be malformed.";
-         m_target_aircraft_intent.DumpParms("target intent:");
          LOG4CPLUS_FATAL(m_logger, msg);
          throw LoadError(msg);
       }
@@ -275,7 +271,6 @@ bool IMClearance::ValidatePlannedTerminationPoint(const AircraftIntent &ownship_
       const string msg =
             "The planned termination point, " + m_planned_termination_point + ", was not found in the ownship intent.";
       LOG4CPLUS_FATAL(m_logger, msg);
-      ownship_aircraft_intent.DumpParms("Own Intent follows:");
       throw LoadError(msg);
    }
 
@@ -308,7 +303,6 @@ bool IMClearance::ValidateTrafficReferencePoint(const AircraftIntent &ownship_ai
             std::string msg = "The Traffic-Reference-Point has not been found in the target intent. Looked for " +
                               m_traffic_reference_point + ".";
             LOG4CPLUS_FATAL(m_logger, msg);
-            m_target_aircraft_intent.DumpParms("Target Intent");
             throw LoadError(msg);
          }
       }
