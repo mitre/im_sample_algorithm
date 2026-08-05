@@ -15,6 +15,7 @@
 #include "public/DefaultAircraftIntent.h"
 #include "public/AircraftIntentUtils.h"
 #include "public/ScenarioUtils.h"
+#include "public/SingleTangentPlaneSequence.h"
 #include "utility/BoundedValue.h"
 
 namespace interval_management::open_source {
@@ -50,12 +51,49 @@ class FIMAircraftIntent final : public aaesim::open_source::AircraftIntent {
          return *this;
       }
       Builder &InsertWaypointAtIndex(const Waypoint &waypoint, int index) {
-         intent_.InsertWaypointAtIndex(waypoint, index);
+         if (index < 0 || static_cast<unsigned int>(index) > intent_.GetNumberOfWaypoints()) {
+            throw std::out_of_range("Waypoint insertion index is outside the intent route");
+         }
+
+         auto ascent = intent_.GetAscentWaypoints();
+         auto cruise = intent_.GetCruiseWaypoints();
+         auto descent = intent_.GetDescentWaypoints();
+         const auto insertion_index = static_cast<std::size_t>(index);
+         if (insertion_index < ascent.size()) {
+            ascent.insert(ascent.begin() + index, waypoint);
+         } else if (insertion_index < ascent.size() + cruise.size()) {
+            cruise.insert(cruise.begin() + index - static_cast<int>(ascent.size()), waypoint);
+         } else {
+            descent.insert(descent.begin() + index - static_cast<int>(ascent.size() + cruise.size()), waypoint);
+         }
+         RebuildIntent(ascent, cruise, descent);
          return *this;
       }
       Builder &InsertPairAtIndex(const std::string &name, Units::Length x, Units::Length y, int index) {
-         intent_.InsertPairAtIndex(name, x, y, index);
-         return *this;
+         const auto &waypoints = intent_.GetWaypoints();
+         if (waypoints.empty() || index < 0 || static_cast<unsigned int>(index) > waypoints.size()) {
+            throw std::out_of_range("Pair insertion index is outside the intent route");
+         }
+
+         SingleTangentPlaneSequence position_converter(waypoints);
+         EarthModel::LocalPositionEnu local_position{};
+         local_position.x = x;
+         local_position.y = y;
+         local_position.z = Units::ZERO_LENGTH;
+         EarthModel::GeodeticPosition geodetic_position{};
+         position_converter.ConvertLocalToGeodetic(local_position, geodetic_position);
+
+         Waypoint waypoint{};
+         waypoint.SetRfTurnArcRadius(Units::ZERO_LENGTH);
+         waypoint.SetWaypointLatLon(geodetic_position.latitude, geodetic_position.longitude);
+         waypoint.SetName(name);
+         const auto &previous_waypoint = waypoints[index == 0 ? 0 : index - 1];
+         const auto &next_waypoint = waypoints[index == static_cast<int>(waypoints.size()) ? waypoints.size() - 1 : index];
+         waypoint.SetAltitudeConstraintHigh(previous_waypoint.GetAltitudeConstraintHigh());
+         waypoint.SetSpeedConstraintHigh(previous_waypoint.GetSpeedConstraintHigh());
+         waypoint.SetAltitudeConstraintLow(next_waypoint.GetAltitudeConstraintLow());
+         waypoint.SetSpeedConstraintLow(next_waypoint.GetSpeedConstraintLow());
+         return InsertWaypointAtIndex(waypoint, index);
       }
       Builder &UpdateWaypoint(const Waypoint &waypoint) {
          auto updated_waypoints = intent_.GetWaypoints();
@@ -89,6 +127,17 @@ class FIMAircraftIntent final : public aaesim::open_source::AircraftIntent {
       FIMAircraftIntent Build() const { return FIMAircraftIntent(intent_, id_); }
 
     private:
+      void RebuildIntent(const std::vector<Waypoint> &ascent, const std::vector<Waypoint> &cruise,
+                         const std::vector<Waypoint> &descent) {
+         intent_ = *aaesim::open_source::DefaultAircraftIntent::Builder()
+                            .SetAscentWaypoints(ascent)
+                            .SetCruiseWaypoints(cruise)
+                            .SetDescentWaypoints(descent)
+                            .SetPlannedCruiseMach(BoundedValue<double, 0, 1>(intent_.GetPlannedCruiseMach()))
+                            .SetPlannedCruiseAltitude(intent_.GetPlannedCruiseAltitude())
+                            .Build();
+      }
+
       aaesim::open_source::DefaultAircraftIntent intent_{};
       int id_{aaesim::open_source::ScenarioUtils::AIRCRAFT_ID_NOT_IN_MAP};
    };

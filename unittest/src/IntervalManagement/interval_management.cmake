@@ -1,5 +1,6 @@
 set(IMALGORITHM_TEST_SOURCE
         ${CMAKE_CURRENT_LIST_DIR}/imalgo_tests.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/fim_aircraft_intent_tests.cpp
         ${CMAKE_CURRENT_LIST_DIR}/predicted_wind_evaluator_tests.cpp
         # ${CMAKE_CURRENT_LIST_DIR}/clearance_tests.cpp
         )
