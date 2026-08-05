@@ -49,7 +49,11 @@ class FIMAircraftIntent final : public aaesim::open_source::AircraftIntent {
       Builder &UpdateWaypoint(const Waypoint &waypoint) { intent_.UpdateWaypoint(waypoint); return *this; }
       Builder &LoadWaypoints(const std::vector<Waypoint> &ascent, const std::vector<Waypoint> &cruise,
                              const std::vector<Waypoint> &descent) {
-         intent_.LoadWaypoints(ascent, cruise, descent);
+         intent_ = *aaesim::open_source::DefaultAircraftIntent::Builder()
+                            .SetAscentWaypoints(ascent)
+                            .SetCruiseWaypoints(cruise)
+                            .SetDescentWaypoints(descent)
+                            .Build();
          return *this;
       }
       FIMAircraftIntent Build() const { return FIMAircraftIntent(intent_, id_); }
