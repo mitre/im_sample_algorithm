@@ -169,7 +169,7 @@ class FIMAircraftIntent final : public aaesim::open_source::AircraftIntent {
    double GetPlannedCruiseMach() const override { return intent_.GetPlannedCruiseMach(); }
    bool ContainsWaypointName(const std::string &name) const override { return intent_.ContainsWaypointName(name); }
 
-   bool IsLoaded() const { return intent_.IsLoaded(); }
+   bool IsLoaded() const { return GetNumberOfWaypoints() > 0; }
    Units::MetersLength GetWaypointX(unsigned int index) const { return intent_.GetWaypointX(index); }
    Units::MetersLength GetWaypointY(unsigned int index) const { return intent_.GetWaypointY(index); }
 
