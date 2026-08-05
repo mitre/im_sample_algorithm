@@ -397,8 +397,17 @@ void IMKinematicAchieve::HandleTrajectoryPrediction(
                                                .InsertWaypointAtIndex(m_traffic_reference_point, index).Build();
          } else {
             // retrieve TRP from target intent
-            const size_t trp_index(m_target_aircraft_intent.GetWaypointIndexByName(trp_name));
-            m_traffic_reference_point = m_target_aircraft_intent.GetWaypoint(trp_index);
+            const auto trp_index = m_target_aircraft_intent.GetWaypointIndexByName(trp_name);
+            if (!trp_index) {
+               throw std::runtime_error("Traffic reference point is not available in the target aircraft intent: " +
+                                        trp_name);
+            }
+            const auto traffic_reference_point = m_target_aircraft_intent.GetWaypoint(*trp_index);
+            if (!traffic_reference_point) {
+               throw std::runtime_error("Traffic reference point is not available in the target aircraft intent: " +
+                                        trp_name);
+            }
+            m_traffic_reference_point = *traffic_reference_point;
          }
 
          m_target_aircraft_intent = FIMAircraftIntent::CopyAndTrimAfterNamedWaypoint(m_target_aircraft_intent,
@@ -813,10 +822,18 @@ void IMKinematicAchieve::ComputeFASTrajectories(
    // find merge point
    Units::MetersLength x1, y1, x2, y2, x3, y3;  // point parameters
    string achieve_by_waypoint_name = m_im_clearance.GetAchieveByPoint();
-   int achieve_by_waypoint_index = m_ownship_aircraft_intent.GetWaypointIndexByName(achieve_by_waypoint_name);
+   const auto achieve_by_waypoint_index =
+         m_ownship_aircraft_intent.GetWaypointIndexByName(achieve_by_waypoint_name);
+   if (!achieve_by_waypoint_index) {
+      throw std::runtime_error("Achieve-by waypoint is not available in the ownship aircraft intent: " +
+                               achieve_by_waypoint_name);
+   }
 
    size_t target_end_waypoint_ix = m_target_aircraft_intent.GetNumberOfWaypoints() - 1;
-   Waypoint target_end_waypoint{m_target_aircraft_intent.GetWaypoint(target_end_waypoint_ix)};
+   const auto target_end_waypoint = m_target_aircraft_intent.GetWaypoint(target_end_waypoint_ix);
+   if (!target_end_waypoint) {
+      throw std::runtime_error("Target aircraft intent has no final waypoint");
+   }
 
    LOG4CPLUS_TRACE(logger, "Achieve by = " << achieve_by_waypoint_name);
 
@@ -824,8 +841,8 @@ void IMKinematicAchieve::ComputeFASTrajectories(
    Units::MetersLength delta_y, delta_x;
    if (m_im_clearance.IsVectorAircraft()) {
       merge_angle_mean = IMUtils::CalculateTrackAngle(m_ownship_track_angle_history);
-      x2 = m_ownship_aircraft_intent.GetWaypointX(achieve_by_waypoint_index);
-      y2 = m_ownship_aircraft_intent.GetWaypointY(achieve_by_waypoint_index);
+      x2 = m_ownship_aircraft_intent.GetWaypointX(*achieve_by_waypoint_index);
+      y2 = m_ownship_aircraft_intent.GetWaypointY(*achieve_by_waypoint_index);
       x3 = owntruthstate.GetPositionX();
       y3 = owntruthstate.GetPositionY();
       delta_x = targettruthstate.GetPositionX() - m_target_aircraft_intent.GetWaypointX(target_end_waypoint_ix);
@@ -836,8 +853,8 @@ void IMKinematicAchieve::ComputeFASTrajectories(
       y2 = m_target_aircraft_intent.GetWaypointY(target_end_waypoint_ix);
       x3 = targettruthstate.GetPositionX();
       y3 = targettruthstate.GetPositionY();
-      delta_x = owntruthstate.GetPositionX() - m_ownship_aircraft_intent.GetWaypointX(achieve_by_waypoint_index);
-      delta_y = owntruthstate.GetPositionY() - m_ownship_aircraft_intent.GetWaypointY(achieve_by_waypoint_index);
+      delta_x = owntruthstate.GetPositionX() - m_ownship_aircraft_intent.GetWaypointX(*achieve_by_waypoint_index);
+      delta_y = owntruthstate.GetPositionY() - m_ownship_aircraft_intent.GetWaypointY(*achieve_by_waypoint_index);
    }
    Units::DegreesAngle reverse_final_approach_angle = Units::arctan2(delta_y.value(), delta_x.value());
    LOG4CPLUS_TRACE(logger, reverse_final_approach_angle);
@@ -870,9 +887,12 @@ void IMKinematicAchieve::ComputeFASTrajectories(
                                       .ClearWaypoints()
                                       .SetPlannedCruiseAltitude(Units::FeetLength(targettruthstate.m_z));
 
-   Waypoint ptp_waypoint{m_ownship_aircraft_intent.GetWaypoint(achieve_by_waypoint_index)};
-   own_intent_builder.InsertWaypointAtIndex(ptp_waypoint, 0);
-   target_intent_builder.InsertWaypointAtIndex(target_end_waypoint, 0);
+   const auto ptp_waypoint = m_ownship_aircraft_intent.GetWaypoint(*achieve_by_waypoint_index);
+   if (!ptp_waypoint) {
+      throw std::runtime_error("Achieve-by waypoint is not available in the ownship aircraft intent");
+   }
+   own_intent_builder.InsertWaypointAtIndex(*ptp_waypoint, 0);
+   target_intent_builder.InsertWaypointAtIndex(*target_end_waypoint, 0);
 
    pair<Units::Length, Units::Length> final_wpt_coords(x2, y2);
    pair<Units::Length, Units::Length> merge_coords(xMerge, yMerge);

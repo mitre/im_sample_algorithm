@@ -68,12 +68,14 @@ class FIMAircraftIntent final : public aaesim::open_source::AircraftIntent {
             .SetId(intent.id_).Build();
    }
 
-   const Waypoint &GetWaypoint(unsigned int i) const override { return intent_.GetWaypoint(i); }
+   std::optional<Waypoint> GetWaypoint(unsigned int i) const override { return intent_.GetWaypoint(i); }
    const std::vector<Waypoint> &GetWaypoints() const override { return intent_.GetWaypoints(); }
-   const std::string &GetWaypointName(unsigned int i) const override { return intent_.GetWaypointName(i); }
+   std::optional<std::string> GetWaypointName(unsigned int i) const override { return intent_.GetWaypointName(i); }
    Units::MetersLength GetPlannedCruiseAltitude() const override { return intent_.GetPlannedCruiseAltitude(); }
    const RouteData &GetRouteData() const override { return intent_.GetRouteData(); }
-   int GetWaypointIndexByName(const std::string &name) const override { return intent_.GetWaypointIndexByName(name); }
+   std::optional<unsigned int> GetWaypointIndexByName(const std::string &name) const override {
+      return intent_.GetWaypointIndexByName(name);
+   }
    std::pair<int, int> FindCommonWaypoint(const AircraftIntent &intent) const override {
       return intent_.FindCommonWaypoint(intent);
    }

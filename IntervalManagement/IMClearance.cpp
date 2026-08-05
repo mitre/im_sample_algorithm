@@ -82,11 +82,14 @@ bool IMClearance::Validate(const AircraftIntent &ownship_aircraft_intent,
       if (m_valid) {
          if (m_planned_termination_point.empty()) {
             m_valid = true;
-            const string lastWptName =
+            const auto lastWptName =
                   ownship_aircraft_intent.GetWaypointName(ownship_aircraft_intent.GetNumberOfWaypoints() - 1);
-            string infomsg = "The planned termination point is empty. It is forced to: " + lastWptName;
+            if (!lastWptName) {
+               throw LoadError("The ownship intent has no final waypoint.");
+            }
+            string infomsg = "The planned termination point is empty. It is forced to: " + *lastWptName;
             LOG4CPLUS_INFO(m_logger, infomsg);
-            m_planned_termination_point = lastWptName;
+            m_planned_termination_point = *lastWptName;
          } else {
             m_valid = ValidatePlannedTerminationPoint(ownship_aircraft_intent, im_algorithm_type);
          }
@@ -151,9 +154,12 @@ bool IMClearance::ValidateFinalApproachSpacingClearance(const AircraftIntent &ow
    // AAES-632 changed the way FAS is handled.
    //   PTP does not have to be the same as TRP (parallel runway approaches)
    //   merge point only added to aircraft on-vector
-   const bool isLastWptNameOwnship =
-         ownship_aircraft_intent.GetWaypointName(ownship_aircraft_intent.GetNumberOfWaypoints() - 1) ==
-         m_planned_termination_point;
+   const auto last_waypoint_name =
+         ownship_aircraft_intent.GetWaypointName(ownship_aircraft_intent.GetNumberOfWaypoints() - 1);
+   if (!last_waypoint_name) {
+      throw LoadError("For FAS, the ownship intent must have a final waypoint.");
+   }
+   const bool isLastWptNameOwnship = *last_waypoint_name == m_planned_termination_point;
 
    if (!isLastWptNameOwnship) {
       const string msg = "For FAS, the Planned Termination Point (" + m_planned_termination_point +
@@ -194,8 +200,7 @@ bool IMClearance::ValidateFinalApproachSpacingClearance(const AircraftIntent &ow
       }
    }
 
-   if (ownship_aircraft_intent.GetWaypointName(ownship_aircraft_intent.GetNumberOfWaypoints() - 1) !=
-       m_achieve_by_point) {
+   if (*last_waypoint_name != m_achieve_by_point) {
       const string msg = "For FAS, The ABP must be the final waypoint and it is not. This intent is malformed.";
       LOG4CPLUS_FATAL(m_logger, msg);
       throw LoadError(msg);
@@ -267,7 +272,7 @@ void IMClearance::SetFinalApproachSpacingMergeAngleStd(Units::Angle final_approa
 
 bool IMClearance::ValidatePlannedTerminationPoint(const AircraftIntent &ownship_aircraft_intent,
                                                   const IMUtils::IMAlgorithmTypes im_algorithm_type) const {
-   if (ownship_aircraft_intent.GetWaypointIndexByName(m_planned_termination_point) < 0) {
+   if (!ownship_aircraft_intent.GetWaypointIndexByName(m_planned_termination_point)) {
       const string msg =
             "The planned termination point, " + m_planned_termination_point + ", was not found in the ownship intent.";
       LOG4CPLUS_FATAL(m_logger, msg);
@@ -298,8 +303,7 @@ bool IMClearance::ValidateTrafficReferencePoint(const AircraftIntent &ownship_ai
          // throw LoadError(msg);
          m_traffic_reference_point = "CALCULATED_TRP";
       } else {
-         const int idx = m_target_aircraft_intent.GetWaypointIndexByName(m_traffic_reference_point);
-         if (idx < 0) {
+         if (!m_target_aircraft_intent.GetWaypointIndexByName(m_traffic_reference_point)) {
             std::string msg = "The Traffic-Reference-Point has not been found in the target intent. Looked for " +
                               m_traffic_reference_point + ".";
             LOG4CPLUS_FATAL(m_logger, msg);

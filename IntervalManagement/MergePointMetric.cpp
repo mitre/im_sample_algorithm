@@ -63,7 +63,12 @@ void MergePointMetric::determineMergePoint(const AircraftIntent &imintent, const
       LOG4CPLUS_TRACE(logger, "No merge point found for the current ownship and target intents"
                                                                   << ". No merge metrics will be reported.");
    } else {
-      mMergePointName = imintent.GetWaypointName(index);
+      const auto merge_point_name = imintent.GetWaypointName(index);
+      if (!merge_point_name) {
+         LOG4CPLUS_WARN(logger, "Merge point index " << index << " is not available. No merge metrics will be reported.");
+         return;
+      }
+      mMergePointName = *merge_point_name;
       mMergePointX = imintent.GetRouteData().m_x[index];
       mMergePointY = imintent.GetRouteData().m_y[index];
       mReportMetrics = true;
