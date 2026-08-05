@@ -878,13 +878,15 @@ void IMKinematicAchieve::ComputeFASTrajectories(
    // construct intents
    // final AC:  current_pos last_wp
    // vector AC:  current_pos merge_point last_wp
-   auto own_intent_builder = FIMAircraftIntent::Builder(m_ownship_aircraft_intent)
+   auto own_intent_builder = FIMAircraftIntent::Builder()
                                    .SetId(m_ownship_aircraft_intent.GetId())
-                                   .ClearWaypoints()
+                                   .SetPlannedCruiseMach(
+                                         BoundedValue<double, 0, 1>(m_ownship_aircraft_intent.GetPlannedCruiseMach()))
                                    .SetPlannedCruiseAltitude(Units::FeetLength(owntruthstate.m_z));
-   auto target_intent_builder = FIMAircraftIntent::Builder(m_target_aircraft_intent)
+   auto target_intent_builder = FIMAircraftIntent::Builder()
                                       .SetId(m_target_aircraft_intent.GetId())
-                                      .ClearWaypoints()
+                                      .SetPlannedCruiseMach(
+                                            BoundedValue<double, 0, 1>(m_target_aircraft_intent.GetPlannedCruiseMach()))
                                       .SetPlannedCruiseAltitude(Units::FeetLength(targettruthstate.m_z));
 
    const auto ptp_waypoint = m_ownship_aircraft_intent.GetWaypoint(*achieve_by_waypoint_index);

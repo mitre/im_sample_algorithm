@@ -37,9 +37,16 @@ class FIMAircraftIntent final : public aaesim::open_source::AircraftIntent {
          id_ = aaesim::open_source::ScenarioUtils::GetUniqueIdForAircraftId(aircraft_id);
          return *this;
       }
-      Builder &ClearWaypoints() { intent_.ClearWaypoints(); return *this; }
       Builder &SetPlannedCruiseAltitude(Units::Length altitude) {
-         intent_.SetPlannedCruiseAltitude(altitude);
+         intent_ = *aaesim::open_source::DefaultAircraftIntent::Builder(intent_)
+                            .SetPlannedCruiseAltitude(altitude)
+                            .Build();
+         return *this;
+      }
+      Builder &SetPlannedCruiseMach(BoundedValue<double, 0, 1> mach) {
+         intent_ = *aaesim::open_source::DefaultAircraftIntent::Builder(intent_)
+                            .SetPlannedCruiseMach(mach)
+                            .Build();
          return *this;
       }
       Builder &InsertWaypointAtIndex(const Waypoint &waypoint, int index) {
