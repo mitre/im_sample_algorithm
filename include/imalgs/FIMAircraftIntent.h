@@ -6,12 +6,16 @@
 
 #pragma once
 
+#include <algorithm>
 #include <memory>
+#include <stdexcept>
 #include <string>
+#include <vector>
 
 #include "public/DefaultAircraftIntent.h"
 #include "public/AircraftIntentUtils.h"
 #include "public/ScenarioUtils.h"
+#include "utility/BoundedValue.h"
 
 namespace interval_management::open_source {
 
@@ -46,7 +50,26 @@ class FIMAircraftIntent final : public aaesim::open_source::AircraftIntent {
          intent_.InsertPairAtIndex(name, x, y, index);
          return *this;
       }
-      Builder &UpdateWaypoint(const Waypoint &waypoint) { intent_.UpdateWaypoint(waypoint); return *this; }
+      Builder &UpdateWaypoint(const Waypoint &waypoint) {
+         auto updated_waypoints = intent_.GetWaypoints();
+         const auto matching_waypoints = std::count_if(
+               updated_waypoints.cbegin(), updated_waypoints.cend(),
+               [&waypoint](const Waypoint &existing_waypoint) { return existing_waypoint.GetName() == waypoint.GetName(); });
+         if (matching_waypoints != 1) {
+            throw std::runtime_error("Expected exactly one waypoint with the supplied name.");
+         }
+         std::replace_if(updated_waypoints.begin(), updated_waypoints.end(),
+                         [&waypoint](const Waypoint &existing_waypoint) {
+                            return existing_waypoint.GetName() == waypoint.GetName();
+                         },
+                         waypoint);
+         intent_ = *aaesim::open_source::DefaultAircraftIntent::Builder()
+                            .SetDescentWaypoints(updated_waypoints)
+                            .SetPlannedCruiseMach(BoundedValue<double, 0, 1>(intent_.GetPlannedCruiseMach()))
+                            .SetPlannedCruiseAltitude(intent_.GetPlannedCruiseAltitude())
+                            .Build();
+         return *this;
+      }
       Builder &LoadWaypoints(const std::vector<Waypoint> &ascent, const std::vector<Waypoint> &cruise,
                              const std::vector<Waypoint> &descent) {
          intent_ = *aaesim::open_source::DefaultAircraftIntent::Builder()
