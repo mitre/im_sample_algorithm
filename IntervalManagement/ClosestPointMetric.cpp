@@ -33,7 +33,7 @@ void ClosestPointMetric::update(double imx, double imy, double targx, double tar
    // imx,imy:position of IM aircraft.
    // targx,targy:position of target aircraft.
 
-   Units::Length dist = aaesim::open_source::AircraftCalculations::PtToPtDist(
+   Units::Length dist = mitre::oss::simcore::AircraftCalculations::PtToPtDist(
          Units::FeetLength(imx), Units::FeetLength(imy), Units::FeetLength(targx), Units::FeetLength(targy));
 
    if (dist < mMinDist) {

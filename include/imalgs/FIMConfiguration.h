@@ -27,6 +27,9 @@
 
 namespace interval_management {
 namespace open_source {
+
+using namespace mitre::oss::simcore;
+
 class FIMConfiguration final : public Loadable {
   public:
    FIMConfiguration() = default;

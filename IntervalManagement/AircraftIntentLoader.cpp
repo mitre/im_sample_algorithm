@@ -25,8 +25,9 @@
 #include "imalgs/WaypointLoader.h"
 
 namespace {
-std::list<Waypoint> BuildWaypointList(const std::list<interval_management::loaders::WaypointLoader> &waypoint_loaders) {
-   std::list<Waypoint> waypoints;
+std::list<mitre::oss::simcore::Waypoint>
+BuildWaypointList(const std::list<interval_management::loaders::WaypointLoader> &waypoint_loaders) {
+   std::list<mitre::oss::simcore::Waypoint> waypoints;
    for (const auto &waypoint_loader : waypoint_loaders) {
       waypoints.push_back(waypoint_loader.BuildWaypoint());
    }

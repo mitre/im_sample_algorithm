@@ -42,26 +42,26 @@ void IMKinematicDistBasedMaintain::IterationReset() {
    m_measured_spacing_interval = Units::NegInfinity();
 }
 
-aaesim::open_source::Guidance IMKinematicDistBasedMaintain::Update(
-      const aaesim::open_source::DynamicsState &dynamics_state,
+mitre::oss::simcore::Guidance IMKinematicDistBasedMaintain::Update(
+      const mitre::oss::simcore::DynamicsState &dynamics_state,
       const interval_management::open_source::AircraftState &ownship_aircraft_state,
       const interval_management::open_source::AircraftState
             &target_state_projected_on_ownships_path_at_adjusted_distance,
       const Units::Length target_dtg_along_ownships_path_at_adjusted_distance,
       const Units::Length target_dtg_along_ownships_path,
-      const aaesim::open_source::KinematicTrajectoryPredictor &ownship_kinematic_trajectory_predictor,
-      const aaesim::open_source::Guidance &guidance_in,
+      const mitre::oss::simcore::KinematicTrajectoryPredictor &ownship_kinematic_trajectory_predictor,
+      const mitre::oss::simcore::Guidance &guidance_in,
       const std::vector<interval_management::open_source::AircraftState> &target_aircraft_state_history,
       const interval_management::open_source::AchievePointCalcs &ownship_achieve_point_calcs,
       const interval_management::open_source::AchievePointCalcs &traffic_reference_point_calcs,
-      aaesim::open_source::StatisticalPilotDelay &pilot_delay) {
+      mitre::oss::simcore::StatisticalPilotDelay &pilot_delay) {
    /*
     * Developer's note: In this level of the algorithm, all uses of the /target state/
     * must be projected onto ownship's route prior to use. This includes all items
     * in the targethistory vector (they have not already been projected). Some lower
     * level algorithms carry this load automatically
     */
-   aaesim::open_source::Guidance guidanceout = guidance_in;
+   mitre::oss::simcore::Guidance guidanceout = guidance_in;
 
    // target's along-path position on ownship's route (adjusted for ASG)
    Units::Length target_projected_dtg(target_dtg_along_ownships_path_at_adjusted_distance);
@@ -161,9 +161,9 @@ aaesim::open_source::Guidance IMKinematicDistBasedMaintain::Update(
 
 void IMKinematicDistBasedMaintain::CalculateIas(
       const Units::Length current_ownship_altitude, const Units::Length target_kinematic_dtg_to_end_of_route,
-      const aaesim::open_source::DynamicsState &dynamics_state,
-      const aaesim::open_source::KinematicTrajectoryPredictor &ownship_kinematic_trajectory_predictor,
-      aaesim::open_source::StatisticalPilotDelay &pilot_delay) {
+      const mitre::oss::simcore::DynamicsState &dynamics_state,
+      const mitre::oss::simcore::KinematicTrajectoryPredictor &ownship_kinematic_trajectory_predictor,
+      mitre::oss::simcore::StatisticalPilotDelay &pilot_delay) {
    m_im_speed_command_ias = m_speed_limiter.LimitSpeedCommand(
          m_previous_im_speed_command_ias, m_im_speed_command_ias,
          ownship_kinematic_trajectory_predictor.GetVerticalPathCasByIndex(m_ownship_reference_lookup_index),
@@ -186,8 +186,8 @@ void IMKinematicDistBasedMaintain::CalculateIas(
 void IMKinematicDistBasedMaintain::CalculateMach(
       const Units::Length current_ownship_altitude, const Units::Length target_kinematic_dtg_to_end_of_route,
       const Units::Speed true_airspeed_command,
-      const aaesim::open_source::KinematicTrajectoryPredictor &ownship_kinematic_trajectory_predictor,
-      aaesim::open_source::StatisticalPilotDelay &pilot_delay, const Units::Mass current_mass) {
+      const mitre::oss::simcore::KinematicTrajectoryPredictor &ownship_kinematic_trajectory_predictor,
+      mitre::oss::simcore::StatisticalPilotDelay &pilot_delay, const Units::Mass current_mass) {
    Units::Speed nominal_profile_ias = Units::MetersPerSecondSpeed(
          ownship_kinematic_trajectory_predictor.GetVerticalPathVelocityByIndex(m_ownship_reference_lookup_index));
    Units::Speed nominal_profile_tas =
@@ -232,10 +232,10 @@ void IMKinematicDistBasedMaintain::CalculateMach(
 void IMKinematicDistBasedMaintain::RecordInternalObserverData(
       const interval_management::open_source::AircraftState &ownship_aircraft_state,
       const interval_management::open_source::AircraftState &target_aircraft_state,
-      const aaesim::open_source::DynamicsState &dynamics_state, const Units::Speed true_airspeed_command,
+      const mitre::oss::simcore::DynamicsState &dynamics_state, const Units::Speed true_airspeed_command,
       const Units::Length target_true_dtg, const Units::Length ownship_true_dtg,
       const std::vector<interval_management::open_source::AircraftState> &target_aircraft_state_history,
-      const aaesim::open_source::KinematicTrajectoryPredictor &ownship_kinematic_trajectory_predictor) {
+      const mitre::oss::simcore::KinematicTrajectoryPredictor &ownship_kinematic_trajectory_predictor) {
    InternalObserver::getInstance()->updateFinalGS(
          target_aircraft_state.GetId(),
          Units::MetersPerSecondSpeed(target_aircraft_state_history.back().GetGroundSpeed()).value());

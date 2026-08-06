@@ -29,7 +29,7 @@
 #include "public/SimulationTime.h"
 
 using namespace interval_management::open_source;
-using namespace aaesim::open_source;
+using namespace mitre::oss::simcore;
 
 log4cplus::Logger IMDistBasedAchieve::m_logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("IMDistBasedAchieve"));
 const Units::Length IMDistBasedAchieve::DEFAULT_DISTANCE_BASED_ASSIGNED_SPACING_GOAL = Units::NegInfinity();
@@ -56,7 +56,7 @@ IMDistBasedAchieve::~IMDistBasedAchieve() = default;
 
 void IMDistBasedAchieve::Initialize(const OwnshipPredictionParameters &ownship_prediction_parameters,
                                     const AircraftIntent &ownship_aircraft_intent,
-                                    aaesim::open_source::WeatherPrediction &weather_prediction,
+                                    mitre::oss::simcore::WeatherPrediction &weather_prediction,
                                     std::shared_ptr<TangentPlaneSequence> &position_converter) {
    SetTangentPlaneSequence(position_converter);
    Initialize(ownship_prediction_parameters, ownship_aircraft_intent, weather_prediction);
@@ -64,7 +64,7 @@ void IMDistBasedAchieve::Initialize(const OwnshipPredictionParameters &ownship_p
 
 void IMDistBasedAchieve::Initialize(const OwnshipPredictionParameters &ownship_prediction_parameters,
                                     const AircraftIntent &ownship_aircraft_intent,
-                                    aaesim::open_source::WeatherPrediction &weather_prediction) {
+                                    mitre::oss::simcore::WeatherPrediction &weather_prediction) {
    IMKinematicAchieve::Initialize(ownship_prediction_parameters, ownship_aircraft_intent, weather_prediction);
 
    m_im_kinematic_dist_based_maintain->SetQuantizeFlag(GetQuantizeFlag());
@@ -98,13 +98,13 @@ bool IMDistBasedAchieve::load(DecodedStream *input) {
    return loaded;
 }
 
-aaesim::open_source::Guidance IMDistBasedAchieve::Update(
-      const aaesim::open_source::Guidance &previous_im_guidance,
-      const aaesim::open_source::DynamicsState &three_dof_dynamics_state,
+mitre::oss::simcore::Guidance IMDistBasedAchieve::Update(
+      const mitre::oss::simcore::Guidance &previous_im_guidance,
+      const mitre::oss::simcore::DynamicsState &three_dof_dynamics_state,
       const interval_management::open_source::AircraftState &current_ownship_state,
       const interval_management::open_source::AircraftState &current_target_state,
       const vector<interval_management::open_source::AircraftState> &target_adsb_history) {
-   aaesim::open_source::Guidance im_guidance =
+   mitre::oss::simcore::Guidance im_guidance =
          IMKinematicAchieve::Update(previous_im_guidance, three_dof_dynamics_state, current_ownship_state,
                                     current_target_state, target_adsb_history);
 
@@ -468,7 +468,7 @@ aaesim::open_source::Guidance IMDistBasedAchieve::Update(
 }
 
 void IMDistBasedAchieve::CalculateIas(const Units::Length current_ownship_altitude,
-                                      const aaesim::open_source::DynamicsState &three_dof_dynamics_state) {
+                                      const mitre::oss::simcore::DynamicsState &three_dof_dynamics_state) {
    if (!IsTargetPassedTrp()) {
       m_im_speed_command_ias = m_speed_limiter.LimitSpeedCommand(
             m_previous_im_speed_command_ias, m_im_speed_command_ias,
@@ -577,10 +577,10 @@ void IMDistBasedAchieve::CalculateMach(const Units::Time reference_ttg, const Un
    m_previous_reference_im_speed_command_mach = estimated_mach;
 }
 
-void IMDistBasedAchieve::RecordData(aaesim::open_source::Guidance &im_guidance,
+void IMDistBasedAchieve::RecordData(mitre::oss::simcore::Guidance &im_guidance,
                                     const interval_management::open_source::AircraftState &current_ownship_state,
                                     const interval_management::open_source::AircraftState &current_target_state,
-                                    const aaesim::open_source::DynamicsState &three_dof_dynamics_state,
+                                    const mitre::oss::simcore::DynamicsState &three_dof_dynamics_state,
                                     Units::Speed unmodified_im_speed_command_ias, Units::Speed im_speed_command_tas,
                                     Units::Speed ownship_reference_cas, Units::Length ownship_reference_dtg_to_ptp,
                                     Units::Time target_reference_ttg_to_trp) {

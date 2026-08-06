@@ -33,6 +33,9 @@
 
 namespace interval_management {
 namespace open_source {
+
+using namespace mitre::oss::simcore;
+
 class IMClearance final {
   public:
    enum ClearanceType { NONE = -1, CUSTOM = 0, CAPTURE, MAINTAIN, ACHIEVE, FAS };

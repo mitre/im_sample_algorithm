@@ -26,6 +26,7 @@
 
 namespace interval_management {
 namespace open_source {
+
 class TrueDistances final {
   public:
    static const Units::Time END_OF_ROUTE_CROSSING_TIME_TOLERANCE;

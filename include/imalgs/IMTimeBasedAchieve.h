@@ -29,6 +29,9 @@
 
 namespace interval_management {
 namespace open_source {
+
+using namespace mitre::oss::simcore;
+
 class IMTimeBasedAchieve : public IMKinematicAchieve {
   public:
    IMTimeBasedAchieve();
@@ -41,9 +44,9 @@ class IMTimeBasedAchieve : public IMKinematicAchieve {
 
    virtual void IterationReset() override;
 
-   virtual aaesim::open_source::Guidance Update(
-         const aaesim::open_source::Guidance &previous_im_guidance,
-         const aaesim::open_source::DynamicsState &three_dof_dynamics_state,
+   virtual mitre::oss::simcore::Guidance Update(
+         const mitre::oss::simcore::Guidance &previous_im_guidance,
+         const mitre::oss::simcore::DynamicsState &three_dof_dynamics_state,
          const interval_management::open_source::AircraftState &current_ownship_state,
          const interval_management::open_source::AircraftState &current_target_state,
          const std::vector<interval_management::open_source::AircraftState> &target_adsb_history) override;
@@ -72,12 +75,12 @@ class IMTimeBasedAchieve : public IMKinematicAchieve {
 
    void Initialize(const OwnshipPredictionParameters &ownship_prediction_parameters,
                    const AircraftIntent &ownship_aircraft_intent,
-                   aaesim::open_source::WeatherPrediction &weather_prediction,
+                   mitre::oss::simcore::WeatherPrediction &weather_prediction,
                    std::shared_ptr<TangentPlaneSequence> &position_converter) override;
 
   protected:
    virtual void CalculateIas(const Units::Length current_ownship_altitude,
-                             const aaesim::open_source::DynamicsState &three_dof_dynamics_state) override;
+                             const mitre::oss::simcore::DynamicsState &three_dof_dynamics_state) override;
 
    virtual void CalculateMach(const Units::Time reference_ttg, const Units::Length current_ownship_altitude,
                               const Units::Mass current_mass);
@@ -85,9 +88,9 @@ class IMTimeBasedAchieve : public IMKinematicAchieve {
    virtual void RecordInternalObserverMetrics(
          const interval_management::open_source::AircraftState &current_ownship_state,
          const interval_management::open_source::AircraftState &current_target_state,
-         const aaesim::open_source::DynamicsState &dynamics_state, const Units::Speed unmodified_ias,
+         const mitre::oss::simcore::DynamicsState &dynamics_state, const Units::Speed unmodified_ias,
          const Units::Speed tas_command, const Units::Speed reference_velocity, const Units::Length reference_distance,
-         const aaesim::open_source::Guidance &guidance) override;
+         const mitre::oss::simcore::Guidance &guidance) override;
 
    void Copy(const IMTimeBasedAchieve &obj);
 
@@ -99,23 +102,23 @@ class IMTimeBasedAchieve : public IMKinematicAchieve {
    Units::Time m_predicted_spacing_interval;
 
   private:
-   aaesim::open_source::Guidance HandleAchieveStage(
+   mitre::oss::simcore::Guidance HandleAchieveStage(
          const interval_management::open_source::AircraftState &current_ownship_state,
          const interval_management::open_source::AircraftState &current_target_state,
          const std::vector<interval_management::open_source::AircraftState> &target_adsb_history,
-         const aaesim::open_source::DynamicsState &three_dof_dynamics_state,
-         aaesim::open_source::Guidance &guidance_out);
+         const mitre::oss::simcore::DynamicsState &three_dof_dynamics_state,
+         mitre::oss::simcore::Guidance &guidance_out);
 
    void TestForTrafficAlignment(
          const interval_management::open_source::AircraftState &current_ownship_state,
          const std::vector<interval_management::open_source::AircraftState> &target_adsb_history);
 
-   aaesim::open_source::Guidance HandleMaintainStage(
+   mitre::oss::simcore::Guidance HandleMaintainStage(
          const interval_management::open_source::AircraftState &current_ownship_state,
          const interval_management::open_source::AircraftState &current_target_state,
          const std::vector<interval_management::open_source::AircraftState> &target_adsb_history,
-         const aaesim::open_source::DynamicsState &three_dof_dynamics_state,
-         const aaesim::open_source::Guidance &previous_im_guidance, aaesim::open_source::Guidance &guidance_out);
+         const mitre::oss::simcore::DynamicsState &three_dof_dynamics_state,
+         const mitre::oss::simcore::Guidance &previous_im_guidance, mitre::oss::simcore::Guidance &guidance_out);
 
    const Units::Time CalculateMeasuredSpacingInterval(
          const interval_management::open_source::AircraftState &current_ownship_state,
@@ -133,7 +136,7 @@ class IMTimeBasedAchieve : public IMKinematicAchieve {
    void DoAlgorithmLogging(const interval_management::open_source::AircraftState &current_ownship_state,
                            const interval_management::open_source::AircraftState &current_target_state,
                            const Units::Length &reference_distance, const Units::Speed &tascommand,
-                           const aaesim::open_source::Guidance &guidance_out, const bool &is_crossing_time_valid) const;
+                           const mitre::oss::simcore::Guidance &guidance_out, const bool &is_crossing_time_valid) const;
 
    interval_management::open_source::AircraftState m_target_state_at_traffic_alignment;
    interval_management::open_source::AircraftState m_target_state_at_cdti_initiate_signal_receipt;
@@ -209,7 +212,7 @@ inline void IMTimeBasedAchieve::DoAlgorithmLogging(
       const interval_management::open_source::AircraftState &current_ownship_state,
       const interval_management::open_source::AircraftState &current_target_state,
       const Units::Length &reference_distance, const Units::Speed &tascommand,
-      const aaesim::open_source::Guidance &guidance_out, const bool &is_crossing_time_valid) const {
+      const mitre::oss::simcore::Guidance &guidance_out, const bool &is_crossing_time_valid) const {
    if (m_logger.getLogLevel() == log4cplus::TRACE_LOG_LEVEL) {
       using json = nlohmann::json;
       json j;

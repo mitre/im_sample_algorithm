@@ -25,9 +25,15 @@
 
 namespace interval_management {
 namespace open_source {
-class MOPSPredictedWindEvaluatorVersion1 final : public aaesim::open_source::PredictedWindEvaluator {
+
+using namespace mitre::oss::simcore;
+
+
+using namespace mitre::oss::simcore;
+
+class MOPSPredictedWindEvaluatorVersion1 final : public mitre::oss::simcore::PredictedWindEvaluator {
   public:
-   const static std::shared_ptr<aaesim::open_source::PredictedWindEvaluator> &GetInstance();
+   const static std::shared_ptr<mitre::oss::simcore::PredictedWindEvaluator> &GetInstance();
 
    virtual ~MOPSPredictedWindEvaluatorVersion1();
 
@@ -43,8 +49,8 @@ class MOPSPredictedWindEvaluatorVersion1 final : public aaesim::open_source::Pre
     * @param predictedwindy wind in the y
     * @author sbowman
     */
-   virtual bool ArePredictedWindsAccurate(const aaesim::open_source::AircraftState &state,
-                                          const aaesim::open_source::WeatherPrediction &weatherPrediction,
+   virtual bool ArePredictedWindsAccurate(const mitre::oss::simcore::AircraftState &state,
+                                          const mitre::oss::simcore::WeatherPrediction &weatherPrediction,
                                           const Units::Speed reference_cas, const Units::Length reference_altitude,
                                           const std::shared_ptr<Atmosphere> &sensed_atmosphere) const;
 
@@ -52,7 +58,7 @@ class MOPSPredictedWindEvaluatorVersion1 final : public aaesim::open_source::Pre
    const static Units::Angle toleranceAngle;
    const static Units::Speed toleranceSpeed;
 
-   static std::shared_ptr<aaesim::open_source::PredictedWindEvaluator> mInstance;
+   static std::shared_ptr<mitre::oss::simcore::PredictedWindEvaluator> mInstance;
 
    MOPSPredictedWindEvaluatorVersion1();
 };

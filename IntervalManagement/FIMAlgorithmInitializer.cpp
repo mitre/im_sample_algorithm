@@ -96,21 +96,21 @@ const interval_management::open_source::FIMAlgorithmInitializer
 
 interval_management::open_source::FIMAlgorithmInitializer::Builder *
       interval_management::open_source::FIMAlgorithmInitializer::Builder::AddOwnshipPerformanceParameters(
-            const aaesim::open_source::OwnshipPerformanceParameters &performance_parameters) {
+            const mitre::oss::simcore::OwnshipPerformanceParameters &performance_parameters) {
    m_performance_parameters = performance_parameters;
    return this;
 }
 
 interval_management::open_source::FIMAlgorithmInitializer::Builder *
       interval_management::open_source::FIMAlgorithmInitializer::Builder::AddOwnshipFmsPredictionParameters(
-            const aaesim::open_source::OwnshipFmsPredictionParameters &prediction_parameters) {
+            const mitre::oss::simcore::OwnshipFmsPredictionParameters &prediction_parameters) {
    m_prediction_parameters = prediction_parameters;
    return this;
 }
 
 interval_management::open_source::FIMAlgorithmInitializer::Builder *
       interval_management::open_source::FIMAlgorithmInitializer::Builder::AddSurveillanceProcessor(
-            std::shared_ptr<const aaesim::open_source::ASSAP> processor) {
+            std::shared_ptr<const mitre::oss::simcore::ASSAP> processor) {
    m_surveillance_processor = processor;
    return this;
 }

@@ -31,6 +31,9 @@
 namespace interval_management {
 namespace open_source {
 
+using namespace mitre::oss::simcore;
+
+
 class IMMaintain : public IMAlgorithm {
   public:
    static const Units::HertzFrequency MAINTAIN_CONTROL_GAIN_DEFAULT;
@@ -49,8 +52,8 @@ class IMMaintain : public IMAlgorithm {
 
    virtual void Prepare(Units::Speed previous_im_speed_command, Units::Speed previous_ias_command,
                         interval_management::open_source::FIMSpeedLimiter speed_limiter, double previous_mach_command,
-                        const aaesim::open_source::EuclideanTrajectoryPredictor &ownship_trajectory_predictor,
-                        const aaesim::open_source::AlongPathDistanceCalculator &im_distance_calculator,
+                        const mitre::oss::simcore::EuclideanTrajectoryPredictor &ownship_trajectory_predictor,
+                        const mitre::oss::simcore::AlongPathDistanceCalculator &im_distance_calculator,
                         const std::vector<interval_management::open_source::AircraftState> &target_adsb_track_history,
                         const IMClearance &im_clearance,
                         const std::vector<interval_management::open_source::FIMSpeedLimiter::RfLegLimit> &rf_limits);
@@ -68,8 +71,8 @@ class IMMaintain : public IMAlgorithm {
   protected:
    void Copy(const IMMaintain &obj);
 
-   aaesim::open_source::AlongPathDistanceCalculator m_ownship_decrementing_distance_calculator;
-   aaesim::open_source::AlongPathDistanceCalculator m_ownship_distance_calculator;
+   mitre::oss::simcore::AlongPathDistanceCalculator m_ownship_decrementing_distance_calculator;
+   mitre::oss::simcore::AlongPathDistanceCalculator m_ownship_distance_calculator;
 
   private:
    static log4cplus::Logger m_logger;

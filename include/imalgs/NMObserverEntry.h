@@ -22,6 +22,7 @@
 namespace interval_management {
 namespace open_source {
 
+
 class NMObserverEntry final {
   public:
    NMObserverEntry();

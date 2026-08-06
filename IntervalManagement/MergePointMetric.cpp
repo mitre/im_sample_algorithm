@@ -91,12 +91,12 @@ void MergePointMetric::update(double imXNew, double imYNew, double targXNew, dou
 
       m_im_x_ft = imXNew;
       m_im_y_ft = imYNew;
-      mIMDist = aaesim::open_source::AircraftCalculations::PtToPtDist(
+      mIMDist = mitre::oss::simcore::AircraftCalculations::PtToPtDist(
             mMergePointX, mMergePointY, Units::FeetLength(m_im_x_ft), Units::FeetLength(m_im_y_ft));
 
       m_targ_x_ft = targXNew;
       m_targ_y_ft = targYNew;
-      mMergeDist = aaesim::open_source::AircraftCalculations::PtToPtDist(
+      mMergeDist = mitre::oss::simcore::AircraftCalculations::PtToPtDist(
             Units::FeetLength(m_im_x_ft), Units::FeetLength(m_im_y_ft), Units::FeetLength(m_targ_x_ft),
             Units::FeetLength(m_targ_y_ft));
    }
@@ -126,7 +126,7 @@ bool MergePointMetric::newPointCloser(double x, double y) {
    // returns true if the new closer to the merge point.
    //         else false.
 
-   return (aaesim::open_source::AircraftCalculations::PtToPtDist(mMergePointX, mMergePointY, Units::FeetLength(x),
+   return (mitre::oss::simcore::AircraftCalculations::PtToPtDist(mMergePointX, mMergePointY, Units::FeetLength(x),
                                                                  Units::FeetLength(y)) < mIMDist);
 }
 

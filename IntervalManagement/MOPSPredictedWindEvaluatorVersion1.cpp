@@ -36,12 +36,12 @@ using namespace interval_management::open_source;
 const Units::Angle MOPSPredictedWindEvaluatorVersion1::toleranceAngle(Units::DegreesAngle(15.0));
 const Units::Speed MOPSPredictedWindEvaluatorVersion1::toleranceSpeed(Units::KnotsSpeed(10.0));
 
-std::shared_ptr<aaesim::open_source::PredictedWindEvaluator> MOPSPredictedWindEvaluatorVersion1::mInstance;
+std::shared_ptr<mitre::oss::simcore::PredictedWindEvaluator> MOPSPredictedWindEvaluatorVersion1::mInstance;
 
-const std::shared_ptr<aaesim::open_source::PredictedWindEvaluator> &MOPSPredictedWindEvaluatorVersion1::GetInstance() {
+const std::shared_ptr<mitre::oss::simcore::PredictedWindEvaluator> &MOPSPredictedWindEvaluatorVersion1::GetInstance() {
    if (!mInstance) {
       mInstance =
-            std::shared_ptr<aaesim::open_source::PredictedWindEvaluator>(new MOPSPredictedWindEvaluatorVersion1());
+            std::shared_ptr<mitre::oss::simcore::PredictedWindEvaluator>(new MOPSPredictedWindEvaluatorVersion1());
    }
    return mInstance;
 }
@@ -51,7 +51,7 @@ MOPSPredictedWindEvaluatorVersion1::MOPSPredictedWindEvaluatorVersion1() = defau
 MOPSPredictedWindEvaluatorVersion1::~MOPSPredictedWindEvaluatorVersion1() = default;
 
 bool MOPSPredictedWindEvaluatorVersion1::ArePredictedWindsAccurate(
-      const aaesim::open_source::AircraftState &state, const aaesim::open_source::WeatherPrediction &weatherPrediction,
+      const mitre::oss::simcore::AircraftState &state, const mitre::oss::simcore::WeatherPrediction &weatherPrediction,
       const Units::Speed reference_cas, const Units::Length reference_altitude,
       const std::shared_ptr<Atmosphere> &sensed_atmosphere) const {
    Units::MetersPerSecondSpeed windeastcomp, windnorthcomp;

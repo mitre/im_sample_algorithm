@@ -102,7 +102,7 @@ void PredictionFileKinematic::Finish() {
 
 void PredictionFileKinematic::Gather(
       const int iteration, const Units::Time simulation_time, std::string aircraft_id,
-      const std::shared_ptr<const aaesim::open_source::FlightDeckApplication> &flightdeck_application) {
+      const std::shared_ptr<const mitre::oss::simcore::FlightDeckApplication> &flightdeck_application) {
    const bool is_im_application =
          CoreUtils::InstanceOf<interval_management::open_source::FIMAlgorithmAdapter>(flightdeck_application.get());
    if (is_im_application) {

@@ -30,7 +30,7 @@
 #include "public/CoreUtils.h"
 #include "public/CustomMath.h"
 
-using namespace aaesim::open_source;
+using namespace mitre::oss::simcore;
 using namespace interval_management::open_source;
 
 log4cplus::Logger IMAlgorithm::m_logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("IMAlgorithm"));
@@ -214,15 +214,15 @@ void IMAlgorithm::ResetDefaults() {
    // TODO remove this function
 }
 
-aaesim::open_source::Guidance IMAlgorithm::Update(
-      const aaesim::open_source::Guidance &prevguidance, const aaesim::open_source::DynamicsState &dynamicsstate,
+mitre::oss::simcore::Guidance IMAlgorithm::Update(
+      const mitre::oss::simcore::Guidance &prevguidance, const mitre::oss::simcore::DynamicsState &dynamicsstate,
       const interval_management::open_source::AircraftState &owntruthstate,
       const interval_management::open_source::AircraftState &targettruthstate,
       const std::vector<interval_management::open_source::AircraftState> &targethistory) {
    return prevguidance;
 }
 
-void IMAlgorithm::SetPilotDelay(aaesim::open_source::StatisticalPilotDelay &pilot_delay) {
+void IMAlgorithm::SetPilotDelay(mitre::oss::simcore::StatisticalPilotDelay &pilot_delay) {
    m_pilot_delay = std::move(pilot_delay);
 }
 

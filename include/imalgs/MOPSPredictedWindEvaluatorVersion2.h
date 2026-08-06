@@ -25,11 +25,17 @@
 
 namespace interval_management {
 namespace open_source {
-class MOPSPredictedWindEvaluatorVersion2 final : public aaesim::open_source::PredictedWindEvaluator {
+
+using namespace mitre::oss::simcore;
+
+
+using namespace mitre::oss::simcore;
+
+class MOPSPredictedWindEvaluatorVersion2 final : public mitre::oss::simcore::PredictedWindEvaluator {
   public:
    static Units::KnotsSpeed MAX_PERMITTED_GROUNDSPEED_ERROR;
 
-   const static std::shared_ptr<aaesim::open_source::PredictedWindEvaluator> &GetInstance();
+   const static std::shared_ptr<mitre::oss::simcore::PredictedWindEvaluator> &GetInstance();
 
    virtual ~MOPSPredictedWindEvaluatorVersion2();
 
@@ -41,15 +47,15 @@ class MOPSPredictedWindEvaluatorVersion2 final : public aaesim::open_source::Pre
     * @param state and aircraft_state_vector that represents the most recent navigations state
     * @param weatherPrediction The predicted winds to be evaluated
     */
-   virtual bool ArePredictedWindsAccurate(const aaesim::open_source::AircraftState &state,
-                                          const aaesim::open_source::WeatherPrediction &weatherPrediction,
+   virtual bool ArePredictedWindsAccurate(const mitre::oss::simcore::AircraftState &state,
+                                          const mitre::oss::simcore::WeatherPrediction &weatherPrediction,
                                           const Units::Speed reference_cas, const Units::Length reference_altitude,
                                           const std::shared_ptr<Atmosphere> &sensed_atmosphere) const;
 
   private:
    static log4cplus::Logger m_logger;
 
-   static std::shared_ptr<aaesim::open_source::PredictedWindEvaluator> mInstance;
+   static std::shared_ptr<mitre::oss::simcore::PredictedWindEvaluator> mInstance;
 
    static void LogWindDisagreeMetaData(
          const Units::KelvinTemperature predicted_temperature, const Units::KelvinTemperature true_temperature,
@@ -58,7 +64,7 @@ class MOPSPredictedWindEvaluatorVersion2 final : public aaesim::open_source::Pre
          const Units::Length reference_altitude, const Units::FeetLength true_altitude,
          const Units::Speed reference_cas, const Units::KnotsSpeed tas1, const Units::KnotsSpeed tas2,
          const Units::KnotsSpeed gs1, const Units::KnotsSpeed gs2, const Units::Speed predicted_wind_x,
-         const Units::Speed predicted_wind_y, const aaesim::open_source::AircraftState &state);
+         const Units::Speed predicted_wind_y, const mitre::oss::simcore::AircraftState &state);
 
    MOPSPredictedWindEvaluatorVersion2();
 };

@@ -66,18 +66,18 @@ class IMUtils final {
    static bool GetCrossingTime(
          const Units::Length current_dtg,
          const std::vector<interval_management::open_source::AircraftState> &aircraft_state_history,
-         const std::vector<aaesim::open_source::HorizontalPath> &horizontal_path, Units::Time &crossing_time);
+         const std::vector<mitre::oss::simcore::HorizontalPath> &horizontal_path, Units::Time &crossing_time);
 
    static bool GetCrossingTime(
          const Units::Length current_dtg,
          const std::vector<interval_management::open_source::AircraftState> &aircraft_state_history,
-         const std::vector<aaesim::open_source::HorizontalPath> &horizontal_path, Units::Time &crossing_time,
+         const std::vector<mitre::oss::simcore::HorizontalPath> &horizontal_path, Units::Time &crossing_time,
          Units::Length &projected_x, Units::Length &projected_y);
 
    static bool GetCrossingTime(
          const Units::Length current_dtg,
          const std::vector<interval_management::open_source::AircraftState> &aircraft_state_history,
-         aaesim::open_source::AlongPathDistanceCalculator &distance_calculator, Units::Time &crossing_time,
+         mitre::oss::simcore::AlongPathDistanceCalculator &distance_calculator, Units::Time &crossing_time,
          Units::Length &projected_x, Units::Length &projected_y);
 
    static void CalculateMergePoint(const Units::Length x1, const Units::Length y1, const Units::Length x2,
@@ -86,48 +86,48 @@ class IMUtils final {
 
    static void CalculateTimeBasedExtrapolate(
          const Units::Length &ownship_dtg, const interval_management::open_source::AircraftState &oldest_target_state,
-         const std::vector<aaesim::open_source::HorizontalPath> &ownship_horizontal_traj,
+         const std::vector<mitre::oss::simcore::HorizontalPath> &ownship_horizontal_traj,
          Units::Time &extrapolated_target_time, Units::Length &projected_x, Units::Length &projected_y,
          Units::Length &projected_distance_to_go);
 
    static void CalculateTimeBasedExtrapolate(const Units::Length &ownship_dtg,
                                              const interval_management::open_source::AircraftState &oldest_target_state,
-                                             aaesim::open_source::AlongPathDistanceCalculator &distance_calculator,
+                                             mitre::oss::simcore::AlongPathDistanceCalculator &distance_calculator,
                                              Units::Time &extrapolated_target_time, Units::Length &projected_x,
                                              Units::Length &projected_y, Units::Length &projected_distance_to_go);
 
    static bool CalculateTargetStateAtTime(
          const interval_management::open_source::AircraftState &target_state,
-         const std::vector<aaesim::open_source::HorizontalPath> &ownship_horizontal_traj,
+         const std::vector<mitre::oss::simcore::HorizontalPath> &ownship_horizontal_traj,
          const Units::Time extrapolation_time, const Units::Angle ownship_true_heading,
          interval_management::open_source::AircraftState &extrapolation_state);
 
    static void GetTimeBasedExtrapolateState(
          const interval_management::open_source::AircraftState &current_ownship_state,
          const interval_management::open_source::AircraftState &oldest_target_state,
-         const std::vector<aaesim::open_source::HorizontalPath> &ownship_horizontal_traj,
-         const std::vector<aaesim::open_source::HorizontalPath> &target_horizontal_traj,
+         const std::vector<mitre::oss::simcore::HorizontalPath> &ownship_horizontal_traj,
+         const std::vector<mitre::oss::simcore::HorizontalPath> &target_horizontal_traj,
          Units::Time &measured_spacing_interval,
          interval_management::open_source::AircraftState &aircraft_state_to_return);
 
    static void GetPositionFromPathLength(const Units::Length distance_to_go_in,
-                                         const std::vector<aaesim::open_source::HorizontalPath> &horizontal_path_in,
+                                         const std::vector<mitre::oss::simcore::HorizontalPath> &horizontal_path_in,
                                          const Units::Angle ownship_true_heading, Units::Length &x_out,
                                          Units::Length &y_out, Units::UnsignedAngle &course_out,
                                          int &horizontal_path_index);
 
    static bool GetPathLengthFromPosition(const Units::Length x, const Units::Length y,
-                                         const std::vector<aaesim::open_source::HorizontalPath> &horizontal_path,
+                                         const std::vector<mitre::oss::simcore::HorizontalPath> &horizontal_path,
                                          Units::Length &distance_to_go, Units::Angle &track);
 
    // method to project target aircraft position onto ownship horizontal trajectory
    static bool ProjectTargetPosition(const Units::Length x_target, const Units::Length y_target,
-                                     const std::vector<aaesim::open_source::HorizontalPath> &ownship_horizontal_path,
+                                     const std::vector<mitre::oss::simcore::HorizontalPath> &ownship_horizontal_path,
                                      Units::Length &x_projected, Units::Length &y_projected, Units::Length &dtg);
 
    // method to get target aircraft position on ownship horizontal trajectory based upon distance to go
    static bool ProjectTargetPositionFromDistance(
-         const Units::Length dtg, const std::vector<aaesim::open_source::HorizontalPath> &ownship_horizontal_path,
+         const Units::Length dtg, const std::vector<mitre::oss::simcore::HorizontalPath> &ownship_horizontal_path,
          Units::Length &x_projected, Units::Length &y_projected);
 
    /**
@@ -140,7 +140,7 @@ class IMUtils final {
     */
    static void CalculateTargetStateAtDistance(
          const interval_management::open_source::AircraftState &target_state,
-         const std::vector<aaesim::open_source::HorizontalPath> &ownship_horizontal_traj,
+         const std::vector<mitre::oss::simcore::HorizontalPath> &ownship_horizontal_traj,
          const Units::Length extrapolation_distance, const Units::Angle ownship_true_heading,
          interval_management::open_source::AircraftState &extrapstate);
 
@@ -154,7 +154,7 @@ class IMUtils final {
     */
    static interval_management::open_source::AircraftState GetTargetStateOnOwnshipPathForDtg(
          const std::vector<interval_management::open_source::AircraftState> &target_adsb_history,
-         const std::vector<aaesim::open_source::HorizontalPath> &ownship_horizontal_path,
+         const std::vector<mitre::oss::simcore::HorizontalPath> &ownship_horizontal_path,
          const Units::Length target_distance, const Units::Angle ownship_true_heading);
 
    static Units::Time InterpolateTimeAtDtg(const Units::Length target_dtg, const Units::Time time1,
@@ -175,13 +175,13 @@ class IMUtils final {
     */
    static interval_management::open_source::AircraftState GetProjectedTargetState(
          const std::vector<interval_management::open_source::AircraftState> &target_state_history,
-         const std::vector<aaesim::open_source::HorizontalPath> &ownship_horizontal_traj, const Units::Time target_time,
+         const std::vector<mitre::oss::simcore::HorizontalPath> &ownship_horizontal_traj, const Units::Time target_time,
          const Units::Angle ownship_true_heading, bool &target_state_is_valid);
 
    static interval_management::open_source::AircraftState GetProjectedTargetState(
-         aaesim::open_source::AlongPathDistanceCalculator &distance_calculator,
+         mitre::oss::simcore::AlongPathDistanceCalculator &distance_calculator,
          const std::vector<interval_management::open_source::AircraftState> &target_state_history,
-         const std::vector<aaesim::open_source::HorizontalPath> &ownship_horizontal_traj, const Units::Time target_time,
+         const std::vector<mitre::oss::simcore::HorizontalPath> &ownship_horizontal_traj, const Units::Time target_time,
          const Units::Angle ownship_true_heading, bool &target_state_is_valid);
 
    static Units::SignedAngle CalculateTrackAngle(const std::list<Units::Angle> &angle_history);
@@ -193,9 +193,9 @@ class IMUtils final {
    static std::map<IMUtils::IMAlgorithmTypes, std::string> algorithm_type_dictionary;
 
    static interval_management::open_source::AircraftState ConvertToIntervalManagementAircraftState(
-         const aaesim::open_source::AircraftState &aircraft_state);
+         const mitre::oss::simcore::AircraftState &aircraft_state);
 
-   static aaesim::open_source::AircraftState ConvertToAaesimAircraftState(
+   static mitre::oss::simcore::AircraftState ConvertToAaesimAircraftState(
          const interval_management::open_source::AircraftState &aircraft_state);
 
   private:

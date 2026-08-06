@@ -29,6 +29,9 @@
 
 namespace interval_management {
 namespace open_source {
+
+using namespace mitre::oss::simcore;
+
 class IMDistBasedAchieve final : public IMKinematicAchieve {
   public:
    static const Units::Length DEFAULT_DISTANCE_BASED_ASSIGNED_SPACING_GOAL;
@@ -43,16 +46,16 @@ class IMDistBasedAchieve final : public IMKinematicAchieve {
 
    void Initialize(const OwnshipPredictionParameters &ownship_prediction_parameters,
                    const AircraftIntent &ownship_aircraft_intent,
-                   aaesim::open_source::WeatherPrediction &weather_prediction,
+                   mitre::oss::simcore::WeatherPrediction &weather_prediction,
                    std::shared_ptr<TangentPlaneSequence> &position_converter) override;
 
    virtual void Initialize(const OwnshipPredictionParameters &ownship_prediction_parameters,
                            const AircraftIntent &ownship_aircraft_intent,
-                           aaesim::open_source::WeatherPrediction &weather_prediction) override;
+                           mitre::oss::simcore::WeatherPrediction &weather_prediction) override;
 
-   virtual aaesim::open_source::Guidance Update(
-         const aaesim::open_source::Guidance &previous_im_guidance,
-         const aaesim::open_source::DynamicsState &three_dof_dynamics_state,
+   virtual mitre::oss::simcore::Guidance Update(
+         const mitre::oss::simcore::Guidance &previous_im_guidance,
+         const mitre::oss::simcore::DynamicsState &three_dof_dynamics_state,
          const interval_management::open_source::AircraftState &current_ownship_state,
          const interval_management::open_source::AircraftState &current_target_state,
          const std::vector<interval_management::open_source::AircraftState> &target_adsb_history) override;
@@ -89,17 +92,17 @@ class IMDistBasedAchieve final : public IMKinematicAchieve {
 
   protected:
    virtual void CalculateIas(const Units::Length current_ownship_altitude,
-                             const aaesim::open_source::DynamicsState &three_dof_dynamics_state) override;
+                             const mitre::oss::simcore::DynamicsState &three_dof_dynamics_state) override;
 
    virtual void CalculateMach(const Units::Time reference_ttg, const Units::Length current_ownship_altitude,
                               const Units::Mass current_mass);
 
    void Copy(const IMDistBasedAchieve &obj);
 
-   void RecordData(aaesim::open_source::Guidance &im_guidance,
+   void RecordData(mitre::oss::simcore::Guidance &im_guidance,
                    const interval_management::open_source::AircraftState &current_ownship_state,
                    const interval_management::open_source::AircraftState &current_target_state,
-                   const aaesim::open_source::DynamicsState &three_dof_dynamics_state,
+                   const mitre::oss::simcore::DynamicsState &three_dof_dynamics_state,
                    Units::Speed unmodified_im_speed_command_ias, Units::Speed im_speed_command_tas,
                    Units::Speed ownship_reference_true_airspeed, Units::Length ownship_reference_dtg_to_ptp,
                    Units::Time target_reference_ttg_to_trp);
@@ -120,8 +123,8 @@ class IMDistBasedAchieve final : public IMKinematicAchieve {
    Units::Length m_predicted_spacing_interval;
    Units::Length m_measured_spacing_interval;
    Units::Length m_assigned_spacing_goal;
-   aaesim::open_source::AlongPathDistanceCalculator m_distance_calculator_target_on_ownship_hpath;
-   aaesim::open_source::PositionCalculator m_position_calculator_target_on_ownship_hpath;
+   mitre::oss::simcore::AlongPathDistanceCalculator m_distance_calculator_target_on_ownship_hpath;
+   mitre::oss::simcore::PositionCalculator m_position_calculator_target_on_ownship_hpath;
 
    static log4cplus::Logger m_logger;
 };

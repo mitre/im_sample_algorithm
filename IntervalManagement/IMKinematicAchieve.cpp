@@ -36,7 +36,7 @@
 #include "public/Wind.h"
 
 using namespace interval_management::open_source;
-using namespace aaesim::open_source;
+using namespace mitre::oss::simcore;
 
 log4cplus::Logger IMKinematicAchieve::logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("IMKinematicAchieve"));
 const int IMKinematicAchieve::MINIMUM_FAS_TRACK_COUNT(5);
@@ -83,7 +83,7 @@ void IMKinematicAchieve::IterClearIMKinAch() {
    m_target_aircraft_exists = false;
    m_target_history_exists = false;
 
-   aaesim::open_source::KinematicTrajectoryPredictor dummytraj;
+   mitre::oss::simcore::KinematicTrajectoryPredictor dummytraj;
 
    m_ownship_kinematic_trajectory_predictor = dummytraj;
    m_target_kinematic_trajectory_predictor = dummytraj;
@@ -97,7 +97,7 @@ void IMKinematicAchieve::IterClearIMKinAch() {
 
 void IMKinematicAchieve::Initialize(const OwnshipPredictionParameters &ownship_prediction_parameters,
                                     const AircraftIntent &ownship_aircraft_intent,
-                                    aaesim::open_source::WeatherPrediction &weather_prediction) {
+                                    mitre::oss::simcore::WeatherPrediction &weather_prediction) {
    IMAchieve::Initialize(ownship_prediction_parameters, ownship_aircraft_intent, weather_prediction);
 
    m_ownship_track_angle_history.clear();
@@ -117,7 +117,7 @@ void IMKinematicAchieve::Initialize(const OwnshipPredictionParameters &ownship_p
    m_ownship_aircraft_intent = FIMAircraftIntent::Builder(ownship_aircraft_intent).Build();
 
    // Create the kinematic trajectory predictors using ownship assumptions
-   m_ownship_kinematic_trajectory_predictor = aaesim::open_source::KinematicTrajectoryPredictor(
+   m_ownship_kinematic_trajectory_predictor = mitre::oss::simcore::KinematicTrajectoryPredictor(
          ownship_prediction_parameters.maximum_allowable_bank_angle, ownship_prediction_parameters.transition_ias,
          ownship_prediction_parameters.transition_mach, ownship_prediction_parameters.transition_altitude,
          ownship_prediction_parameters.expected_cruise_altitude);
@@ -140,7 +140,7 @@ void IMKinematicAchieve::Initialize(const OwnshipPredictionParameters &ownship_p
          TrajectoryIndexProgressionDirection::UNDEFINED);
 
    // --- Prepare Target objects -------------
-   m_target_kinematic_trajectory_predictor = aaesim::open_source::KinematicTrajectoryPredictor(
+   m_target_kinematic_trajectory_predictor = mitre::oss::simcore::KinematicTrajectoryPredictor(
          ownship_prediction_parameters.maximum_allowable_bank_angle, ownship_prediction_parameters.transition_ias,
          ownship_prediction_parameters.transition_mach, ownship_prediction_parameters.transition_altitude,
          ownship_prediction_parameters.expected_cruise_altitude);
@@ -177,12 +177,12 @@ bool IMKinematicAchieve::load(DecodedStream *input) {
    return m_loaded;
 }
 
-aaesim::open_source::Guidance IMKinematicAchieve::Update(
-      const aaesim::open_source::Guidance &prevguidance, const aaesim::open_source::DynamicsState &dynamicsstate,
+mitre::oss::simcore::Guidance IMKinematicAchieve::Update(
+      const mitre::oss::simcore::Guidance &prevguidance, const mitre::oss::simcore::DynamicsState &dynamicsstate,
       const interval_management::open_source::AircraftState &owntruthstate,
       const interval_management::open_source::AircraftState &targetsyncstate,
       const vector<interval_management::open_source::AircraftState> &targethistory) {
-   aaesim::open_source::Guidance guidance_out =
+   mitre::oss::simcore::Guidance guidance_out =
          IMAchieve::Update(prevguidance, dynamicsstate, owntruthstate, targetsyncstate, targethistory);
 
    m_ownship_aircraft_intent = FIMAircraftIntent::Builder(m_ownship_aircraft_intent)
@@ -272,7 +272,7 @@ void IMKinematicAchieve::HandleTrajectoryPrediction(
                                                                          Units::FeetLength(owntruthstate.m_z),
                                                                          ownship_distance_to_go);
 
-      std::shared_ptr<aaesim::open_source::KinematicDescent4DPredictor> kinematic_descent_4d_predictor =
+      std::shared_ptr<mitre::oss::simcore::KinematicDescent4DPredictor> kinematic_descent_4d_predictor =
             m_ownship_kinematic_trajectory_predictor.GetKinematicDescent4dPredictor();
       CalculateRFLegPhase(m_ownship_kinematic_trajectory_predictor.GetPrecalcWaypoints(),
                           Units::MetersSecondAcceleration(kinematic_descent_4d_predictor->GetDecelerationRateFPA()),
@@ -864,7 +864,7 @@ void IMKinematicAchieve::ComputeFASTrajectories(
    // randomize merge angle around the mean
    Units::Angle merge_angle_std = m_im_clearance.GetFinalApproachSpacingMergeAngleStd();
    Units::Angle merge_angle =
-         aaesim::open_source::ScenarioUtils::RANDOM_NUMBER_GENERATOR.GaussianSample(merge_angle_mean, merge_angle_std);
+         mitre::oss::simcore::ScenarioUtils::RANDOM_NUMBER_GENERATOR.GaussianSample(merge_angle_mean, merge_angle_std);
    Units::DegreesAngle final_approach_angle = reverse_final_approach_angle + Units::PI_RADIANS_ANGLE;
    LOG4CPLUS_TRACE(logger, "Average track angle = " << Units::DegreesAngle(merge_angle_mean)
                                                     << ", randomized merge angle = " << Units::DegreesAngle(merge_angle)

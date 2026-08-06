@@ -29,6 +29,9 @@
 namespace interval_management {
 namespace open_source {
 
+using namespace mitre::oss::simcore;
+
+
 class MergePointMetric final {
   public:
    MergePointMetric();

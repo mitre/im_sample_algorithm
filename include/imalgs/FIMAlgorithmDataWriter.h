@@ -39,6 +39,9 @@
 
 namespace interval_management {
 namespace open_source {
+
+using namespace mitre::oss::simcore;
+
 class FIMAlgorithmDataWriter final : public OutputHandler {
   public:
    FIMAlgorithmDataWriter();
@@ -46,9 +49,9 @@ class FIMAlgorithmDataWriter final : public OutputHandler {
 
    virtual void Finish();
 
-   void Gather(const int iteration_number, const aaesim::open_source::SimulationTime &time,
+   void Gather(const int iteration_number, const mitre::oss::simcore::SimulationTime &time,
                const std::string &aircraft_id,
-               std::shared_ptr<const aaesim::open_source::FlightDeckApplication> application);
+               std::shared_ptr<const mitre::oss::simcore::FlightDeckApplication> application);
 
   private:
    struct SimData {

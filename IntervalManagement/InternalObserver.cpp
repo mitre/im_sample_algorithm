@@ -29,7 +29,7 @@
 #include "public/StereographicProjection.h"
 
 using namespace std;
-using namespace aaesim::open_source::constants;
+using namespace mitre::oss::simcore::constants;
 using namespace interval_management::open_source;
 
 std::unique_ptr<InternalObserver> InternalObserver::m_instance = nullptr;
@@ -400,7 +400,7 @@ void InternalObserver::processClosestPointMetric() {
    closestPointOutput.clear();
 }
 
-void InternalObserver::addPredictedWind(int id, const aaesim::open_source::WeatherPrediction &weatherPrediction) {
+void InternalObserver::addPredictedWind(int id, const mitre::oss::simcore::WeatherPrediction &weatherPrediction) {
    if (predWinds.empty()) {
       predWinds.push_back(predWindsHeading(weatherPrediction.east_west().GetMaxRow()));
    }
@@ -422,7 +422,7 @@ string InternalObserver::predWindsHeading(int numVals) {
 }
 
 string InternalObserver::predWindsData(int id, int col, const string &field,
-                                       const aaesim::open_source::WindStack &mat) {
+                                       const mitre::oss::simcore::WindStack &mat) {
    string str;
 
    auto buffer_size = 31;
@@ -450,7 +450,7 @@ string InternalObserver::predWindsData(int id, int col, const string &field,
 }
 
 string InternalObserver::predTempData(int id, const string &field,
-                                      const aaesim::open_source::WeatherPrediction &weatherPrediction) {
+                                      const mitre::oss::simcore::WeatherPrediction &weatherPrediction) {
    string str;
 
    char txt[31];
@@ -461,7 +461,7 @@ string InternalObserver::predTempData(int id, const string &field,
    str += ",";
    str += field.c_str();
 
-   const aaesim::open_source::WindStack &mat(weatherPrediction.east_west());
+   const mitre::oss::simcore::WindStack &mat(weatherPrediction.east_west());
    for (int i = 1; i <= mat.GetMaxRow(); i++) {
       Units::Length alt = mat.GetAltitude(i);
       Units::KelvinTemperature temperature = weatherPrediction.GetForecastAtmosphere()->GetTemperature(alt);

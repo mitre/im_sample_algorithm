@@ -30,7 +30,7 @@
 #include "utility/CustomUnits.h"
 
 using namespace std;
-using namespace aaesim::open_source;
+using namespace mitre::oss::simcore;
 using namespace interval_management::open_source;
 
 #define SQR(x)           \

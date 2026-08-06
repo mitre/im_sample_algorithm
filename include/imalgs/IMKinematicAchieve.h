@@ -35,6 +35,9 @@
 namespace interval_management {
 namespace open_source {
 
+using namespace mitre::oss::simcore;
+
+
 class IMKinematicAchieve : public IMAchieve, public Loadable {
   public:
    enum RFLegPhase { NON_RF_LEG, ON_RF_LEG, PRE_RF_LEG };
@@ -51,15 +54,15 @@ class IMKinematicAchieve : public IMAchieve, public Loadable {
 
    void Initialize(const OwnshipPredictionParameters &ownship_prediction_parameters,
                    const AircraftIntent &ownship_aircraft_intent,
-                   aaesim::open_source::WeatherPrediction &weather_prediction) override;
+                   mitre::oss::simcore::WeatherPrediction &weather_prediction) override;
 
    virtual void Initialize(const OwnshipPredictionParameters &ownship_prediction_parameters,
                            const AircraftIntent &ownship_aircraft_intent,
-                           aaesim::open_source::WeatherPrediction &weather_prediction,
+                           mitre::oss::simcore::WeatherPrediction &weather_prediction,
                            std::shared_ptr<TangentPlaneSequence> &position_converter) = 0;
 
-   aaesim::open_source::Guidance Update(
-         const aaesim::open_source::Guidance &prevguidance, const aaesim::open_source::DynamicsState &dynamicsstate,
+   mitre::oss::simcore::Guidance Update(
+         const mitre::oss::simcore::Guidance &prevguidance, const mitre::oss::simcore::DynamicsState &dynamicsstate,
          const interval_management::open_source::AircraftState &owntruthstate,
          const interval_management::open_source::AircraftState &targettruthstate,
          const std::vector<interval_management::open_source::AircraftState> &targethistory) override;
@@ -101,9 +104,9 @@ class IMKinematicAchieve : public IMAchieve, public Loadable {
     */
    bool IsNewTrajectoryPredictionAvailable() const;
 
-   const aaesim::open_source::KinematicTrajectoryPredictor &GetOwnshipKinematicPredictor() const;
+   const mitre::oss::simcore::KinematicTrajectoryPredictor &GetOwnshipKinematicPredictor() const;
 
-   const aaesim::open_source::KinematicTrajectoryPredictor &GetTargetKinematicPredictor() const;
+   const mitre::oss::simcore::KinematicTrajectoryPredictor &GetTargetKinematicPredictor() const;
 
    bool load(DecodedStream *input) override;
 
@@ -122,7 +125,7 @@ class IMKinematicAchieve : public IMAchieve, public Loadable {
    void CalculateRFLegPhase(const std::vector<PrecalcWaypoint> &waypoints,
                             const Units::Acceleration deceleration_rate_flight_path_angle,
                             const VerticalPath &vertical_path,
-                            const std::vector<aaesim::open_source::HorizontalPath> &horizontal_trajectory);
+                            const std::vector<mitre::oss::simcore::HorizontalPath> &horizontal_trajectory);
 
    void ComputeFASTrajectories(const interval_management::open_source::AircraftState &owntruthstate,
                                const interval_management::open_source::AircraftState &targettruthstate);
@@ -133,8 +136,8 @@ class IMKinematicAchieve : public IMAchieve, public Loadable {
    void SetTrafficReferencePointConstraints(const interval_management::open_source::AircraftState &owntruthstate,
                                             const interval_management::open_source::AircraftState &targetsyncstate);
 
-   aaesim::open_source::KinematicTrajectoryPredictor m_ownship_kinematic_trajectory_predictor;
-   aaesim::open_source::KinematicTrajectoryPredictor m_target_kinematic_trajectory_predictor;
+   mitre::oss::simcore::KinematicTrajectoryPredictor m_ownship_kinematic_trajectory_predictor;
+   mitre::oss::simcore::KinematicTrajectoryPredictor m_target_kinematic_trajectory_predictor;
 
    interval_management::open_source::AchievePointCalcs m_ownship_kinematic_achieve_by_calcs;
    Waypoint m_traffic_reference_point;
@@ -142,9 +145,9 @@ class IMKinematicAchieve : public IMAchieve, public Loadable {
 
    FIMAircraftIntent m_ownship_aircraft_intent;
 
-   aaesim::open_source::AlongPathDistanceCalculator m_ownship_distance_calculator;
-   aaesim::open_source::AlongPathDistanceCalculator m_target_distance_calculator;
-   aaesim::open_source::AlongPathDistanceCalculator m_im_ownship_distance_calculator;
+   mitre::oss::simcore::AlongPathDistanceCalculator m_ownship_distance_calculator;
+   mitre::oss::simcore::AlongPathDistanceCalculator m_target_distance_calculator;
+   mitre::oss::simcore::AlongPathDistanceCalculator m_im_ownship_distance_calculator;
 
    std::list<Units::Angle> m_ownship_track_angle_history;
    std::list<Units::Angle> m_target_track_angle_history;
@@ -161,8 +164,8 @@ class IMKinematicAchieve : public IMAchieve, public Loadable {
    bool m_is_target_aligned;
    bool m_new_trajectory_prediction_available;
 
-   std::shared_ptr<aaesim::open_source::WindBlendingAlgorithm> m_wind_blender{
-         std::make_shared<aaesim::open_source::BlendWindsVerticallyByAltitude>()};
+   std::shared_ptr<mitre::oss::simcore::WindBlendingAlgorithm> m_wind_blender{
+         std::make_shared<mitre::oss::simcore::BlendWindsVerticallyByAltitude>()};
 
    static const Units::FeetLength TARGET_ALTITUDE_TOLERANCE;
 
@@ -222,12 +225,12 @@ inline std::shared_ptr<VerticalPredictor> IMKinematicAchieve::GetTargetVerticalP
    return nullptr;
 }
 
-inline const aaesim::open_source::KinematicTrajectoryPredictor &IMKinematicAchieve::GetOwnshipKinematicPredictor()
+inline const mitre::oss::simcore::KinematicTrajectoryPredictor &IMKinematicAchieve::GetOwnshipKinematicPredictor()
       const {
    return m_ownship_kinematic_trajectory_predictor;
 }
 
-inline const aaesim::open_source::KinematicTrajectoryPredictor &IMKinematicAchieve::GetTargetKinematicPredictor()
+inline const mitre::oss::simcore::KinematicTrajectoryPredictor &IMKinematicAchieve::GetTargetKinematicPredictor()
       const {
    return m_target_kinematic_trajectory_predictor;
 }

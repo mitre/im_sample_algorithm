@@ -25,6 +25,8 @@
 #include "public/CustomMath.h"
 #include "utility/CustomUnits.h"
 
+using namespace mitre::oss::simcore;
+
 log4cplus::Logger interval_management::open_source::AircraftState::m_logger =
       log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("AircraftState"));
 

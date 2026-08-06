@@ -28,6 +28,9 @@
 #include "public/PredictionFileBase.h"
 
 namespace interval_management::open_source {
+
+using namespace mitre::oss::simcore;
+
 class PredictionFileKinematic final : private PredictionFileBase, public OutputHandler {
   public:
    PredictionFileKinematic();
@@ -35,7 +38,7 @@ class PredictionFileKinematic final : private PredictionFileBase, public OutputH
    void Finish() override;
 
    void Gather(const int iteration, const Units::Time simulation_time, std::string aircraft_id,
-               const std::shared_ptr<const aaesim::open_source::FlightDeckApplication> &flightdeck_application);
+               const std::shared_ptr<const mitre::oss::simcore::FlightDeckApplication> &flightdeck_application);
 
   private:
    const bool TrajectoryWasRegenerated(const std::vector<PredictionData> &prediction_data_single_acid,

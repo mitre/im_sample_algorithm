@@ -72,7 +72,7 @@ bool IMTimeBasedAchieveMutableASG::load(DecodedStream *input) {
 
 void IMTimeBasedAchieveMutableASG::Initialize(const OwnshipPredictionParameters &ownship_prediction_parameters,
                                               const AircraftIntent &ownship_aircraft_intent,
-                                              aaesim::open_source::WeatherPrediction &weather_prediction,
+                                              mitre::oss::simcore::WeatherPrediction &weather_prediction,
                                               std::shared_ptr<TangentPlaneSequence> &position_converter) {
    SetTangentPlaneSequence(nullptr);
    Initialize(ownship_prediction_parameters, ownship_aircraft_intent, weather_prediction);
@@ -80,7 +80,7 @@ void IMTimeBasedAchieveMutableASG::Initialize(const OwnshipPredictionParameters 
 
 void IMTimeBasedAchieveMutableASG::Initialize(const OwnshipPredictionParameters &ownship_prediction_parameters,
                                               const AircraftIntent &ownship_aircraft_intent,
-                                              aaesim::open_source::WeatherPrediction &weather_prediction) {
+                                              mitre::oss::simcore::WeatherPrediction &weather_prediction) {
    IMKinematicAchieve::Initialize(ownship_prediction_parameters, ownship_aircraft_intent, weather_prediction);
 
    if (m_loaded) {
@@ -88,7 +88,7 @@ void IMTimeBasedAchieveMutableASG::Initialize(const OwnshipPredictionParameters 
       // Positive means the ASG is increasing.
       if (m_asg_change_duration > Units::zero()) {
          m_asg_change_increment = ((m_next_assigned_spacing_goal - m_assigned_spacing_goal) / m_asg_change_duration) *
-                                  aaesim::open_source::SimulationTime::GetSimulationTimeStep();
+                                  mitre::oss::simcore::SimulationTime::GetSimulationTimeStep();
       } else {
          // make the change immediate
          m_asg_change_increment = (m_next_assigned_spacing_goal - m_assigned_spacing_goal);
@@ -96,9 +96,9 @@ void IMTimeBasedAchieveMutableASG::Initialize(const OwnshipPredictionParameters 
    }
 }
 
-aaesim::open_source::Guidance IMTimeBasedAchieveMutableASG::Update(
-      const aaesim::open_source::Guidance &previous_im_guidance,
-      const aaesim::open_source::DynamicsState &three_dof_dynamics_state,
+mitre::oss::simcore::Guidance IMTimeBasedAchieveMutableASG::Update(
+      const mitre::oss::simcore::Guidance &previous_im_guidance,
+      const mitre::oss::simcore::DynamicsState &three_dof_dynamics_state,
       const interval_management::open_source::AircraftState &current_ownship_state,
       const interval_management::open_source::AircraftState &current_target_state,
       const vector<interval_management::open_source::AircraftState> &target_adsb_history) {
@@ -112,7 +112,7 @@ aaesim::open_source::Guidance IMTimeBasedAchieveMutableASG::Update(
       m_assigned_spacing_goal += m_asg_change_increment;
    }
 
-   aaesim::open_source::Guidance guidanceout =
+   mitre::oss::simcore::Guidance guidanceout =
          IMTimeBasedAchieve::Update(previous_im_guidance, three_dof_dynamics_state, current_ownship_state,
                                     current_target_state, target_adsb_history);
 

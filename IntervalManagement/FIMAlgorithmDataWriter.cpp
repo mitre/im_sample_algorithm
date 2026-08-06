@@ -134,8 +134,8 @@ void interval_management::open_source::FIMAlgorithmDataWriter::Finish() {
 }
 
 void interval_management::open_source::FIMAlgorithmDataWriter::Gather(
-      const int iteration_number, const aaesim::open_source::SimulationTime &time, const std::string &aircraft_id,
-      std::shared_ptr<const aaesim::open_source::FlightDeckApplication> application) {
+      const int iteration_number, const mitre::oss::simcore::SimulationTime &time, const std::string &aircraft_id,
+      std::shared_ptr<const mitre::oss::simcore::FlightDeckApplication> application) {
    const bool is_fim_application =
          CoreUtils::InstanceOf<interval_management::open_source::FIMAlgorithmAdapter>(application.get());
    if (!is_fim_application) {

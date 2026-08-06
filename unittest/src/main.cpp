@@ -23,7 +23,7 @@
 
 GTEST_API_ int main(int argc, char **argv) {
    log4cplus::Initializer initializer;
-   LoadLoggerProperties();
+   mitre::oss::simcore::LoadLoggerProperties();
    log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("main"));
    LOG4CPLUS_INFO(logger, "Running main()");
    testing::InitGoogleTest(&argc, argv);

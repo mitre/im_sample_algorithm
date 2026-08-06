@@ -20,32 +20,34 @@
 
 namespace interval_management::open_source {
 
-class FIMAircraftIntent final : public aaesim::open_source::AircraftIntent {
+using namespace mitre::oss::simcore;
+
+class FIMAircraftIntent final : public mitre::oss::simcore::AircraftIntent {
  public:
    class Builder final {
     public:
       Builder() = default;
-      explicit Builder(const aaesim::open_source::DefaultAircraftIntent &intent) : intent_(intent) {}
-      explicit Builder(const std::shared_ptr<const aaesim::open_source::AircraftIntent> &intent)
-         : intent_(*aaesim::open_source::DefaultAircraftIntent::Builder(*intent).Build()) {}
-      explicit Builder(const std::shared_ptr<aaesim::open_source::AircraftIntent> &intent)
-         : intent_(*aaesim::open_source::DefaultAircraftIntent::Builder(*intent).Build()) {}
-      explicit Builder(const aaesim::open_source::AircraftIntent &intent)
-         : intent_(*aaesim::open_source::DefaultAircraftIntent::Builder(intent).Build()) {}
+      explicit Builder(const mitre::oss::simcore::DefaultAircraftIntent &intent) : intent_(intent) {}
+      explicit Builder(const std::shared_ptr<const mitre::oss::simcore::AircraftIntent> &intent)
+         : intent_(*mitre::oss::simcore::DefaultAircraftIntent::Builder(*intent).Build()) {}
+      explicit Builder(const std::shared_ptr<mitre::oss::simcore::AircraftIntent> &intent)
+         : intent_(*mitre::oss::simcore::DefaultAircraftIntent::Builder(*intent).Build()) {}
+      explicit Builder(const mitre::oss::simcore::AircraftIntent &intent)
+         : intent_(*mitre::oss::simcore::DefaultAircraftIntent::Builder(intent).Build()) {}
 
       Builder &SetId(int id) { id_ = id; return *this; }
       Builder &SetAircraftId(const std::string &aircraft_id) {
-         id_ = aaesim::open_source::ScenarioUtils::GetUniqueIdForAircraftId(aircraft_id);
+         id_ = mitre::oss::simcore::ScenarioUtils::GetUniqueIdForAircraftId(aircraft_id);
          return *this;
       }
       Builder &SetPlannedCruiseAltitude(Units::Length altitude) {
-         intent_ = *aaesim::open_source::DefaultAircraftIntent::Builder(intent_)
+         intent_ = *mitre::oss::simcore::DefaultAircraftIntent::Builder(intent_)
                             .SetPlannedCruiseAltitude(altitude)
                             .Build();
          return *this;
       }
       Builder &SetPlannedCruiseMach(BoundedValue<double, 0, 1> mach) {
-         intent_ = *aaesim::open_source::DefaultAircraftIntent::Builder(intent_)
+         intent_ = *mitre::oss::simcore::DefaultAircraftIntent::Builder(intent_)
                             .SetPlannedCruiseMach(mach)
                             .Build();
          return *this;
@@ -108,7 +110,7 @@ class FIMAircraftIntent final : public aaesim::open_source::AircraftIntent {
                             return existing_waypoint.GetName() == waypoint.GetName();
                          },
                          waypoint);
-         intent_ = *aaesim::open_source::DefaultAircraftIntent::Builder()
+         intent_ = *mitre::oss::simcore::DefaultAircraftIntent::Builder()
                             .SetDescentWaypoints(updated_waypoints)
                             .SetPlannedCruiseMach(BoundedValue<double, 0, 1>(intent_.GetPlannedCruiseMach()))
                             .SetPlannedCruiseAltitude(intent_.GetPlannedCruiseAltitude())
@@ -117,7 +119,7 @@ class FIMAircraftIntent final : public aaesim::open_source::AircraftIntent {
       }
       Builder &LoadWaypoints(const std::vector<Waypoint> &ascent, const std::vector<Waypoint> &cruise,
                              const std::vector<Waypoint> &descent) {
-         intent_ = *aaesim::open_source::DefaultAircraftIntent::Builder()
+         intent_ = *mitre::oss::simcore::DefaultAircraftIntent::Builder()
                             .SetAscentWaypoints(ascent)
                             .SetCruiseWaypoints(cruise)
                             .SetDescentWaypoints(descent)
@@ -129,7 +131,7 @@ class FIMAircraftIntent final : public aaesim::open_source::AircraftIntent {
     private:
       void RebuildIntent(const std::vector<Waypoint> &ascent, const std::vector<Waypoint> &cruise,
                          const std::vector<Waypoint> &descent) {
-         intent_ = *aaesim::open_source::DefaultAircraftIntent::Builder()
+         intent_ = *mitre::oss::simcore::DefaultAircraftIntent::Builder()
                             .SetAscentWaypoints(ascent)
                             .SetCruiseWaypoints(cruise)
                             .SetDescentWaypoints(descent)
@@ -138,8 +140,8 @@ class FIMAircraftIntent final : public aaesim::open_source::AircraftIntent {
                             .Build();
       }
 
-      aaesim::open_source::DefaultAircraftIntent intent_{};
-      int id_{aaesim::open_source::ScenarioUtils::AIRCRAFT_ID_NOT_IN_MAP};
+      mitre::oss::simcore::DefaultAircraftIntent intent_{};
+      int id_{mitre::oss::simcore::ScenarioUtils::AIRCRAFT_ID_NOT_IN_MAP};
    };
 
    FIMAircraftIntent() = default;
@@ -147,7 +149,7 @@ class FIMAircraftIntent final : public aaesim::open_source::AircraftIntent {
 
    static FIMAircraftIntent CopyAndTrimAfterNamedWaypoint(const FIMAircraftIntent &intent,
                                                            const std::string &waypoint_name) {
-      return Builder(aaesim::open_source::AircraftIntentUtils::CopyAndTrimAfterNamedWaypoint(intent, waypoint_name))
+      return Builder(mitre::oss::simcore::AircraftIntentUtils::CopyAndTrimAfterNamedWaypoint(intent, waypoint_name))
             .SetId(intent.id_).Build();
    }
 
@@ -174,10 +176,10 @@ class FIMAircraftIntent final : public aaesim::open_source::AircraftIntent {
    Units::MetersLength GetWaypointY(unsigned int index) const { return intent_.GetWaypointY(index); }
 
  private:
-   FIMAircraftIntent(const aaesim::open_source::DefaultAircraftIntent &intent, int id) : intent_(intent), id_(id) {}
+   FIMAircraftIntent(const mitre::oss::simcore::DefaultAircraftIntent &intent, int id) : intent_(intent), id_(id) {}
 
-   aaesim::open_source::DefaultAircraftIntent intent_{};
-   int id_{aaesim::open_source::ScenarioUtils::AIRCRAFT_ID_NOT_IN_MAP};
+   mitre::oss::simcore::DefaultAircraftIntent intent_{};
+   int id_{mitre::oss::simcore::ScenarioUtils::AIRCRAFT_ID_NOT_IN_MAP};
 };
 
 }  // namespace interval_management::open_source

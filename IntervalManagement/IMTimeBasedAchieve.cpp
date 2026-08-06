@@ -28,7 +28,7 @@
 #include "public/CustomMath.h"
 
 using namespace std;
-using namespace aaesim::open_source;
+using namespace mitre::oss::simcore;
 using namespace interval_management::open_source;
 
 log4cplus::Logger IMTimeBasedAchieve::m_logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("IMTimeBasedAchieve"));
@@ -107,13 +107,13 @@ bool IMTimeBasedAchieve::load(DecodedStream *input) {
    return loaded;
 }
 
-aaesim::open_source::Guidance IMTimeBasedAchieve::Update(
-      const aaesim::open_source::Guidance &previous_im_guidance,
-      const aaesim::open_source::DynamicsState &three_dof_dynamics_state,
+mitre::oss::simcore::Guidance IMTimeBasedAchieve::Update(
+      const mitre::oss::simcore::Guidance &previous_im_guidance,
+      const mitre::oss::simcore::DynamicsState &three_dof_dynamics_state,
       const interval_management::open_source::AircraftState &current_ownship_state,
       const interval_management::open_source::AircraftState &current_target_state,
       const vector<interval_management::open_source::AircraftState> &target_adsb_history) {
-   aaesim::open_source::Guidance guidance_out =
+   mitre::oss::simcore::Guidance guidance_out =
          IMKinematicAchieve::Update(previous_im_guidance, three_dof_dynamics_state, current_ownship_state,
                                     current_target_state, target_adsb_history);
 
@@ -166,11 +166,11 @@ aaesim::open_source::Guidance IMTimeBasedAchieve::Update(
    return guidance_out;
 }
 
-aaesim::open_source::Guidance IMTimeBasedAchieve::HandleAchieveStage(
+mitre::oss::simcore::Guidance IMTimeBasedAchieve::HandleAchieveStage(
       const interval_management::open_source::AircraftState &current_ownship_state,
       const interval_management::open_source::AircraftState &current_target_state,
       const vector<interval_management::open_source::AircraftState> &target_adsb_history,
-      const aaesim::open_source::DynamicsState &three_dof_dynamics_state, aaesim::open_source::Guidance &guidance_out) {
+      const mitre::oss::simcore::DynamicsState &three_dof_dynamics_state, mitre::oss::simcore::Guidance &guidance_out) {
    m_stage_of_im_operation = ACHIEVE;
 
    Units::Time reference_ttg = Units::zero();
@@ -445,12 +445,12 @@ void IMTimeBasedAchieve::TestForTrafficAlignment(
    }
 }
 
-aaesim::open_source::Guidance IMTimeBasedAchieve::HandleMaintainStage(
+mitre::oss::simcore::Guidance IMTimeBasedAchieve::HandleMaintainStage(
       const interval_management::open_source::AircraftState &current_ownship_state,
       const interval_management::open_source::AircraftState &current_target_state,
       const vector<interval_management::open_source::AircraftState> &target_adsb_history,
-      const aaesim::open_source::DynamicsState &three_dof_dynamics_state,
-      const aaesim::open_source::Guidance &previous_im_guidance, aaesim::open_source::Guidance &guidance_out) {
+      const mitre::oss::simcore::DynamicsState &three_dof_dynamics_state,
+      const mitre::oss::simcore::Guidance &previous_im_guidance, mitre::oss::simcore::Guidance &guidance_out) {
    m_ownship_ttg_to_abp = Units::zero();
    m_ownship_kinematic_dtg_to_abp = Units::zero();
    m_predicted_spacing_interval = Units::NegInfinity();
@@ -570,7 +570,7 @@ void IMTimeBasedAchieve::SaveTargetStateAtTrafficAlignment(
 }
 
 void IMTimeBasedAchieve::CalculateIas(const Units::Length current_ownship_altitude,
-                                      const aaesim::open_source::DynamicsState &three_dof_dynamics_state) {
+                                      const mitre::oss::simcore::DynamicsState &three_dof_dynamics_state) {
    m_im_speed_command_ias = m_speed_limiter.LimitSpeedCommand(
          m_previous_im_speed_command_ias, m_im_speed_command_ias,
          m_ownship_kinematic_trajectory_predictor.GetVerticalPathCasByIndex(m_ownship_reference_lookup_index),
@@ -633,9 +633,9 @@ void IMTimeBasedAchieve::CalculateMach(const Units::Time reference_ttg, const Un
 void IMTimeBasedAchieve::RecordInternalObserverMetrics(
       const interval_management::open_source::AircraftState &current_ownship_state,
       const interval_management::open_source::AircraftState &current_target_state,
-      const aaesim::open_source::DynamicsState &dynamics_state, const Units::Speed unmodified_ias,
+      const mitre::oss::simcore::DynamicsState &dynamics_state, const Units::Speed unmodified_ias,
       const Units::Speed tas_command, const Units::Speed reference_velocity, const Units::Length reference_distance,
-      const aaesim::open_source::Guidance &guidance) {
+      const mitre::oss::simcore::Guidance &guidance) {
    if (InternalObserver::getInstance()->outputNM()) {
       NMObserver &nm_observer = InternalObserver::getInstance()->GetNMObserver(current_ownship_state.GetId());
 
@@ -699,7 +699,7 @@ const Units::Speed IMTimeBasedAchieve::GetImSpeedCommandIas() const {
 
 void IMTimeBasedAchieve::Initialize(const OwnshipPredictionParameters &ownship_prediction_parameters,
                                     const AircraftIntent &ownship_aircraft_intent,
-                                    aaesim::open_source::WeatherPrediction &weather_prediction,
+                                    mitre::oss::simcore::WeatherPrediction &weather_prediction,
                                     std::shared_ptr<TangentPlaneSequence> &position_converter) {
    SetTangentPlaneSequence(position_converter);
    IMKinematicAchieve::Initialize(ownship_prediction_parameters, ownship_aircraft_intent, weather_prediction);

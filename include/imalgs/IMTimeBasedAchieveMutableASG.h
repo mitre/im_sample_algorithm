@@ -35,6 +35,9 @@
 namespace interval_management {
 namespace open_source {
 
+using namespace mitre::oss::simcore;
+
+
 class IMTimeBasedAchieveMutableASG final : public IMTimeBasedAchieve {
   public:
    IMTimeBasedAchieveMutableASG();
@@ -47,9 +50,9 @@ class IMTimeBasedAchieveMutableASG final : public IMTimeBasedAchieve {
 
    virtual void IterationReset() override;
 
-   virtual aaesim::open_source::Guidance Update(
-         const aaesim::open_source::Guidance &previous_im_guidance,
-         const aaesim::open_source::DynamicsState &three_dof_dynamics_state,
+   virtual mitre::oss::simcore::Guidance Update(
+         const mitre::oss::simcore::Guidance &previous_im_guidance,
+         const mitre::oss::simcore::DynamicsState &three_dof_dynamics_state,
          const interval_management::open_source::AircraftState &current_ownship_state,
          const interval_management::open_source::AircraftState &current_target_state,
          const std::vector<interval_management::open_source::AircraftState> &target_adsb_history) override;
@@ -58,13 +61,13 @@ class IMTimeBasedAchieveMutableASG final : public IMTimeBasedAchieve {
 
    virtual void Initialize(const OwnshipPredictionParameters &ownship_prediction_parameters,
                            const AircraftIntent &ownship_aircraft_intent,
-                           aaesim::open_source::WeatherPrediction &weather_prediction) override;
+                           mitre::oss::simcore::WeatherPrediction &weather_prediction) override;
 
    bool load(DecodedStream *input) override;
 
    void Initialize(const OwnshipPredictionParameters &ownship_prediction_parameters,
                    const AircraftIntent &ownship_aircraft_intent,
-                   aaesim::open_source::WeatherPrediction &weather_prediction,
+                   mitre::oss::simcore::WeatherPrediction &weather_prediction,
                    std::shared_ptr<TangentPlaneSequence> &position_converter) override;
 
   protected:

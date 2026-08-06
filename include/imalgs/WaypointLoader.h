@@ -33,13 +33,13 @@ class WaypointLoader final : public LoggingLoadable {
 
    bool load(DecodedStream *input) override;
 
-   const Waypoint &BuildWaypoint() const;
+   const mitre::oss::simcore::Waypoint &BuildWaypoint() const;
 
   private:
-   Waypoint waypoint_{};
+   mitre::oss::simcore::Waypoint waypoint_{};
 };
 
-inline const Waypoint &WaypointLoader::BuildWaypoint() const { return waypoint_; }
+inline const mitre::oss::simcore::Waypoint &WaypointLoader::BuildWaypoint() const { return waypoint_; }
 
 }  // namespace loaders
 }  // namespace interval_management
