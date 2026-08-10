@@ -29,11 +29,11 @@ class FIMAircraftIntent final : public mitre::oss::simcore::AircraftIntent {
       Builder() = default;
       explicit Builder(const mitre::oss::simcore::DefaultAircraftIntent &intent) : intent_(intent) {}
       explicit Builder(const std::shared_ptr<const mitre::oss::simcore::AircraftIntent> &intent)
-         : intent_(*mitre::oss::simcore::DefaultAircraftIntent::Builder(*intent).Build()) {}
+         : intent_(*mitre::oss::simcore::DefaultAircraftIntent::Builder().CopyFrom(*intent).Build()) {}
       explicit Builder(const std::shared_ptr<mitre::oss::simcore::AircraftIntent> &intent)
-         : intent_(*mitre::oss::simcore::DefaultAircraftIntent::Builder(*intent).Build()) {}
+         : intent_(*mitre::oss::simcore::DefaultAircraftIntent::Builder().CopyFrom(*intent).Build()) {}
       explicit Builder(const mitre::oss::simcore::AircraftIntent &intent)
-         : intent_(*mitre::oss::simcore::DefaultAircraftIntent::Builder(intent).Build()) {}
+         : intent_(*mitre::oss::simcore::DefaultAircraftIntent::Builder().CopyFrom(intent).Build()) {}
 
       Builder &SetId(int id) { id_ = id; return *this; }
       Builder &SetAircraftId(const std::string &aircraft_id) {
@@ -41,13 +41,13 @@ class FIMAircraftIntent final : public mitre::oss::simcore::AircraftIntent {
          return *this;
       }
       Builder &SetPlannedCruiseAltitude(Units::Length altitude) {
-         intent_ = *mitre::oss::simcore::DefaultAircraftIntent::Builder(intent_)
+         intent_ = *mitre::oss::simcore::DefaultAircraftIntent::Builder().CopyFrom(intent_)
                             .SetPlannedCruiseAltitude(altitude)
                             .Build();
          return *this;
       }
       Builder &SetPlannedCruiseMach(BoundedValue<double, 0, 1> mach) {
-         intent_ = *mitre::oss::simcore::DefaultAircraftIntent::Builder(intent_)
+         intent_ = *mitre::oss::simcore::DefaultAircraftIntent::Builder().CopyFrom(intent_)
                             .SetPlannedCruiseMach(mach)
                             .Build();
          return *this;
