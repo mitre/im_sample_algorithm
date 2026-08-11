@@ -82,9 +82,8 @@ mitre::oss::simcore::Guidance interval_management::open_source::FIMAlgorithmAdap
    mitre::oss::simcore::AircraftState synced_target_state = m_assap->Update(
          own_truth_state, m_assap->GetAdsbReceiver()->GetCurrentADSBReport(GetImClearance().GetTargetId()));
 
-   if (im_algorithm_guidance.GetSelectedSpeed().GetSpeedType() == UNSPECIFIED_SPEED) {
-      im_algorithm_guidance.SetSelectedSpeed(
-            mitre::oss::simcore::AircraftSpeed::OfIndicatedAirspeed(Units::KnotsSpeed(60)));
+   if (im_algorithm_guidance.GetSelectedSpeedType() == UNSPECIFIED_SPEED) {
+      im_algorithm_guidance.SetSelectedSpeedType(INDICATED_AIR_SPEED);
    }
    auto ownship_im_state = ConvertAircraftState(own_truth_state);
    auto target_im_state = ConvertAircraftState(synced_target_state);

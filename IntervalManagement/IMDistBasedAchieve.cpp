@@ -283,7 +283,7 @@ mitre::oss::simcore::Guidance IMDistBasedAchieve::Update(
 
          m_unmodified_im_speed_command_ias = m_im_speed_command_ias;
 
-         if (im_guidance.GetSelectedSpeed().GetSpeedType() == INDICATED_AIR_SPEED) {
+         if (im_guidance.GetSelectedSpeedType() == INDICATED_AIR_SPEED) {
             CalculateIas(current_ownship_state.GetPositionZ(), three_dof_dynamics_state);
          } else {
             CalculateMach(reference_ttg, current_ownship_state.GetPositionZ(), three_dof_dynamics_state.current_mass);
@@ -300,7 +300,7 @@ mitre::oss::simcore::Guidance IMDistBasedAchieve::Update(
 
          if (m_pilot_delay.IsPilotDelayOn()) {
             im_guidance.m_ias_command = m_im_speed_command_with_pilot_delay;
-            if (im_guidance.GetSelectedSpeed().GetSpeedType() == MACH_SPEED) {
+            if (im_guidance.GetSelectedSpeedType() == MACH_SPEED) {
                const auto true_airspeed_equivalent = m_weather_prediction.CAS2TAS(m_im_speed_command_with_pilot_delay,
                                                                                   current_ownship_state.GetPositionZ());
                const auto mach_equivalent =
@@ -309,7 +309,7 @@ mitre::oss::simcore::Guidance IMDistBasedAchieve::Update(
             }
          } else {
             im_guidance.m_ias_command = m_im_speed_command_ias;
-            if (im_guidance.GetSelectedSpeed().GetSpeedType() == MACH_SPEED) {
+            if (im_guidance.GetSelectedSpeedType() == MACH_SPEED) {
                const auto true_airspeed_equivalent =
                      m_weather_prediction.CAS2TAS(m_im_speed_command_ias, current_ownship_state.GetPositionZ());
                const auto mach_equivalent =
@@ -348,7 +348,7 @@ mitre::oss::simcore::Guidance IMDistBasedAchieve::Update(
          if (m_distance_calculator_target_on_ownship_hpath.IsPassedEndOfRoute() || !m_target_aircraft_exists) {
             // Operation is completing. IM Speed must be defaulted; the control law cannot be used.
             m_measured_spacing_interval = Units::NegInfinity();
-            if (im_guidance.GetSelectedSpeed().GetSpeedType() == INDICATED_AIR_SPEED) {
+            if (im_guidance.GetSelectedSpeedType() == INDICATED_AIR_SPEED) {
                CalculateIas(current_ownship_state.GetPositionZ(), three_dof_dynamics_state);
             } else {
                CalculateMach(Units::negInfinity(), current_ownship_state.GetPositionZ(),

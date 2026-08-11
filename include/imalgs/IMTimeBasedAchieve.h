@@ -243,7 +243,7 @@ inline void IMTimeBasedAchieve::DoAlgorithmLogging(
       j["im_speed_command_ias_mps"] = Units::MetersPerSecondSpeed(m_im_speed_command_ias).value();
       j["ownship_ttg_to_abp_sec"] = Units::SecondsTime(m_ownship_ttg_to_abp).value();
       j["target_ttg_to_trp_sec"] = Units::SecondsTime(m_target_ttg_to_trp).value();
-      j["ownship_selected_speed_type"] = guidance_out.GetSelectedSpeed().GetSpeedType();
+      j["ownship_selected_speed_type"] = guidance_out.GetSelectedSpeedType();
       j["predicted_spacing_interval_sec"] = Units::SecondsTime(m_predicted_spacing_interval).value();
       j["pilot_delay_enabled"] = m_pilot_delay.IsPilotDelayOn();
       j["is_crossing_time_valid"] = is_crossing_time_valid;

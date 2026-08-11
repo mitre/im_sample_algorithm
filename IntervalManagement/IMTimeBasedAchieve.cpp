@@ -143,14 +143,13 @@ mitre::oss::simcore::Guidance IMTimeBasedAchieve::Update(
                   TestForTrafficAlignment(current_ownship_state, target_adsb_history);
                }
 
-               AircraftSpeed aircraft_speed = guidance_out.GetSelectedSpeed();
-               if (aircraft_speed.GetSpeedType() != INDICATED_AIR_SPEED) {
+               if (guidance_out.GetSelectedSpeedType() != INDICATED_AIR_SPEED) {
                   LOG4CPLUS_FATAL(m_logger,
                                   "AircraftSpeed SpeedValueType not INDICATED_AIR_SPEED.  "
                                   "Unable to update guidance for CAPTURE clearance");
                }
 
-               m_im_speed_command_ias = Units::KnotsSpeed(aircraft_speed.GetValue());
+               m_im_speed_command_ias = guidance_out.m_ias_command;
                m_previous_im_speed_command_ias = m_im_speed_command_ias;
                guidance_out.m_ias_command = m_im_speed_command_ias;
             } else {
@@ -340,7 +339,7 @@ mitre::oss::simcore::Guidance IMTimeBasedAchieve::HandleAchieveStage(
 
    m_unmodified_im_speed_command_ias = m_im_speed_command_ias;
 
-   if (guidance_out.GetSelectedSpeed().GetSpeedType() == INDICATED_AIR_SPEED) {
+   if (guidance_out.GetSelectedSpeedType() == INDICATED_AIR_SPEED) {
       CalculateIas(Units::FeetLength(current_ownship_state.m_z), three_dof_dynamics_state);
    } else {
       CalculateMach(reference_ttg, Units::FeetLength(current_ownship_state.m_z), three_dof_dynamics_state.current_mass);
@@ -356,7 +355,7 @@ mitre::oss::simcore::Guidance IMTimeBasedAchieve::HandleAchieveStage(
 
    if (m_pilot_delay.IsPilotDelayOn()) {
       guidance_out.m_ias_command = m_im_speed_command_with_pilot_delay;
-      if (guidance_out.GetSelectedSpeed().GetSpeedType() == MACH_SPEED) {
+      if (guidance_out.GetSelectedSpeedType() == MACH_SPEED) {
          const auto true_airspeed_equivalent =
                m_weather_prediction.CAS2TAS(m_im_speed_command_with_pilot_delay, current_ownship_state.GetPositionZ());
          const auto mach_equivalent =
@@ -365,7 +364,7 @@ mitre::oss::simcore::Guidance IMTimeBasedAchieve::HandleAchieveStage(
       }
    } else {
       guidance_out.m_ias_command = m_im_speed_command_ias;
-      if (guidance_out.GetSelectedSpeed().GetSpeedType() == MACH_SPEED) {
+      if (guidance_out.GetSelectedSpeedType() == MACH_SPEED) {
          const auto true_airspeed_equivalent =
                m_weather_prediction.CAS2TAS(m_im_speed_command_ias, current_ownship_state.GetPositionZ());
          const auto mach_equivalent =

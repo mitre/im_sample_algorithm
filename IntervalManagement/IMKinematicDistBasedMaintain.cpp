@@ -114,7 +114,7 @@ mitre::oss::simcore::Guidance IMKinematicDistBasedMaintain::Update(
       m_ownship_reference_lookup_index =
             mitre::oss::simcore::VerticalPathUtils::GetVerticalPathData(ownship_kinematic_trajectory_predictor.GetVerticalPredictor()->GetVerticalPath(), Units::MetersLength(Units::MetersLength(ownship_estimated_dtg).value())).resolved_index;
 
-      if (guidanceout.GetSelectedSpeed().GetSpeedType() == INDICATED_AIR_SPEED) {
+      if (guidanceout.GetSelectedSpeedType() == INDICATED_AIR_SPEED) {
          CalculateIas(Units::FeetLength(ownship_aircraft_state.m_z), target_dtg_along_ownships_path, dynamics_state,
                       ownship_kinematic_trajectory_predictor, pilot_delay);
       } else {
@@ -127,7 +127,7 @@ mitre::oss::simcore::Guidance IMKinematicDistBasedMaintain::Update(
 
       if (pilot_delay.IsPilotDelayOn()) {
          guidanceout.m_ias_command = m_im_speed_command_with_pilot_delay;
-         if (guidanceout.GetSelectedSpeed().GetSpeedType() == MACH_SPEED) {
+         if (guidanceout.GetSelectedSpeedType() == MACH_SPEED) {
             const auto true_airspeed_equivalent = m_weather_prediction.CAS2TAS(m_im_speed_command_with_pilot_delay,
                                                                                ownship_aircraft_state.GetPositionZ());
             const auto mach_equivalent =
@@ -136,7 +136,7 @@ mitre::oss::simcore::Guidance IMKinematicDistBasedMaintain::Update(
          }
       } else {
          guidanceout.m_ias_command = m_im_speed_command_ias;
-         if (guidanceout.GetSelectedSpeed().GetSpeedType() == MACH_SPEED) {
+         if (guidanceout.GetSelectedSpeedType() == MACH_SPEED) {
             const auto true_airspeed_equivalent =
                   m_weather_prediction.CAS2TAS(m_im_speed_command_ias, ownship_aircraft_state.GetPositionZ());
             const auto mach_equivalent =
