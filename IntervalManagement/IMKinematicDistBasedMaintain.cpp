@@ -167,10 +167,11 @@ void IMKinematicDistBasedMaintain::CalculateIas(
       mitre::oss::simcore::StatisticalPilotDelay &pilot_delay) {
    m_im_speed_command_ias = m_speed_limiter.LimitSpeedCommand(
          m_previous_im_speed_command_ias, m_im_speed_command_ias,
-         ownship_kinematic_trajectory_predictor.GetVerticalPathCasByIndex(m_ownship_reference_lookup_index),
+         mitre::oss::simcore::VerticalPathUtils::GetPathDataAtIndex(ownship_kinematic_trajectory_predictor.GetVerticalPredictor()->GetVerticalPath(), m_ownship_reference_lookup_index).calibrated_airspeed,
          Units::ZERO_LENGTH,
-         Units::MetersLength(
-               ownship_kinematic_trajectory_predictor.GetVerticalPathDistanceByIndex(m_ownship_reference_lookup_index)),
+         mitre::oss::simcore::VerticalPathUtils::GetPathDataAtIndex(
+               ownship_kinematic_trajectory_predictor.GetVerticalPredictor()->GetVerticalPath(),
+               m_ownship_reference_lookup_index).along_path_distance,
          current_ownship_altitude, dynamics_state.flap_configuration);
 
    if (m_im_speed_command_ias != m_previous_im_speed_command_ias) {
