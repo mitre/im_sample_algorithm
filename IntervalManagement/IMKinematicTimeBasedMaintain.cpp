@@ -27,6 +27,7 @@
 #include "public/CoreUtils.h"
 #include "public/CustomMath.h"
 #include "public/SimulationTime.h"
+#include "public/VerticalPathUtils.h"
 
 using namespace interval_management::open_source;
 
@@ -225,12 +226,14 @@ mitre::oss::simcore::Guidance IMKinematicTimeBasedMaintain::Update(
              guidance_out.IsValid()) {
             --nm_observer.curr_NM;
 
-            double lval =
-                  m_speed_limiter.LowLimit(ownship_kinematic_trajectory_predictor.GetVerticalPathVelocityByIndex(
-                        m_ownship_reference_lookup_index));
-            double hval =
-                  m_speed_limiter.HighLimit(ownship_kinematic_trajectory_predictor.GetVerticalPathVelocityByIndex(
-                        m_ownship_reference_lookup_index));
+            double lval = Units::MetersPerSecondSpeed(m_speed_limiter.LowLimit(
+                  mitre::oss::simcore::VerticalPathUtils::GetPathDataAtIndex(
+                        ownship_kinematic_trajectory_predictor.GetVerticalPredictor()->GetVerticalPath(),
+                        m_ownship_reference_lookup_index).calibrated_airspeed)).value();
+            double hval = Units::MetersPerSecondSpeed(m_speed_limiter.HighLimit(
+                  mitre::oss::simcore::VerticalPathUtils::GetPathDataAtIndex(
+                        ownship_kinematic_trajectory_predictor.GetVerticalPredictor()->GetVerticalPath(),
+                        m_ownship_reference_lookup_index).calibrated_airspeed)).value();
 
             double ltas = Units::MetersPerSecondSpeed(
                                 m_weather_prediction.getAtmosphere()->CAS2TAS(
@@ -283,7 +286,7 @@ void IMKinematicTimeBasedMaintain::CalculateMach(
       mitre::oss::simcore::StatisticalPilotDelay &pilot_delay, const Units::Mass current_mass) {
    // Make sure velocity is within nominal limits (AAES-694)
    Units::Speed nominal_profile_ias = Units::MetersPerSecondSpeed(
-         ownship_kinematic_trajectory_predictor.GetVerticalPathVelocityByIndex(m_ownship_reference_lookup_index));
+         mitre::oss::simcore::VerticalPathUtils::GetPathDataAtIndex(ownship_kinematic_trajectory_predictor.GetVerticalPredictor()->GetVerticalPath(), m_ownship_reference_lookup_index).calibrated_airspeed);
    Units::Speed nominal_profile_tas =
          m_weather_prediction.getAtmosphere()->CAS2TAS(nominal_profile_ias, current_ownship_altitude);
 

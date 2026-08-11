@@ -26,6 +26,7 @@
 #include "imalgs/InternalObserver.h"
 #include "public/CoreUtils.h"
 #include "public/CustomMath.h"
+#include "public/VerticalPathUtils.h"
 
 using namespace interval_management::open_source;
 
@@ -189,7 +190,7 @@ void IMKinematicDistBasedMaintain::CalculateMach(
       const mitre::oss::simcore::KinematicTrajectoryPredictor &ownship_kinematic_trajectory_predictor,
       mitre::oss::simcore::StatisticalPilotDelay &pilot_delay, const Units::Mass current_mass) {
    Units::Speed nominal_profile_ias = Units::MetersPerSecondSpeed(
-         ownship_kinematic_trajectory_predictor.GetVerticalPathVelocityByIndex(m_ownship_reference_lookup_index));
+         mitre::oss::simcore::VerticalPathUtils::GetPathDataAtIndex(ownship_kinematic_trajectory_predictor.GetVerticalPredictor()->GetVerticalPath(), m_ownship_reference_lookup_index).calibrated_airspeed);
    Units::Speed nominal_profile_tas =
          m_weather_prediction.getAtmosphere()->CAS2TAS(nominal_profile_ias, current_ownship_altitude);
 
@@ -263,10 +264,14 @@ void IMKinematicDistBasedMaintain::RecordInternalObserverData(
       if (ownship_true_dtg <= Units::NauticalMilesLength(nm_observer.curr_NM)) {
          --nm_observer.curr_NM;
 
-         double lval = m_speed_limiter.LowLimit(
-               ownship_kinematic_trajectory_predictor.GetVerticalPathVelocityByIndex(m_ownship_reference_lookup_index));
-         double hval = m_speed_limiter.HighLimit(
-               ownship_kinematic_trajectory_predictor.GetVerticalPathVelocityByIndex(m_ownship_reference_lookup_index));
+         double lval = Units::MetersPerSecondSpeed(m_speed_limiter.LowLimit(
+               mitre::oss::simcore::VerticalPathUtils::GetPathDataAtIndex(
+                     ownship_kinematic_trajectory_predictor.GetVerticalPredictor()->GetVerticalPath(),
+                     m_ownship_reference_lookup_index).calibrated_airspeed)).value();
+         double hval = Units::MetersPerSecondSpeed(m_speed_limiter.HighLimit(
+               mitre::oss::simcore::VerticalPathUtils::GetPathDataAtIndex(
+                     ownship_kinematic_trajectory_predictor.GetVerticalPredictor()->GetVerticalPath(),
+                     m_ownship_reference_lookup_index).calibrated_airspeed)).value();
 
          double ltas = Units::MetersPerSecondSpeed(
                              m_weather_prediction.getAtmosphere()->CAS2TAS(

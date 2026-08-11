@@ -27,6 +27,7 @@
 #include "public/CoreUtils.h"
 #include "public/CustomMath.h"
 #include "public/SimulationTime.h"
+#include "public/VerticalPathUtils.h"
 
 using namespace interval_management::open_source;
 using namespace mitre::oss::simcore;
@@ -282,7 +283,7 @@ mitre::oss::simcore::Guidance IMDistBasedAchieve::Update(
             ownship_reference_dtg_to_ptp =
                   Units::MetersLength(-m_ownship_kinematic_trajectory_predictor.GetVerticalPathDistanceByIndex(0));
             m_ownship_reference_cas = Units::MetersPerSecondSpeed(
-                  m_ownship_kinematic_trajectory_predictor.GetVerticalPathVelocityByIndex(0));
+                  mitre::oss::simcore::VerticalPathUtils::GetPathDataAtIndex(m_ownship_kinematic_trajectory_predictor.GetVerticalPredictor()->GetVerticalPath(), 0).calibrated_airspeed);
             m_ownship_reference_gs = Units::ZERO_SPEED;
             m_ownship_reference_altitude =
                   Units::MetersLength(m_ownship_kinematic_trajectory_predictor.GetVerticalPathAltitudeByIndex(0));
@@ -483,7 +484,7 @@ void IMDistBasedAchieve::CalculateIas(const Units::Length current_ownship_altitu
                                         m_ownship_kinematic_trajectory_predictor.GetVerticalPathDistances());
 
       Units::Speed nominal_profile_ias = Units::MetersPerSecondSpeed(
-            m_ownship_kinematic_trajectory_predictor.GetVerticalPathVelocityByIndex(m_ownship_reference_lookup_index));
+            mitre::oss::simcore::VerticalPathUtils::GetPathDataAtIndex(m_ownship_kinematic_trajectory_predictor.GetVerticalPredictor()->GetVerticalPath(), m_ownship_reference_lookup_index).calibrated_airspeed);
 
       m_im_speed_command_ias = m_speed_limiter.LimitSpeedCommand(
             m_previous_im_speed_command_ias, Units::min(nominal_profile_ias, m_previous_im_speed_command_ias),
@@ -525,8 +526,8 @@ void IMDistBasedAchieve::CalculateMach(const Units::Time reference_ttg, const Un
 
          // Make sure velocity is within nominal limits (AAES-694)
          Units::MetersPerSecondSpeed nominal_indicated_airspeed(
-               m_ownship_kinematic_trajectory_predictor.GetVerticalPathVelocityByIndex(
-                     m_ownship_reference_lookup_index));
+               mitre::oss::simcore::VerticalPathUtils::GetPathDataAtIndex(m_ownship_kinematic_trajectory_predictor.GetVerticalPredictor()->GetVerticalPath(),
+                     m_ownship_reference_lookup_index).calibrated_airspeed);
          Units::Speed nominal_true_airspeed =
                m_weather_prediction.getAtmosphere()->CAS2TAS(nominal_indicated_airspeed, current_ownship_altitude);
          BoundedValue<double, 0, 2> nominal_mach =
@@ -551,7 +552,7 @@ void IMDistBasedAchieve::CalculateMach(const Units::Time reference_ttg, const Un
                                         m_ownship_kinematic_trajectory_predictor.GetVerticalPathDistances());
 
       Units::MetersPerSecondSpeed nominal_indicated_airspeed(
-            m_ownship_kinematic_trajectory_predictor.GetVerticalPathVelocityByIndex(m_ownship_reference_lookup_index));
+            mitre::oss::simcore::VerticalPathUtils::GetPathDataAtIndex(m_ownship_kinematic_trajectory_predictor.GetVerticalPredictor()->GetVerticalPath(), m_ownship_reference_lookup_index).calibrated_airspeed);
       Units::Speed nominal_true_airspeed =
             m_weather_prediction.getAtmosphere()->CAS2TAS(nominal_indicated_airspeed, current_ownship_altitude);
       double nominal_mach = Units::MetersPerSecondSpeed(nominal_true_airspeed).value() /
@@ -596,12 +597,14 @@ void IMDistBasedAchieve::RecordData(mitre::oss::simcore::Guidance &im_guidance,
       if (m_ownship_kinematic_dtg_to_ptp <= Units::NauticalMilesLength(nm_observer.curr_NM) && im_guidance.IsValid()) {
          nm_observer.curr_NM--;
 
-         double minimum_allowable_reference_im_speed_cas =
-               m_speed_limiter.LowLimit(m_ownship_kinematic_trajectory_predictor.GetVerticalPathVelocityByIndex(
-                     m_ownship_reference_lookup_index));
-         double maximum_allowable_reference_im_speed_cas =
-               m_speed_limiter.HighLimit(m_ownship_kinematic_trajectory_predictor.GetVerticalPathVelocityByIndex(
-                     m_ownship_reference_lookup_index));
+         double minimum_allowable_reference_im_speed_cas = Units::MetersPerSecondSpeed(
+               m_speed_limiter.LowLimit(mitre::oss::simcore::VerticalPathUtils::GetPathDataAtIndex(
+                     m_ownship_kinematic_trajectory_predictor.GetVerticalPredictor()->GetVerticalPath(),
+                     m_ownship_reference_lookup_index).calibrated_airspeed)).value();
+         double maximum_allowable_reference_im_speed_cas = Units::MetersPerSecondSpeed(
+               m_speed_limiter.HighLimit(mitre::oss::simcore::VerticalPathUtils::GetPathDataAtIndex(
+                     m_ownship_kinematic_trajectory_predictor.GetVerticalPredictor()->GetVerticalPath(),
+                     m_ownship_reference_lookup_index).calibrated_airspeed)).value();
 
          double minimum_allowable_reference_im_speed_tas =
                Units::MetersPerSecondSpeed(m_weather_prediction.getAtmosphere()->CAS2TAS(

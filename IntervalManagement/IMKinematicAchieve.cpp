@@ -34,6 +34,7 @@
 #include "public/Environment.h"
 #include "public/ScenarioUtils.h"
 #include "public/Wind.h"
+#include "public/VerticalPathUtils.h"
 
 using namespace interval_management::open_source;
 using namespace mitre::oss::simcore;
@@ -454,7 +455,7 @@ void IMKinematicAchieve::CheckPredictionAccuracy(
       } else if (ownship_reference_index == 0) {
          // beginning
          m_ownship_reference_cas =
-               Units::MetersPerSecondSpeed(m_ownship_kinematic_trajectory_predictor.GetVerticalPathVelocityByIndex(0));
+               Units::MetersPerSecondSpeed(mitre::oss::simcore::VerticalPathUtils::GetPathDataAtIndex(m_ownship_kinematic_trajectory_predictor.GetVerticalPredictor()->GetVerticalPath(), 0).calibrated_airspeed);
          m_ownship_reference_altitude =
                Units::MetersLength(m_ownship_kinematic_trajectory_predictor.GetVerticalPathAltitudeByIndex(0));
       } else {
@@ -1055,7 +1056,7 @@ void IMKinematicAchieve::SetTrafficReferencePointConstraints(
       } else if (ownship_achieve_by_index == 0) {
          // beginning
          ownship_cas_at_abp =
-               Units::MetersPerSecondSpeed(m_ownship_kinematic_trajectory_predictor.GetVerticalPathVelocityByIndex(0));
+               Units::MetersPerSecondSpeed(mitre::oss::simcore::VerticalPathUtils::GetPathDataAtIndex(m_ownship_kinematic_trajectory_predictor.GetVerticalPredictor()->GetVerticalPath(), 0).calibrated_airspeed);
          ownship_altitude_at_abp =
                Units::MetersLength(m_ownship_kinematic_trajectory_predictor.GetVerticalPathAltitudeByIndex(0));
       } else {
