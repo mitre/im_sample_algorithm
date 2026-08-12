@@ -52,25 +52,25 @@ void interval_management::open_source::FIMAlgorithmInitializer::Initialize(
 
 void interval_management::open_source::FIMAlgorithmInitializer::Initialize(
       interval_management::open_source::IMKinematicAchieve *kinematic_algorithm) {
-   kinematic_algorithm->Initialize(BuildOwnshipPredictionParameters(), fms_prediction_parameters.fms_intent,
+   kinematic_algorithm->Initialize(BuildOwnshipPredictionParameters(), *fms_prediction_parameters.fms_intent,
                                    fms_prediction_parameters.weather_prediction, position_converter);
 }
 
 void interval_management::open_source::FIMAlgorithmInitializer::Initialize(
       interval_management::open_source::IMTimeBasedAchieveMutableASG *test_vector_algorithm) {
-   test_vector_algorithm->Initialize(BuildOwnshipPredictionParameters(), fms_prediction_parameters.fms_intent,
+   test_vector_algorithm->Initialize(BuildOwnshipPredictionParameters(), *fms_prediction_parameters.fms_intent,
                                      fms_prediction_parameters.weather_prediction);
 }
 
 void interval_management::open_source::FIMAlgorithmInitializer::Initialize(
       interval_management::open_source::IMTimeBasedAchieve *time_achieve_algorithm) {
-   time_achieve_algorithm->Initialize(BuildOwnshipPredictionParameters(), fms_prediction_parameters.fms_intent,
+   time_achieve_algorithm->Initialize(BuildOwnshipPredictionParameters(), *fms_prediction_parameters.fms_intent,
                                       fms_prediction_parameters.weather_prediction, position_converter);
 }
 
 void interval_management::open_source::FIMAlgorithmInitializer::Initialize(
       interval_management::open_source::IMDistBasedAchieve *dist_achieve_algorithm) {
-   dist_achieve_algorithm->Initialize(BuildOwnshipPredictionParameters(), fms_prediction_parameters.fms_intent,
+   dist_achieve_algorithm->Initialize(BuildOwnshipPredictionParameters(), *fms_prediction_parameters.fms_intent,
                                       fms_prediction_parameters.weather_prediction, position_converter);
 }
 
@@ -96,21 +96,21 @@ const interval_management::open_source::FIMAlgorithmInitializer
 
 interval_management::open_source::FIMAlgorithmInitializer::Builder *
       interval_management::open_source::FIMAlgorithmInitializer::Builder::AddOwnshipPerformanceParameters(
-            const aaesim::open_source::OwnshipPerformanceParameters &performance_parameters) {
+            const mitre::oss::simcore::OwnshipPerformanceParameters &performance_parameters) {
    m_performance_parameters = performance_parameters;
    return this;
 }
 
 interval_management::open_source::FIMAlgorithmInitializer::Builder *
       interval_management::open_source::FIMAlgorithmInitializer::Builder::AddOwnshipFmsPredictionParameters(
-            const aaesim::open_source::OwnshipFmsPredictionParameters &prediction_parameters) {
+            const mitre::oss::simcore::OwnshipFmsPredictionParameters &prediction_parameters) {
    m_prediction_parameters = prediction_parameters;
    return this;
 }
 
 interval_management::open_source::FIMAlgorithmInitializer::Builder *
       interval_management::open_source::FIMAlgorithmInitializer::Builder::AddSurveillanceProcessor(
-            std::shared_ptr<const aaesim::open_source::ASSAP> processor) {
+            std::shared_ptr<const mitre::oss::simcore::ASSAP> processor) {
    m_surveillance_processor = processor;
    return this;
 }

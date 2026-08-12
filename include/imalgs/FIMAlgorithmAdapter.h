@@ -29,16 +29,19 @@
 
 namespace interval_management {
 namespace open_source {
-class FIMAlgorithmAdapter final : public aaesim::open_source::FlightDeckApplication {
+
+using namespace mitre::oss::simcore;
+
+class FIMAlgorithmAdapter final : public mitre::oss::simcore::FlightDeckApplication {
   public:
    FIMAlgorithmAdapter(std::shared_ptr<interval_management::open_source::IMAlgorithm> im_algorithm,
                        IMUtils::IMAlgorithmTypes algorithm_type);
    ~FIMAlgorithmAdapter() = default;
-   void Initialize(aaesim::open_source::FlightDeckApplicationInitializer &initializer_visitor) override;
-   aaesim::open_source::Guidance Update(const aaesim::open_source::SimulationTime &simtime,
-                                        const aaesim::open_source::Guidance &prevguidance,
-                                        const aaesim::open_source::DynamicsState &dynamicsstate,
-                                        const aaesim::open_source::AircraftState &owntruthstate) override;
+   void Initialize(mitre::oss::simcore::FlightDeckApplicationInitializer &initializer_visitor) override;
+   mitre::oss::simcore::Guidance Update(const mitre::oss::simcore::SimulationTime &simtime,
+                                        const mitre::oss::simcore::Guidance &prevguidance,
+                                        const mitre::oss::simcore::DynamicsState &dynamicsstate,
+                                        const mitre::oss::simcore::AircraftState &owntruthstate) override;
    bool IsActive() const override;
    std::shared_ptr<interval_management::open_source::IMAlgorithm> GetImAlgorithm() const;
    IMUtils::IMAlgorithmTypes GetImAlgorithmType() const;
@@ -49,13 +52,13 @@ class FIMAlgorithmAdapter final : public aaesim::open_source::FlightDeckApplicat
 
   private:
    inline static log4cplus::Logger m_logger{log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("FIMAlgorithmAdapter"))};
-   static void LogAircraftState(const aaesim::open_source::AircraftState &state);
-   void UpdateTargetHistory(const aaesim::open_source::SimulationTime &simtime);
+   static void LogAircraftState(const mitre::oss::simcore::AircraftState &state);
+   void UpdateTargetHistory(const mitre::oss::simcore::SimulationTime &simtime);
    interval_management::open_source::AircraftState ConvertAircraftState(
-         const aaesim::open_source::AircraftState &state) const;
+         const mitre::oss::simcore::AircraftState &state) const;
    std::shared_ptr<interval_management::open_source::IMAlgorithm> m_im_algorithm{};
    IMUtils::IMAlgorithmTypes m_im_algorithm_type{IMUtils::IMAlgorithmTypes::NONE};
-   std::shared_ptr<const aaesim::open_source::ASSAP> m_assap{};
+   std::shared_ptr<const mitre::oss::simcore::ASSAP> m_assap{};
    std::vector<interval_management::open_source::AircraftState> m_target_history{};
    std::shared_ptr<TangentPlaneSequence> m_position_converter{};
 };

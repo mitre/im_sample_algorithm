@@ -32,7 +32,7 @@ using namespace interval_management::open_source;
 
 log4cplus::Logger IMAchieve::m_logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("IMAchieve"));
 
-const shared_ptr<aaesim::open_source::PredictedWindEvaluator> IMAchieve::m_predicted_wind_evaluator(
+const shared_ptr<mitre::oss::simcore::PredictedWindEvaluator> IMAchieve::m_predicted_wind_evaluator(
       MOPSPredictedWindEvaluatorVersion2::GetInstance());
 
 // Do not change these values without discussing with Lesley Weitz.
@@ -91,8 +91,8 @@ void IMAchieve::IterationReset() {
    IterClearIMAch();
 }
 
-aaesim::open_source::Guidance IMAchieve::Update(
-      const aaesim::open_source::Guidance &prevguidance, const aaesim::open_source::DynamicsState &dynamicsstate,
+mitre::oss::simcore::Guidance IMAchieve::Update(
+      const mitre::oss::simcore::Guidance &prevguidance, const mitre::oss::simcore::DynamicsState &dynamicsstate,
       const interval_management::open_source::AircraftState &owntruthstate,
       const interval_management::open_source::AircraftState &targettruthstate,
       const vector<interval_management::open_source::AircraftState> &targethistory) {
@@ -124,7 +124,7 @@ void IMAchieve::DumpParameters(const string &parameters_to_print) {
 
 void IMAchieve::Initialize(const OwnshipPredictionParameters &ownship_prediction_parameters,
                            const AircraftIntent &ownship_aircraft_intent,
-                           aaesim::open_source::WeatherPrediction &weather_prediction) {
+                           mitre::oss::simcore::WeatherPrediction &weather_prediction) {
    IMAlgorithm::Initialize(ownship_prediction_parameters, ownship_aircraft_intent, weather_prediction);
 
    m_achieve_by_point.assign(m_im_clearance.GetAchieveByPoint());

@@ -24,8 +24,8 @@
 #include <memory>
 
 using namespace std;
-using namespace aaesim::open_source;
-using namespace aaesim::open_source::constants;
+using namespace mitre::oss::simcore;
+using namespace mitre::oss::simcore::constants;
 using namespace interval_management::open_source;
 
 namespace aaesim {
@@ -90,7 +90,7 @@ TEST(IMAlgorithm, API) {
    im_time_based_achieve->SetSlope(Units::KnotsInvertedSpeed(0));
    im_time_based_achieve->SetErrorDistance(Units::MetersLength(0));
    im_time_based_achieve->SetBlendWind(true);
-   auto no_delay = aaesim::open_source::StatisticalPilotDelay::NoDelay();
+   auto no_delay = mitre::oss::simcore::StatisticalPilotDelay::NoDelay();
    im_time_based_achieve->SetPilotDelay(no_delay);
 
    im_time_based_achieve->GetTargetTrpCrossingTime();
@@ -861,8 +861,8 @@ TEST(IMUtils, ConvertAircraftStates) {
                      actual_sensed_wind_perpendicular, actual_sensed_temperature, actual_psi);
 
    // This is the tested method
-   // convert to aaesim::open_source::AircraftState
-   const aaesim::open_source::AircraftState converted_state_1 = IMUtils::ConvertToAaesimAircraftState(test_state);
+   // convert to mitre::oss::simcore::AircraftState
+   const mitre::oss::simcore::AircraftState converted_state_1 = IMUtils::ConvertToAaesimAircraftState(test_state);
 
    // assert data transferred
    EXPECT_EQ(actual_id, converted_state_1.GetUniqueId());

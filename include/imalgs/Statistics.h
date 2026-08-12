@@ -26,6 +26,7 @@ using std::vector;
 namespace interval_management {
 namespace open_source {
 
+
 class Statistics final {
   public:
    Statistics();

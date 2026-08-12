@@ -31,6 +31,9 @@
 namespace interval_management {
 namespace open_source {
 
+using namespace mitre::oss::simcore;
+
+
 class IMAchieve : public IMAlgorithm {
   public:
    static const Units::Angle TOLERANCE_ANGLE;
@@ -43,15 +46,15 @@ class IMAchieve : public IMAlgorithm {
 
    void IterationReset() override;
 
-   aaesim::open_source::Guidance Update(
-         const aaesim::open_source::Guidance &prevguidance, const aaesim::open_source::DynamicsState &dynamicsstate,
+   mitre::oss::simcore::Guidance Update(
+         const mitre::oss::simcore::Guidance &prevguidance, const mitre::oss::simcore::DynamicsState &dynamicsstate,
          const interval_management::open_source::AircraftState &owntruthstate,
          const interval_management::open_source::AircraftState &targettruthstate,
          const std::vector<interval_management::open_source::AircraftState> &targethistory) override;
 
    void Initialize(const OwnshipPredictionParameters &ownship_prediction_parameters,
                    const AircraftIntent &ownship_aircraft_intent,
-                   aaesim::open_source::WeatherPrediction &weather_prediction) override;
+                   mitre::oss::simcore::WeatherPrediction &weather_prediction) override;
 
    void DumpParameters(const std::string &parameters_to_print) override;
 
@@ -69,7 +72,7 @@ class IMAchieve : public IMAlgorithm {
    void Copy(const IMAchieve &obj);
 
    virtual void CalculateIas(const Units::Length current_ownship_altitude,
-                             const aaesim::open_source::DynamicsState &three_dof_dynamics_state);
+                             const mitre::oss::simcore::DynamicsState &three_dof_dynamics_state);
 
    virtual void CalculateMach(const Units::Time reference_ttg, const Units::Length current_ownship_altitude);
 
@@ -78,16 +81,16 @@ class IMAchieve : public IMAlgorithm {
    virtual void RecordInternalObserverMetrics(
          const interval_management::open_source::AircraftState &current_ownship_state,
          const interval_management::open_source::AircraftState &current_target_state,
-         const aaesim::open_source::DynamicsState &dynamics_state, const Units::Speed unmodified_ias,
+         const mitre::oss::simcore::DynamicsState &dynamics_state, const Units::Speed unmodified_ias,
          const Units::Speed tas_command, const Units::Speed reference_velocity, const Units::Length reference_distance,
-         const aaesim::open_source::Guidance &guidance);
+         const mitre::oss::simcore::Guidance &guidance);
 
    const bool WithinErrorThreshold(const Units::Length distance_to_go, const Units::Time ownship_ttg,
                                    const Units::Time reference_ttg);
 
    Units::Time GetErrorThreshold(Units::Length distance_to_go);
 
-   static const std::shared_ptr<aaesim::open_source::PredictedWindEvaluator> m_predicted_wind_evaluator;
+   static const std::shared_ptr<mitre::oss::simcore::PredictedWindEvaluator> m_predicted_wind_evaluator;
 
    bool m_transitioned_to_maintain{false};
    bool m_within_error_threshold{false};
@@ -113,7 +116,7 @@ inline const bool IMAchieve::IsWithinErrorThreshold() const { return m_within_er
 inline const bool IMAchieve::IsOwnshipBelowTransitionAltitude(Units::Length current_ownship_altitude) { return false; }
 
 inline void IMAchieve::CalculateIas(const Units::Length current_ownship_altitude,
-                                    const aaesim::open_source::DynamicsState &three_dof_dynamics_state) {
+                                    const mitre::oss::simcore::DynamicsState &three_dof_dynamics_state) {
    // Do nothing.
 }
 
@@ -124,9 +127,9 @@ inline void IMAchieve::CalculateMach(const Units::Time reference_ttg, const Unit
 inline void IMAchieve::RecordInternalObserverMetrics(
       const interval_management::open_source::AircraftState &current_ownship_state,
       const interval_management::open_source::AircraftState &current_target_state,
-      const aaesim::open_source::DynamicsState &dynamics_state, const Units::Speed unmodified_ias,
+      const mitre::oss::simcore::DynamicsState &dynamics_state, const Units::Speed unmodified_ias,
       const Units::Speed tas_command, const Units::Speed reference_velocity, const Units::Length reference_distance,
-      const aaesim::open_source::Guidance &guidance) {
+      const mitre::oss::simcore::Guidance &guidance) {
    // Do Nothing
 }
 

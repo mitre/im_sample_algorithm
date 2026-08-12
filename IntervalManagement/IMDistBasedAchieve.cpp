@@ -27,9 +27,10 @@
 #include "public/CoreUtils.h"
 #include "public/CustomMath.h"
 #include "public/SimulationTime.h"
+#include "public/VerticalPathUtils.h"
 
 using namespace interval_management::open_source;
-using namespace aaesim::open_source;
+using namespace mitre::oss::simcore;
 
 log4cplus::Logger IMDistBasedAchieve::m_logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("IMDistBasedAchieve"));
 const Units::Length IMDistBasedAchieve::DEFAULT_DISTANCE_BASED_ASSIGNED_SPACING_GOAL = Units::NegInfinity();
@@ -56,7 +57,7 @@ IMDistBasedAchieve::~IMDistBasedAchieve() = default;
 
 void IMDistBasedAchieve::Initialize(const OwnshipPredictionParameters &ownship_prediction_parameters,
                                     const AircraftIntent &ownship_aircraft_intent,
-                                    aaesim::open_source::WeatherPrediction &weather_prediction,
+                                    mitre::oss::simcore::WeatherPrediction &weather_prediction,
                                     std::shared_ptr<TangentPlaneSequence> &position_converter) {
    SetTangentPlaneSequence(position_converter);
    Initialize(ownship_prediction_parameters, ownship_aircraft_intent, weather_prediction);
@@ -64,7 +65,7 @@ void IMDistBasedAchieve::Initialize(const OwnshipPredictionParameters &ownship_p
 
 void IMDistBasedAchieve::Initialize(const OwnshipPredictionParameters &ownship_prediction_parameters,
                                     const AircraftIntent &ownship_aircraft_intent,
-                                    aaesim::open_source::WeatherPrediction &weather_prediction) {
+                                    mitre::oss::simcore::WeatherPrediction &weather_prediction) {
    IMKinematicAchieve::Initialize(ownship_prediction_parameters, ownship_aircraft_intent, weather_prediction);
 
    m_im_kinematic_dist_based_maintain->SetQuantizeFlag(GetQuantizeFlag());
@@ -98,13 +99,13 @@ bool IMDistBasedAchieve::load(DecodedStream *input) {
    return loaded;
 }
 
-aaesim::open_source::Guidance IMDistBasedAchieve::Update(
-      const aaesim::open_source::Guidance &previous_im_guidance,
-      const aaesim::open_source::DynamicsState &three_dof_dynamics_state,
+mitre::oss::simcore::Guidance IMDistBasedAchieve::Update(
+      const mitre::oss::simcore::Guidance &previous_im_guidance,
+      const mitre::oss::simcore::DynamicsState &three_dof_dynamics_state,
       const interval_management::open_source::AircraftState &current_ownship_state,
       const interval_management::open_source::AircraftState &current_target_state,
       const vector<interval_management::open_source::AircraftState> &target_adsb_history) {
-   aaesim::open_source::Guidance im_guidance =
+   mitre::oss::simcore::Guidance im_guidance =
          IMKinematicAchieve::Update(previous_im_guidance, three_dof_dynamics_state, current_ownship_state,
                                     current_target_state, target_adsb_history);
 
@@ -118,11 +119,11 @@ aaesim::open_source::Guidance IMDistBasedAchieve::Update(
 
       if (m_target_reference_lookup_index == -1) {
          m_target_reference_lookup_index =
-               static_cast<int>(m_target_kinematic_trajectory_predictor.GetVerticalPathDistances().size() - 1);
+               static_cast<int>(mitre::oss::simcore::VerticalPathUtils::GetPathDataCount(m_target_kinematic_trajectory_predictor.GetVerticalPredictor()->GetVerticalPath()) - 1);
          m_ownship_reference_lookup_index =
-               static_cast<int>(m_ownship_kinematic_trajectory_predictor.GetVerticalPathDistances().size() - 1);
+               static_cast<int>(mitre::oss::simcore::VerticalPathUtils::GetPathDataCount(m_ownship_kinematic_trajectory_predictor.GetVerticalPredictor()->GetVerticalPath()) - 1);
          m_reference_precalc_index =
-               static_cast<int>(m_ownship_kinematic_trajectory_predictor.GetVerticalPathDistances().size() - 1);
+               static_cast<int>(mitre::oss::simcore::VerticalPathUtils::GetPathDataCount(m_ownship_kinematic_trajectory_predictor.GetVerticalPredictor()->GetVerticalPath()) - 1);
       }
 
       if (InAchieveStage()) {
@@ -139,45 +140,32 @@ aaesim::open_source::Guidance IMDistBasedAchieve::Update(
          Units::Time target_reference_ttg_to_trp = Units::zero();
 
          m_target_reference_lookup_index =
-               CoreUtils::FindNearestIndex(Units::MetersLength(m_target_kinematic_dtg_to_last_waypoint).value(),
-                                           m_target_kinematic_trajectory_predictor.GetVerticalPathDistances());
+               mitre::oss::simcore::VerticalPathUtils::GetVerticalPathData(m_target_kinematic_trajectory_predictor.GetVerticalPredictor()->GetVerticalPath(), Units::MetersLength(Units::MetersLength(m_target_kinematic_dtg_to_last_waypoint).value())).resolved_index;
 
          if (m_target_reference_lookup_index >=
-             m_target_kinematic_trajectory_predictor.GetVerticalPathDistances().size() - 1) {
+             mitre::oss::simcore::VerticalPathUtils::GetPathDataCount(m_target_kinematic_trajectory_predictor.GetVerticalPredictor()->GetVerticalPath()) - 1) {
             target_reference_ttg_to_ptp =
-                  Units::SecondsTime(m_target_kinematic_trajectory_predictor.GetVerticalPathTimes().back());
+                  Units::SecondsTime(mitre::oss::simcore::VerticalPathUtils::GetLastPathData(m_target_kinematic_trajectory_predictor.GetVerticalPredictor()->GetVerticalPath()).time_to_go);
             m_target_reference_lookup_index =
-                  static_cast<int>(m_target_kinematic_trajectory_predictor.GetVerticalPathTimes().size() - 1);
+                  static_cast<int>(mitre::oss::simcore::VerticalPathUtils::GetPathDataCount(m_target_kinematic_trajectory_predictor.GetVerticalPredictor()->GetVerticalPath()) - 1);
             m_target_reference_altitude =
-                  Units::MetersLength(m_target_kinematic_trajectory_predictor.GetVerticalPathAltitudes().back());
+                  Units::MetersLength(mitre::oss::simcore::VerticalPathUtils::GetLastPathData(m_target_kinematic_trajectory_predictor.GetVerticalPredictor()->GetVerticalPath()).altitude_msl);
             m_target_reference_gs = Units::MetersPerSecondSpeed(
-                  m_target_kinematic_trajectory_predictor.GetVerticalPathGroundspeeds().back());
+                  mitre::oss::simcore::VerticalPathUtils::GetLastPathData(m_target_kinematic_trajectory_predictor.GetVerticalPredictor()->GetVerticalPath()).ground_speed);
             m_target_reference_ias = Units::MetersPerSecondSpeed(
-                  m_target_kinematic_trajectory_predictor.GetVerticalPathVelocities().back());
+                  mitre::oss::simcore::VerticalPathUtils::GetLastPathData(m_target_kinematic_trajectory_predictor.GetVerticalPredictor()->GetVerticalPath()).calibrated_airspeed);
          } else if (m_target_reference_lookup_index == 0) {
             target_reference_ttg_to_ptp =
-                  Units::SecondsTime(m_target_kinematic_trajectory_predictor.GetVerticalPathTimeByIndex(0));
+                  mitre::oss::simcore::VerticalPathUtils::GetPathDataAtIndex(m_target_kinematic_trajectory_predictor.GetVerticalPredictor()->GetVerticalPath(), 0).time_to_go;
             m_target_reference_altitude =
-                  Units::MetersLength(m_target_kinematic_trajectory_predictor.GetVerticalPathAltitudeByIndex(0));
+                  mitre::oss::simcore::VerticalPathUtils::GetPathDataAtIndex(m_target_kinematic_trajectory_predictor.GetVerticalPredictor()->GetVerticalPath(), 0).altitude_msl;
             m_target_reference_gs = Units::ZERO_SPEED;
             m_target_reference_ias = Units::ZERO_SPEED;
          } else {
-            target_reference_ttg_to_ptp = Units::SecondsTime(CoreUtils::LinearlyInterpolate(
-                  m_target_reference_lookup_index, Units::MetersLength(m_target_kinematic_dtg_to_last_waypoint).value(),
-                  m_target_kinematic_trajectory_predictor.GetVerticalPathDistances(),
-                  m_target_kinematic_trajectory_predictor.GetVerticalPathTimes()));
-            m_target_reference_altitude = Units::MetersLength(CoreUtils::LinearlyInterpolate(
-                  m_target_reference_lookup_index, Units::MetersLength(m_target_kinematic_dtg_to_last_waypoint).value(),
-                  m_target_kinematic_trajectory_predictor.GetVerticalPathDistances(),
-                  m_target_kinematic_trajectory_predictor.GetVerticalPathAltitudes()));
-            m_target_reference_gs = Units::MetersPerSecondSpeed(CoreUtils::LinearlyInterpolate(
-                  m_target_reference_lookup_index, Units::MetersLength(m_target_kinematic_dtg_to_last_waypoint).value(),
-                  m_target_kinematic_trajectory_predictor.GetVerticalPathDistances(),
-                  m_target_kinematic_trajectory_predictor.GetVerticalPathGroundspeeds()));
-            m_target_reference_ias = Units::MetersPerSecondSpeed(CoreUtils::LinearlyInterpolate(
-                  m_target_reference_lookup_index, Units::MetersLength(m_target_kinematic_dtg_to_last_waypoint).value(),
-                  m_target_kinematic_trajectory_predictor.GetVerticalPathDistances(),
-                  m_target_kinematic_trajectory_predictor.GetVerticalPathVelocities()));
+            target_reference_ttg_to_ptp = Units::SecondsTime(mitre::oss::simcore::VerticalPathUtils::GetInterpolatedPathData(m_target_kinematic_trajectory_predictor.GetVerticalPredictor()->GetVerticalPath(), Units::MetersLength(Units::MetersLength(m_target_kinematic_dtg_to_last_waypoint).value())).time_to_go);
+            m_target_reference_altitude = Units::MetersLength(mitre::oss::simcore::VerticalPathUtils::GetInterpolatedPathData(m_target_kinematic_trajectory_predictor.GetVerticalPredictor()->GetVerticalPath(), Units::MetersLength(Units::MetersLength(m_target_kinematic_dtg_to_last_waypoint).value())).altitude_msl);
+            m_target_reference_gs = Units::MetersPerSecondSpeed(mitre::oss::simcore::VerticalPathUtils::GetInterpolatedPathData(m_target_kinematic_trajectory_predictor.GetVerticalPredictor()->GetVerticalPath(), Units::MetersLength(Units::MetersLength(m_target_kinematic_dtg_to_last_waypoint).value())).ground_speed);
+            m_target_reference_ias = Units::MetersPerSecondSpeed(mitre::oss::simcore::VerticalPathUtils::GetInterpolatedPathData(m_target_kinematic_trajectory_predictor.GetVerticalPredictor()->GetVerticalPath(), Units::MetersLength(Units::MetersLength(m_target_kinematic_dtg_to_last_waypoint).value())).calibrated_airspeed);
          }
 
          target_reference_ttg_to_trp =
@@ -188,17 +176,17 @@ aaesim::open_source::Guidance IMDistBasedAchieve::Update(
          if (m_previous_im_speed_command_ias == Units::zero()) {
             m_previous_reference_im_speed_command_tas = m_weather_prediction.getAtmosphere()->CAS2TAS(
                   Units::MetersPerSecondSpeed(
-                        m_ownship_kinematic_trajectory_predictor.GetVerticalPathVelocities().back()),
-                  Units::MetersLength(m_ownship_kinematic_trajectory_predictor.GetVerticalPathAltitudes().back()));
+                        mitre::oss::simcore::VerticalPathUtils::GetLastPathData(m_ownship_kinematic_trajectory_predictor.GetVerticalPredictor()->GetVerticalPath()).calibrated_airspeed),
+                  Units::MetersLength(mitre::oss::simcore::VerticalPathUtils::GetLastPathData(m_ownship_kinematic_trajectory_predictor.GetVerticalPredictor()->GetVerticalPath()).altitude_msl));
 
             m_previous_im_speed_command_ias = Units::MetersPerSecondSpeed(
-                  m_ownship_kinematic_trajectory_predictor.GetVerticalPathVelocities().back());
+                  mitre::oss::simcore::VerticalPathUtils::GetLastPathData(m_ownship_kinematic_trajectory_predictor.GetVerticalPredictor()->GetVerticalPath()).calibrated_airspeed);
             m_previous_reference_im_speed_command_mach =
                   Units::MetersPerSecondSpeed(m_previous_reference_im_speed_command_tas).value() /
                   sqrt(kGamma * R.value() *
                        m_weather_prediction.getAtmosphere()
                              ->GetTemperature(Units::MetersLength(
-                                   m_ownship_kinematic_trajectory_predictor.GetVerticalPathAltitudes().back()))
+                                   mitre::oss::simcore::VerticalPathUtils::GetLastPathData(m_ownship_kinematic_trajectory_predictor.GetVerticalPredictor()->GetVerticalPath()).altitude_msl))
                              .value());
          }
 
@@ -206,38 +194,31 @@ aaesim::open_source::Guidance IMDistBasedAchieve::Update(
          Units::MetersLength ownship_reference_distance =
                m_ownship_kinematic_achieve_by_calcs.GetDistanceFromWaypoint() + m_assigned_spacing_goal;
 
-         m_ownship_reference_lookup_index = CoreUtils::FindNearestIndex(
-               ownship_reference_distance.value(), m_ownship_kinematic_trajectory_predictor.GetVerticalPathDistances());
+         m_ownship_reference_lookup_index = mitre::oss::simcore::VerticalPathUtils::GetVerticalPathData(m_ownship_kinematic_trajectory_predictor.GetVerticalPredictor()->GetVerticalPath(), Units::MetersLength(ownship_reference_distance.value())).resolved_index;
 
          // Note that this calculation includes the ASG. Be careful how used.
          ownship_ttg_from_abp_to_ptp = Units::SecondsTime(
-               CoreUtils::LinearlyInterpolate(m_ownship_reference_lookup_index, ownship_reference_distance.value(),
-                                              m_ownship_kinematic_trajectory_predictor.GetVerticalPathDistances(),
-                                              m_ownship_kinematic_trajectory_predictor.GetVerticalPathTimes()));
+               mitre::oss::simcore::VerticalPathUtils::GetInterpolatedPathData(m_ownship_kinematic_trajectory_predictor.GetVerticalPredictor()->GetVerticalPath(), Units::MetersLength(ownship_reference_distance.value())).time_to_go);
 
          if (m_ownship_kinematic_dtg_to_ptp <=
              Units::abs(
-                   Units::MetersLength(m_ownship_kinematic_trajectory_predictor.GetVerticalPathDistances().back()))) {
+                   Units::MetersLength(mitre::oss::simcore::VerticalPathUtils::GetLastPathData(m_ownship_kinematic_trajectory_predictor.GetVerticalPredictor()->GetVerticalPath()).along_path_distance))) {
             m_ownship_reference_lookup_index =
-                  CoreUtils::FindNearestIndex(Units::MetersLength(m_ownship_kinematic_dtg_to_ptp).value(),
-                                              m_ownship_kinematic_trajectory_predictor.GetVerticalPathDistances());
+                  mitre::oss::simcore::VerticalPathUtils::GetVerticalPathData(m_ownship_kinematic_trajectory_predictor.GetVerticalPredictor()->GetVerticalPath(), Units::MetersLength(Units::MetersLength(m_ownship_kinematic_dtg_to_ptp).value())).resolved_index;
 
             if (m_ownship_reference_lookup_index >=
-                m_ownship_kinematic_trajectory_predictor.GetVerticalPathDistances().size() - 1) {
+                mitre::oss::simcore::VerticalPathUtils::GetPathDataCount(m_ownship_kinematic_trajectory_predictor.GetVerticalPredictor()->GetVerticalPath()) - 1) {
                m_ownship_reference_ttg_to_ptp =
-                     Units::SecondsTime(m_ownship_kinematic_trajectory_predictor.GetVerticalPathTimes().back());
+                     Units::SecondsTime(mitre::oss::simcore::VerticalPathUtils::GetLastPathData(m_ownship_kinematic_trajectory_predictor.GetVerticalPredictor()->GetVerticalPath()).time_to_go);
                m_ownship_ttg_to_abp = m_ownship_reference_ttg_to_ptp - ownship_ttg_from_abp_to_ptp;
                m_ownship_reference_lookup_index =
-                     static_cast<int>(m_ownship_kinematic_trajectory_predictor.GetVerticalPathTimes().size() - 1);
+                     static_cast<int>(mitre::oss::simcore::VerticalPathUtils::GetPathDataCount(m_ownship_kinematic_trajectory_predictor.GetVerticalPredictor()->GetVerticalPath()) - 1);
             } else if (m_ownship_reference_lookup_index == 0) {
                m_ownship_reference_ttg_to_ptp =
-                     Units::SecondsTime(m_ownship_kinematic_trajectory_predictor.GetVerticalPathTimeByIndex(0));
+                     mitre::oss::simcore::VerticalPathUtils::GetPathDataAtIndex(m_ownship_kinematic_trajectory_predictor.GetVerticalPredictor()->GetVerticalPath(), 0).time_to_go;
                m_ownship_ttg_to_abp = m_ownship_reference_ttg_to_ptp - ownship_ttg_from_abp_to_ptp;
             } else {
-               m_ownship_reference_ttg_to_ptp = Units::SecondsTime(CoreUtils::LinearlyInterpolate(
-                     m_ownship_reference_lookup_index, Units::MetersLength(m_ownship_kinematic_dtg_to_ptp).value(),
-                     m_ownship_kinematic_trajectory_predictor.GetVerticalPathDistances(),
-                     m_ownship_kinematic_trajectory_predictor.GetVerticalPathTimes()));
+               m_ownship_reference_ttg_to_ptp = Units::SecondsTime(mitre::oss::simcore::VerticalPathUtils::GetInterpolatedPathData(m_ownship_kinematic_trajectory_predictor.GetVerticalPredictor()->GetVerticalPath(), Units::MetersLength(Units::MetersLength(m_ownship_kinematic_dtg_to_ptp).value())).time_to_go);
                m_ownship_ttg_to_abp = m_ownship_reference_ttg_to_ptp - ownship_ttg_from_abp_to_ptp;
             }
          }
@@ -263,47 +244,37 @@ aaesim::open_source::Guidance IMDistBasedAchieve::Update(
          Units::Time ownrefttgtoend = reference_ttg + ownship_ttg_from_abp_to_ptp;
 
          m_reference_precalc_index =
-               CoreUtils::FindNearestIndex(Units::SecondsTime(ownrefttgtoend).value(),
-                                           m_ownship_kinematic_trajectory_predictor.GetVerticalPathTimes());
+               mitre::oss::simcore::VerticalPathUtils::GetPathDataAtTime(m_ownship_kinematic_trajectory_predictor.GetVerticalPredictor()->GetVerticalPath(), Units::SecondsTime(Units::SecondsTime(ownrefttgtoend).value())).resolved_index;
 
-         if (m_reference_precalc_index >= m_ownship_kinematic_trajectory_predictor.GetVerticalPathTimes().size() - 1) {
+         if (m_reference_precalc_index >= mitre::oss::simcore::VerticalPathUtils::GetPathDataCount(m_ownship_kinematic_trajectory_predictor.GetVerticalPredictor()->GetVerticalPath()) - 1) {
             m_reference_precalc_index =
-                  static_cast<int>(m_ownship_kinematic_trajectory_predictor.GetVerticalPathTimes().size() - 1);
+                  static_cast<int>(mitre::oss::simcore::VerticalPathUtils::GetPathDataCount(m_ownship_kinematic_trajectory_predictor.GetVerticalPredictor()->GetVerticalPath()) - 1);
 
             ownship_reference_dtg_to_ptp =
-                  Units::MetersLength(-m_ownship_kinematic_trajectory_predictor.GetVerticalPathDistances().back());
+                  Units::MetersLength(-mitre::oss::simcore::VerticalPathUtils::GetLastPathData(m_ownship_kinematic_trajectory_predictor.GetVerticalPredictor()->GetVerticalPath()).along_path_distance);
             m_ownship_reference_cas = Units::MetersPerSecondSpeed(
-                  m_ownship_kinematic_trajectory_predictor.GetVerticalPathVelocities().back());
+                  mitre::oss::simcore::VerticalPathUtils::GetLastPathData(m_ownship_kinematic_trajectory_predictor.GetVerticalPredictor()->GetVerticalPath()).calibrated_airspeed);
             m_ownship_reference_gs = Units::MetersPerSecondSpeed(
-                  m_ownship_kinematic_trajectory_predictor.GetVerticalPathGroundspeeds().back());
+                  mitre::oss::simcore::VerticalPathUtils::GetLastPathData(m_ownship_kinematic_trajectory_predictor.GetVerticalPredictor()->GetVerticalPath()).ground_speed);
             m_ownship_reference_altitude =
-                  Units::MetersLength(m_ownship_kinematic_trajectory_predictor.GetVerticalPathAltitudes().back());
+                  Units::MetersLength(mitre::oss::simcore::VerticalPathUtils::GetLastPathData(m_ownship_kinematic_trajectory_predictor.GetVerticalPredictor()->GetVerticalPath()).altitude_msl);
          } else if (m_reference_precalc_index == 0) {
             ownship_reference_dtg_to_ptp =
-                  Units::MetersLength(-m_ownship_kinematic_trajectory_predictor.GetVerticalPathDistanceByIndex(0));
+                  -mitre::oss::simcore::VerticalPathUtils::GetPathDataAtIndex(m_ownship_kinematic_trajectory_predictor.GetVerticalPredictor()->GetVerticalPath(), 0).along_path_distance;
             m_ownship_reference_cas = Units::MetersPerSecondSpeed(
-                  m_ownship_kinematic_trajectory_predictor.GetVerticalPathVelocityByIndex(0));
+                  mitre::oss::simcore::VerticalPathUtils::GetPathDataAtIndex(m_ownship_kinematic_trajectory_predictor.GetVerticalPredictor()->GetVerticalPath(), 0).calibrated_airspeed);
             m_ownship_reference_gs = Units::ZERO_SPEED;
             m_ownship_reference_altitude =
-                  Units::MetersLength(m_ownship_kinematic_trajectory_predictor.GetVerticalPathAltitudeByIndex(0));
+                  mitre::oss::simcore::VerticalPathUtils::GetPathDataAtIndex(m_ownship_kinematic_trajectory_predictor.GetVerticalPredictor()->GetVerticalPath(), 0).altitude_msl;
          } else {
             ownship_reference_dtg_to_ptp = Units::MetersLength(
-                  -CoreUtils::LinearlyInterpolate(m_reference_precalc_index, Units::SecondsTime(ownrefttgtoend).value(),
-                                                  m_ownship_kinematic_trajectory_predictor.GetVerticalPathTimes(),
-                                                  m_ownship_kinematic_trajectory_predictor.GetVerticalPathDistances()));
+                  -mitre::oss::simcore::VerticalPathUtils::GetInterpolatedPathDataAtTime(m_ownship_kinematic_trajectory_predictor.GetVerticalPredictor()->GetVerticalPath(), Units::SecondsTime(Units::SecondsTime(ownrefttgtoend).value())).along_path_distance);
 
             m_ownship_reference_cas = Units::MetersPerSecondSpeed(
-                  CoreUtils::LinearlyInterpolate(m_reference_precalc_index, Units::SecondsTime(ownrefttgtoend).value(),
-                                                 m_ownship_kinematic_trajectory_predictor.GetVerticalPathTimes(),
-                                                 m_ownship_kinematic_trajectory_predictor.GetVerticalPathVelocities()));
-            m_ownship_reference_gs = Units::MetersPerSecondSpeed(CoreUtils::LinearlyInterpolate(
-                  m_reference_precalc_index, Units::SecondsTime(ownrefttgtoend).value(),
-                  m_ownship_kinematic_trajectory_predictor.GetVerticalPathTimes(),
-                  m_ownship_kinematic_trajectory_predictor.GetVerticalPathGroundspeeds()));
+                  mitre::oss::simcore::VerticalPathUtils::GetInterpolatedPathDataAtTime(m_ownship_kinematic_trajectory_predictor.GetVerticalPredictor()->GetVerticalPath(), Units::SecondsTime(Units::SecondsTime(ownrefttgtoend).value())).calibrated_airspeed);
+            m_ownship_reference_gs = Units::MetersPerSecondSpeed(mitre::oss::simcore::VerticalPathUtils::GetInterpolatedPathDataAtTime(m_ownship_kinematic_trajectory_predictor.GetVerticalPredictor()->GetVerticalPath(), Units::SecondsTime(Units::SecondsTime(ownrefttgtoend).value())).ground_speed);
             m_ownship_reference_altitude = Units::MetersLength(
-                  CoreUtils::LinearlyInterpolate(m_reference_precalc_index, Units::SecondsTime(ownrefttgtoend).value(),
-                                                 m_ownship_kinematic_trajectory_predictor.GetVerticalPathTimes(),
-                                                 m_ownship_kinematic_trajectory_predictor.GetVerticalPathAltitudes()));
+                  mitre::oss::simcore::VerticalPathUtils::GetInterpolatedPathDataAtTime(m_ownship_kinematic_trajectory_predictor.GetVerticalPredictor()->GetVerticalPath(), Units::SecondsTime(Units::SecondsTime(ownrefttgtoend).value())).altitude_msl);
          }
 
          m_im_speed_command_ias =
@@ -312,7 +283,7 @@ aaesim::open_source::Guidance IMDistBasedAchieve::Update(
 
          m_unmodified_im_speed_command_ias = m_im_speed_command_ias;
 
-         if (im_guidance.GetSelectedSpeed().GetSpeedType() == INDICATED_AIR_SPEED) {
+         if (im_guidance.GetSelectedSpeedType() == INDICATED_AIR_SPEED) {
             CalculateIas(current_ownship_state.GetPositionZ(), three_dof_dynamics_state);
          } else {
             CalculateMach(reference_ttg, current_ownship_state.GetPositionZ(), three_dof_dynamics_state.current_mass);
@@ -329,7 +300,7 @@ aaesim::open_source::Guidance IMDistBasedAchieve::Update(
 
          if (m_pilot_delay.IsPilotDelayOn()) {
             im_guidance.m_ias_command = m_im_speed_command_with_pilot_delay;
-            if (im_guidance.GetSelectedSpeed().GetSpeedType() == MACH_SPEED) {
+            if (im_guidance.GetSelectedSpeedType() == MACH_SPEED) {
                const auto true_airspeed_equivalent = m_weather_prediction.CAS2TAS(m_im_speed_command_with_pilot_delay,
                                                                                   current_ownship_state.GetPositionZ());
                const auto mach_equivalent =
@@ -338,7 +309,7 @@ aaesim::open_source::Guidance IMDistBasedAchieve::Update(
             }
          } else {
             im_guidance.m_ias_command = m_im_speed_command_ias;
-            if (im_guidance.GetSelectedSpeed().GetSpeedType() == MACH_SPEED) {
+            if (im_guidance.GetSelectedSpeedType() == MACH_SPEED) {
                const auto true_airspeed_equivalent =
                      m_weather_prediction.CAS2TAS(m_im_speed_command_ias, current_ownship_state.GetPositionZ());
                const auto mach_equivalent =
@@ -377,7 +348,7 @@ aaesim::open_source::Guidance IMDistBasedAchieve::Update(
          if (m_distance_calculator_target_on_ownship_hpath.IsPassedEndOfRoute() || !m_target_aircraft_exists) {
             // Operation is completing. IM Speed must be defaulted; the control law cannot be used.
             m_measured_spacing_interval = Units::NegInfinity();
-            if (im_guidance.GetSelectedSpeed().GetSpeedType() == INDICATED_AIR_SPEED) {
+            if (im_guidance.GetSelectedSpeedType() == INDICATED_AIR_SPEED) {
                CalculateIas(current_ownship_state.GetPositionZ(), three_dof_dynamics_state);
             } else {
                CalculateMach(Units::negInfinity(), current_ownship_state.GetPositionZ(),
@@ -468,26 +439,25 @@ aaesim::open_source::Guidance IMDistBasedAchieve::Update(
 }
 
 void IMDistBasedAchieve::CalculateIas(const Units::Length current_ownship_altitude,
-                                      const aaesim::open_source::DynamicsState &three_dof_dynamics_state) {
+                                      const mitre::oss::simcore::DynamicsState &three_dof_dynamics_state) {
    if (!IsTargetPassedTrp()) {
       m_im_speed_command_ias = m_speed_limiter.LimitSpeedCommand(
             m_previous_im_speed_command_ias, m_im_speed_command_ias,
-            m_ownship_kinematic_trajectory_predictor.GetVerticalPathCasByIndex(m_ownship_reference_lookup_index),
+            mitre::oss::simcore::VerticalPathUtils::GetPathDataAtIndex(m_ownship_kinematic_trajectory_predictor.GetVerticalPredictor()->GetVerticalPath(), m_ownship_reference_lookup_index).calibrated_airspeed,
             m_ownship_kinematic_dtg_to_abp, m_ownship_kinematic_dtg_to_ptp, current_ownship_altitude,
             three_dof_dynamics_state.flap_configuration);
    } else {
       m_predicted_spacing_interval = Units::NegInfinity();
 
       m_ownship_reference_lookup_index =
-            CoreUtils::FindNearestIndex(Units::MetersLength(m_ownship_kinematic_dtg_to_ptp).value(),
-                                        m_ownship_kinematic_trajectory_predictor.GetVerticalPathDistances());
+            mitre::oss::simcore::VerticalPathUtils::GetVerticalPathData(m_ownship_kinematic_trajectory_predictor.GetVerticalPredictor()->GetVerticalPath(), Units::MetersLength(Units::MetersLength(m_ownship_kinematic_dtg_to_ptp).value())).resolved_index;
 
       Units::Speed nominal_profile_ias = Units::MetersPerSecondSpeed(
-            m_ownship_kinematic_trajectory_predictor.GetVerticalPathVelocityByIndex(m_ownship_reference_lookup_index));
+            mitre::oss::simcore::VerticalPathUtils::GetPathDataAtIndex(m_ownship_kinematic_trajectory_predictor.GetVerticalPredictor()->GetVerticalPath(), m_ownship_reference_lookup_index).calibrated_airspeed);
 
       m_im_speed_command_ias = m_speed_limiter.LimitSpeedCommand(
             m_previous_im_speed_command_ias, Units::min(nominal_profile_ias, m_previous_im_speed_command_ias),
-            m_ownship_kinematic_trajectory_predictor.GetVerticalPathCasByIndex(m_ownship_reference_lookup_index),
+            mitre::oss::simcore::VerticalPathUtils::GetPathDataAtIndex(m_ownship_kinematic_trajectory_predictor.GetVerticalPredictor()->GetVerticalPath(), m_ownship_reference_lookup_index).calibrated_airspeed,
             m_ownship_kinematic_dtg_to_abp, m_ownship_kinematic_dtg_to_ptp, current_ownship_altitude,
             three_dof_dynamics_state.flap_configuration);
    }
@@ -525,8 +495,8 @@ void IMDistBasedAchieve::CalculateMach(const Units::Time reference_ttg, const Un
 
          // Make sure velocity is within nominal limits (AAES-694)
          Units::MetersPerSecondSpeed nominal_indicated_airspeed(
-               m_ownship_kinematic_trajectory_predictor.GetVerticalPathVelocityByIndex(
-                     m_ownship_reference_lookup_index));
+               mitre::oss::simcore::VerticalPathUtils::GetPathDataAtIndex(m_ownship_kinematic_trajectory_predictor.GetVerticalPredictor()->GetVerticalPath(),
+                     m_ownship_reference_lookup_index).calibrated_airspeed);
          Units::Speed nominal_true_airspeed =
                m_weather_prediction.getAtmosphere()->CAS2TAS(nominal_indicated_airspeed, current_ownship_altitude);
          BoundedValue<double, 0, 2> nominal_mach =
@@ -547,11 +517,10 @@ void IMDistBasedAchieve::CalculateMach(const Units::Time reference_ttg, const Un
       m_predicted_spacing_interval = Units::NegInfinity();
 
       m_ownship_reference_lookup_index =
-            CoreUtils::FindNearestIndex(Units::MetersLength(m_ownship_kinematic_dtg_to_ptp).value(),
-                                        m_ownship_kinematic_trajectory_predictor.GetVerticalPathDistances());
+            mitre::oss::simcore::VerticalPathUtils::GetVerticalPathData(m_ownship_kinematic_trajectory_predictor.GetVerticalPredictor()->GetVerticalPath(), Units::MetersLength(Units::MetersLength(m_ownship_kinematic_dtg_to_ptp).value())).resolved_index;
 
       Units::MetersPerSecondSpeed nominal_indicated_airspeed(
-            m_ownship_kinematic_trajectory_predictor.GetVerticalPathVelocityByIndex(m_ownship_reference_lookup_index));
+            mitre::oss::simcore::VerticalPathUtils::GetPathDataAtIndex(m_ownship_kinematic_trajectory_predictor.GetVerticalPredictor()->GetVerticalPath(), m_ownship_reference_lookup_index).calibrated_airspeed);
       Units::Speed nominal_true_airspeed =
             m_weather_prediction.getAtmosphere()->CAS2TAS(nominal_indicated_airspeed, current_ownship_altitude);
       double nominal_mach = Units::MetersPerSecondSpeed(nominal_true_airspeed).value() /
@@ -577,10 +546,10 @@ void IMDistBasedAchieve::CalculateMach(const Units::Time reference_ttg, const Un
    m_previous_reference_im_speed_command_mach = estimated_mach;
 }
 
-void IMDistBasedAchieve::RecordData(aaesim::open_source::Guidance &im_guidance,
+void IMDistBasedAchieve::RecordData(mitre::oss::simcore::Guidance &im_guidance,
                                     const interval_management::open_source::AircraftState &current_ownship_state,
                                     const interval_management::open_source::AircraftState &current_target_state,
-                                    const aaesim::open_source::DynamicsState &three_dof_dynamics_state,
+                                    const mitre::oss::simcore::DynamicsState &three_dof_dynamics_state,
                                     Units::Speed unmodified_im_speed_command_ias, Units::Speed im_speed_command_tas,
                                     Units::Speed ownship_reference_cas, Units::Length ownship_reference_dtg_to_ptp,
                                     Units::Time target_reference_ttg_to_trp) {
@@ -596,12 +565,14 @@ void IMDistBasedAchieve::RecordData(aaesim::open_source::Guidance &im_guidance,
       if (m_ownship_kinematic_dtg_to_ptp <= Units::NauticalMilesLength(nm_observer.curr_NM) && im_guidance.IsValid()) {
          nm_observer.curr_NM--;
 
-         double minimum_allowable_reference_im_speed_cas =
-               m_speed_limiter.LowLimit(m_ownship_kinematic_trajectory_predictor.GetVerticalPathVelocityByIndex(
-                     m_ownship_reference_lookup_index));
-         double maximum_allowable_reference_im_speed_cas =
-               m_speed_limiter.HighLimit(m_ownship_kinematic_trajectory_predictor.GetVerticalPathVelocityByIndex(
-                     m_ownship_reference_lookup_index));
+         double minimum_allowable_reference_im_speed_cas = Units::MetersPerSecondSpeed(
+               m_speed_limiter.LowLimit(mitre::oss::simcore::VerticalPathUtils::GetPathDataAtIndex(
+                     m_ownship_kinematic_trajectory_predictor.GetVerticalPredictor()->GetVerticalPath(),
+                     m_ownship_reference_lookup_index).calibrated_airspeed)).value();
+         double maximum_allowable_reference_im_speed_cas = Units::MetersPerSecondSpeed(
+               m_speed_limiter.HighLimit(mitre::oss::simcore::VerticalPathUtils::GetPathDataAtIndex(
+                     m_ownship_kinematic_trajectory_predictor.GetVerticalPredictor()->GetVerticalPath(),
+                     m_ownship_reference_lookup_index).calibrated_airspeed)).value();
 
          double minimum_allowable_reference_im_speed_tas =
                Units::MetersPerSecondSpeed(m_weather_prediction.getAtmosphere()->CAS2TAS(
@@ -634,14 +605,7 @@ void IMDistBasedAchieve::RecordData(aaesim::open_source::Guidance &im_guidance,
 
 const Units::MetersLength IMDistBasedAchieve::CalculatePredictedSpacingInterval(
       const Units::Time target_reference_ttg_to_trp) {
-   const auto ownship_reference_dtg_to_ptp_index =
-         CoreUtils::FindNearestIndex(Units::MetersLength(m_ownship_kinematic_dtg_to_ptp).value(),
-                                     m_ownship_kinematic_trajectory_predictor.GetVerticalPathDistances());
-
-   const Units::Time own_ttg_to_ptp = Units::SecondsTime(CoreUtils::LinearlyInterpolate(
-         ownship_reference_dtg_to_ptp_index, Units::MetersLength(m_ownship_kinematic_dtg_to_ptp).value(),
-         m_ownship_kinematic_trajectory_predictor.GetVerticalPathDistances(),
-         m_ownship_kinematic_trajectory_predictor.GetVerticalPathTimes()));
+   const Units::Time own_ttg_to_ptp = Units::SecondsTime(mitre::oss::simcore::VerticalPathUtils::GetInterpolatedPathData(m_ownship_kinematic_trajectory_predictor.GetVerticalPredictor()->GetVerticalPath(), Units::MetersLength(Units::MetersLength(m_ownship_kinematic_dtg_to_ptp).value())).time_to_go);
 
    const Units::Time ownship_kinematic_ttg_to_abp =
          own_ttg_to_ptp - m_ownship_kinematic_achieve_by_calcs.GetTimeToGoToWaypoint();
@@ -649,14 +613,15 @@ const Units::MetersLength IMDistBasedAchieve::CalculatePredictedSpacingInterval(
    const Units::SecondsTime predicted_spacing_interval_lookup_ttg =
          ownship_target_delta_ttg + m_ownship_kinematic_achieve_by_calcs.GetTimeToGoToWaypoint();
    const Units::Length ownship_dtg_from_abp_to_ptp = m_ownship_kinematic_achieve_by_calcs.GetDistanceFromWaypoint();
-   const auto index_ttg = CoreUtils::FindNearestIndex(predicted_spacing_interval_lookup_ttg.value(),
-                                                      m_ownship_kinematic_trajectory_predictor.GetVerticalPathTimes());
+   const auto index_ttg = mitre::oss::simcore::VerticalPathUtils::GetPathDataAtTime(m_ownship_kinematic_trajectory_predictor.GetVerticalPredictor()->GetVerticalPath(), Units::SecondsTime(predicted_spacing_interval_lookup_ttg.value())).resolved_index;
 
    if ((ownship_target_delta_ttg < Units::zero()) && (index_ttg == 0)) {
       // This calculation handles negative PSI situations in which there is no maintain stage afterward. In this
       // situation, the PSI must be guessed using ownship's predicted groundspeed.
       const Units::Speed ownship_groundspeed_at_ptp =
-            Units::MetersPerSecondSpeed(m_ownship_kinematic_trajectory_predictor.GetVerticalPathGroundspeeds().front());
+            mitre::oss::simcore::VerticalPathUtils::GetFirstPathData(
+                  m_ownship_kinematic_trajectory_predictor.GetVerticalPredictor()->GetVerticalPath())
+                  .ground_speed;
       const Units::Time ownship_time_past_ptp = target_reference_ttg_to_trp - own_ttg_to_ptp;
       const Units::Length ownship_distance_passed_abp =
             ownship_groundspeed_at_ptp * ownship_time_past_ptp + ownship_dtg_from_abp_to_ptp;
@@ -669,9 +634,7 @@ const Units::MetersLength IMDistBasedAchieve::CalculatePredictedSpacingInterval(
       // ** positive PSI situations
       // ** negative PSI situations in which there is a valid 4D prediction that goes beyond the ABP
       const Units::Length ownship_reference_dtg_at_predicted_spacing_interval_lookup_distance = Units::MetersLength(
-            CoreUtils::LinearlyInterpolate(index_ttg, predicted_spacing_interval_lookup_ttg.value(),
-                                           m_ownship_kinematic_trajectory_predictor.GetVerticalPathTimes(),
-                                           m_ownship_kinematic_trajectory_predictor.GetVerticalPathDistances()));
+            mitre::oss::simcore::VerticalPathUtils::GetInterpolatedPathDataAtTime(m_ownship_kinematic_trajectory_predictor.GetVerticalPredictor()->GetVerticalPath(), Units::SecondsTime(predicted_spacing_interval_lookup_ttg.value())).along_path_distance);
 
       const Units::Length predicted_spacing_interval =
             ownship_reference_dtg_at_predicted_spacing_interval_lookup_distance - ownship_dtg_from_abp_to_ptp;

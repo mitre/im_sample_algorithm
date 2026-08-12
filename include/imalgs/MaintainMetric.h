@@ -27,6 +27,7 @@
 
 namespace interval_management {
 namespace open_source {
+
 class MaintainMetric final {
   public:
    MaintainMetric();

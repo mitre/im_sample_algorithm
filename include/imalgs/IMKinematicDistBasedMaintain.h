@@ -29,6 +29,9 @@
 
 namespace interval_management {
 namespace open_source {
+
+using namespace mitre::oss::simcore;
+
 class IMKinematicDistBasedMaintain final : public IMMaintain {
   public:
    IMKinematicDistBasedMaintain();
@@ -38,19 +41,19 @@ class IMKinematicDistBasedMaintain final : public IMMaintain {
    virtual void IterationReset();
 
    // Does NOT inherit from IMAlgorithm::Update()
-   aaesim::open_source::Guidance Update(
-         const aaesim::open_source::DynamicsState &dynamics_state,
+   mitre::oss::simcore::Guidance Update(
+         const mitre::oss::simcore::DynamicsState &dynamics_state,
          const interval_management::open_source::AircraftState &ownship_aircraft_state,
          const interval_management::open_source::AircraftState
                &target_state_projected_on_ownships_path_at_adjusted_distance,
          const Units::Length target_dtg_along_ownships_path_at_adjusted_distance,
          const Units::Length target_dtg_along_ownships_path,
-         const aaesim::open_source::KinematicTrajectoryPredictor &ownship_kinematic_trajectory_predictor,
-         const aaesim::open_source::Guidance &guidance_in,
+         const mitre::oss::simcore::KinematicTrajectoryPredictor &ownship_kinematic_trajectory_predictor,
+         const mitre::oss::simcore::Guidance &guidance_in,
          const std::vector<interval_management::open_source::AircraftState> &target_aircraft_state_history,
          const interval_management::open_source::AchievePointCalcs &ownship_achieve_point_calcs,
          const interval_management::open_source::AchievePointCalcs &traffic_reference_point_calcs,
-         aaesim::open_source::StatisticalPilotDelay &pilot_delay);
+         mitre::oss::simcore::StatisticalPilotDelay &pilot_delay);
 
    virtual const double GetMsi() const;
 
@@ -61,27 +64,27 @@ class IMKinematicDistBasedMaintain final : public IMMaintain {
   private:
    void CalculateIas(const Units::Length current_ownship_altitude,
                      const Units::Length target_kinematic_dtg_to_end_of_route,
-                     const aaesim::open_source::DynamicsState &dynamics_state,
-                     const aaesim::open_source::KinematicTrajectoryPredictor &ownship_kinematic_trajectory_predictor,
-                     aaesim::open_source::StatisticalPilotDelay &pilot_delay);
+                     const mitre::oss::simcore::DynamicsState &dynamics_state,
+                     const mitre::oss::simcore::KinematicTrajectoryPredictor &ownship_kinematic_trajectory_predictor,
+                     mitre::oss::simcore::StatisticalPilotDelay &pilot_delay);
 
    void CalculateMach(const Units::Length current_ownship_altitude,
                       const Units::Length target_kinematic_dtg_to_end_of_route,
                       const Units::Speed true_airspeed_command,
-                      const aaesim::open_source::KinematicTrajectoryPredictor &ownship_kinematic_trajectory_predictor,
-                      aaesim::open_source::StatisticalPilotDelay &pilot_delay, const Units::Mass current_mass);
+                      const mitre::oss::simcore::KinematicTrajectoryPredictor &ownship_kinematic_trajectory_predictor,
+                      mitre::oss::simcore::StatisticalPilotDelay &pilot_delay, const Units::Mass current_mass);
 
    void RecordInternalObserverData(
          const interval_management::open_source::AircraftState &ownship_aircraft_state,
          const interval_management::open_source::AircraftState &target_aircraft_state,
-         const aaesim::open_source::DynamicsState &dynamics_state, const Units::Speed true_airspeed_command,
+         const mitre::oss::simcore::DynamicsState &dynamics_state, const Units::Speed true_airspeed_command,
          const Units::Length target_true_dtg, const Units::Length ownship_true_dtg,
          const std::vector<interval_management::open_source::AircraftState> &target_aircraft_state_history,
-         const aaesim::open_source::KinematicTrajectoryPredictor &ownship_kinematic_trajectory_predictor);
+         const mitre::oss::simcore::KinematicTrajectoryPredictor &ownship_kinematic_trajectory_predictor);
 
    const bool IsOwnshipBelowTransitionAltitude(
          Units::Length current_ownship_altitude,
-         const aaesim::open_source::KinematicTrajectoryPredictor &ownship_kinematic_trajectory_predictor);
+         const mitre::oss::simcore::KinematicTrajectoryPredictor &ownship_kinematic_trajectory_predictor);
 
    Units::Length m_measured_spacing_interval;
 
@@ -90,7 +93,7 @@ class IMKinematicDistBasedMaintain final : public IMMaintain {
 
 inline const bool IMKinematicDistBasedMaintain::IsOwnshipBelowTransitionAltitude(
       Units::Length current_ownship_altitude,
-      const aaesim::open_source::KinematicTrajectoryPredictor &ownship_kinematic_trajectory_predictor) {
+      const mitre::oss::simcore::KinematicTrajectoryPredictor &ownship_kinematic_trajectory_predictor) {
    return current_ownship_altitude <
           ownship_kinematic_trajectory_predictor.GetKinematicDescent4dPredictor()->GetTransitionAltitude();
 }

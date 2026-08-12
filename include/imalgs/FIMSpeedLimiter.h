@@ -30,7 +30,10 @@
 
 namespace interval_management {
 namespace open_source {
-class FIMSpeedLimiter final : public aaesim::open_source::SpeedCommandLimiter {
+
+using namespace mitre::oss::simcore;
+
+class FIMSpeedLimiter final : public mitre::oss::simcore::SpeedCommandLimiter {
   public:
    struct RfLegLimit {
       RfLegLimit(Units::Length distance_to_go, Units::Speed upper_ias_limit)
@@ -48,10 +51,10 @@ class FIMSpeedLimiter final : public aaesim::open_source::SpeedCommandLimiter {
    FIMSpeedLimiter();
 
    FIMSpeedLimiter(bool use_speed_quantization, bool use_speed_limiting,
-                   aaesim::open_source::bada_utils::FlapSpeeds flap_speeds,
-                   aaesim::open_source::bada_utils::FlightEnvelope flight_envelope,
-                   aaesim::open_source::bada_utils::Mass mass_data,
-                   const aaesim::open_source::bada_utils::Aerodynamics &aerodynamics,
+                   mitre::oss::simcore::bada_utils::FlapSpeeds flap_speeds,
+                   mitre::oss::simcore::bada_utils::FlightEnvelope flight_envelope,
+                   mitre::oss::simcore::bada_utils::Mass mass_data,
+                   const mitre::oss::simcore::bada_utils::Aerodynamics &aerodynamics,
                    const FIMSpeedQuantizer &speed_quantizer);
 
    ~FIMSpeedLimiter();
@@ -66,13 +69,13 @@ class FIMSpeedLimiter final : public aaesim::open_source::SpeedCommandLimiter {
                                   const Units::Speed current_ias_speed_command,
                                   const Units::Speed reference_velocity_mps, const Units::Length distance_to_go_to_abp,
                                   const Units::Length distance_to_go_to_ptp, const Units::Length ownship_altitude,
-                                  const aaesim::open_source::bada_utils::FlapConfiguration flap_configuration) override;
+                                  const mitre::oss::simcore::bada_utils::FlapConfiguration flap_configuration) override;
 
    BoundedValue<double, 0, 2> LimitMachCommand(
          const BoundedValue<double, 0, 2> &previous_reference_speed_command_mach,
          const BoundedValue<double, 0, 2> &current_mach_command, const BoundedValue<double, 0, 2> &nominal_mach,
          const Units::Mass &current_mass, const Units::Length &current_ownship_altitude,
-         const aaesim::open_source::WeatherPrediction &weather_prediction) override;
+         const mitre::oss::simcore::WeatherPrediction &weather_prediction) override;
 
    const interval_management::open_source::FIMSpeedQuantizer &GetSpeedQuantizer() const;
 
@@ -119,10 +122,10 @@ class FIMSpeedLimiter final : public aaesim::open_source::SpeedCommandLimiter {
    double m_low_speed_coef{0};
    double m_high_speed_coef{0};
    FIMSpeedQuantizer m_fim_quantizer;
-   aaesim::open_source::bada_utils::FlapSpeeds m_flap_speeds{};
-   aaesim::open_source::bada_utils::FlightEnvelope m_aircraft_flight_envelope{};
-   aaesim::open_source::bada_utils::Mass m_mass_data{};
-   aaesim::open_source::bada_utils::Aerodynamics m_aerodynamics{};
+   mitre::oss::simcore::bada_utils::FlapSpeeds m_flap_speeds{};
+   mitre::oss::simcore::bada_utils::FlightEnvelope m_aircraft_flight_envelope{};
+   mitre::oss::simcore::bada_utils::Mass m_mass_data{};
+   mitre::oss::simcore::bada_utils::Aerodynamics m_aerodynamics{};
 };
 
 inline const interval_management::open_source::FIMSpeedQuantizer &FIMSpeedLimiter::GetSpeedQuantizer() const {

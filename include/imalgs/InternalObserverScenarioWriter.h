@@ -24,7 +24,7 @@
 #include "public/ScenarioEventNotifier.h"
 
 namespace interval_management::open_source {
-class InternalObserverScenarioWriter final : public aaesim::open_source::ScenarioEventNotifier {
+class InternalObserverScenarioWriter final : public mitre::oss::simcore::ScenarioEventNotifier {
   public:
    InternalObserverScenarioWriter() = default;
    ~InternalObserverScenarioWriter() = default;

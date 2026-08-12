@@ -21,6 +21,7 @@
 
 namespace interval_management {
 namespace open_source {
+
 class CrossTrackObserver final {
   public:
    CrossTrackObserver(void);

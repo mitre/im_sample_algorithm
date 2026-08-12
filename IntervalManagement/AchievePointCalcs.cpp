@@ -30,7 +30,7 @@
 #include "utility/CustomUnits.h"
 
 using namespace std;
-using namespace aaesim::open_source;
+using namespace mitre::oss::simcore;
 using namespace interval_management::open_source;
 
 #define SQR(x)           \
@@ -115,13 +115,14 @@ void AchievePointCalcs::ComputeDefaultTRP(const AchievePointCalcs &ownship_calcs
                                           Waypoint &traffic_reference_point, Units::Length &waypoint_x,
                                           Units::Length &waypoint_y, size_t &waypoint_index_in_target_intent) {
    // Get ABP index from ownship
-   int ix0 = ownship_intent.GetWaypointIndexByName(ownship_calcs.GetWaypointName());
-   if (ix0 < 0) {
+   const auto achieve_by_index = ownship_intent.GetWaypointIndexByName(ownship_calcs.GetWaypointName());
+   if (!achieve_by_index) {
       string emsg = "Illegal ownship achieve-by point " + ownship_calcs.GetWaypointName() +
                     " encountered while computing achieve point calculations positions";
       LOG4CPLUS_FATAL(AchievePointCalcs::m_logger, emsg);
       throw logic_error(emsg);
    }
+   int ix0 = static_cast<int>(*achieve_by_index);
 
    int ix1 = ix0 + 1;
    if (ix1 >= ownship_intent.GetNumberOfWaypoints()) {
@@ -376,13 +377,14 @@ void AchievePointCalcs::ComputeDefaultTRP(const AchievePointCalcs &ownship_calcs
       try {
          distance_calculator.CalculateAlongPathDistanceFromPosition(x, y, distance_to_end);
       } catch (std::logic_error &e) {
-         LOG4CPLUS_ERROR(m_logger, target_intent.GetWaypointName(i)
+         LOG4CPLUS_ERROR(m_logger, target_intent.GetWaypointName(i).value_or("<unknown>")
                                          << " at (" << x << "," << y << ") is not on horizontal path.");
          continue;
       }
       Units::MetersLength distance_to_trp = distance_to_end - distance_trp_to_end;
       LOG4CPLUS_TRACE(m_logger,
-                      "Distance from " << target_intent.GetWaypointName(i) << " to TRP is " << distance_to_trp);
+                      "Distance from " << target_intent.GetWaypointName(i).value_or("<unknown>")
+                                       << " to TRP is " << distance_to_trp);
       if (distance_to_trp <= Units::MetersLength(100)) {
          waypoint_index_in_target_intent = i;
          break;
@@ -394,18 +396,18 @@ void AchievePointCalcs::ComputeDefaultTRP(const AchievePointCalcs &ownship_calcs
 
 void AchievePointCalcs::ComputePositions(const AircraftIntent &intent) {
    if (this->HasWaypoint()) {
-      int ix = intent.GetWaypointIndexByName(m_waypoint_name);
+      const auto waypoint_index = intent.GetWaypointIndexByName(m_waypoint_name);
 
-      if (ix > -1) {
-         m_waypoint_x = Units::MetersLength(intent.GetRouteData().m_x[ix]);
-         m_waypoint_y = Units::MetersLength(intent.GetRouteData().m_y[ix]);
+      if (waypoint_index) {
+         m_waypoint_x = Units::MetersLength(intent.GetRouteData().m_x[*waypoint_index]);
+         m_waypoint_y = Units::MetersLength(intent.GetRouteData().m_y[*waypoint_index]);
       } else {
          string emsg = "Illegal achieve point " + m_waypoint_name +
                        " encountered while computing achieve point calculations positions";
          LOG4CPLUS_FATAL(AchievePointCalcs::m_logger, emsg);
          throw logic_error(emsg);
       }
-      LOG4CPLUS_DEBUG(m_logger, "Waypoint[" << ix << "] = " << m_waypoint_name << "(" << m_waypoint_x << ","
+      LOG4CPLUS_DEBUG(m_logger, "Waypoint[" << *waypoint_index << "] = " << m_waypoint_name << "(" << m_waypoint_x << ","
                                             << m_waypoint_y << ")");
    }
 }

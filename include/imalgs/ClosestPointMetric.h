@@ -23,6 +23,7 @@
 
 namespace interval_management {
 namespace open_source {
+
 class ClosestPointMetric final {
   public:
    ClosestPointMetric();

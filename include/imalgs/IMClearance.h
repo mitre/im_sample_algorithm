@@ -28,10 +28,14 @@
 #include <string>
 
 #include "imalgs/IMUtils.h"
+#include "imalgs/FIMAircraftIntent.h"
 #include "public/AircraftIntent.h"
 
 namespace interval_management {
 namespace open_source {
+
+using namespace mitre::oss::simcore;
+
 class IMClearance final {
   public:
    enum ClearanceType { NONE = -1, CUSTOM = 0, CAPTURE, MAINTAIN, ACHIEVE, FAS };
@@ -46,8 +50,8 @@ class IMClearance final {
      private:
       ClearanceType m_builder_clearance_type;
       SpacingGoalType m_builder_assigned_spacing_goal_type;
-      AircraftIntent m_builder_target_aircraft_intent;
-      AircraftIntent m_builder_ownship_intent;
+      FIMAircraftIntent m_builder_target_aircraft_intent;
+      FIMAircraftIntent m_builder_ownship_intent;
       Units::RadiansAngle m_builder_final_approach_spacing_merge_angle_mean;
       Units::RadiansAngle m_builder_final_approach_spacing_merge_angle_std;
       std::string m_builder_achieve_by_point;
@@ -63,7 +67,7 @@ class IMClearance final {
               const SpacingGoalType &assigned_spacing_goal_type, const double assigned_spacing_goal)
          : m_builder_clearance_type(clearance_type),
            m_builder_assigned_spacing_goal_type(assigned_spacing_goal_type),
-           m_builder_target_aircraft_intent(target_intent),
+           m_builder_target_aircraft_intent(FIMAircraftIntent::Builder(target_intent).SetId(target_id).Build()),
            m_builder_ownship_intent(),
            m_builder_final_approach_spacing_merge_angle_mean(0),
            m_builder_final_approach_spacing_merge_angle_std(0),
@@ -76,7 +80,7 @@ class IMClearance final {
       ~Builder() = default;
       const IMClearance Build() const { return IMClearance(this); }
       Builder *OwnshipIntent(const AircraftIntent &ownship_intent) {
-         m_builder_ownship_intent = ownship_intent;
+         m_builder_ownship_intent = FIMAircraftIntent::Builder(ownship_intent).Build();
          return this;
       };
       Builder *TrafficReferencePoint(const std::string &traffic_reference_point) {
@@ -93,8 +97,10 @@ class IMClearance final {
 
       ClearanceType GetClearanceType() const { return m_builder_clearance_type; };
       SpacingGoalType GetSpacingGoalType() const { return m_builder_assigned_spacing_goal_type; };
-      const AircraftIntent &GetTargetAircraftIntent() const { return m_builder_target_aircraft_intent; };
-      const AircraftIntent &GetOwnshipAircraftIntent() const { return m_builder_ownship_intent; };
+      const FIMAircraftIntent &GetTargetAircraftIntent() const { return m_builder_target_aircraft_intent; };
+      const FIMAircraftIntent &GetOwnshipAircraftIntent() const {
+         return m_builder_ownship_intent;
+      };
       Units::RadiansAngle GetMergeAngleMean() const { return m_builder_final_approach_spacing_merge_angle_mean; };
       Units::RadiansAngle GetMergeAngleStd() const { return m_builder_final_approach_spacing_merge_angle_std; };
       const std::string &GetAchieveByPoint() const { return m_builder_achieve_by_point; };
@@ -139,7 +145,7 @@ class IMClearance final {
 
    const AircraftIntent &GetTargetAircraftIntent() const { return m_target_aircraft_intent; }
 
-   const std::optional<AircraftIntent> GetOwnshipIntent() const {
+   const std::optional<FIMAircraftIntent> GetOwnshipIntent() const {
       if (m_ownship_intent.IsLoaded()) return std::optional{m_ownship_intent};
       return {};
    }
@@ -164,8 +170,8 @@ class IMClearance final {
 
    ClearanceType m_clearance_type{CUSTOM};
    SpacingGoalType m_assigned_spacing_goal_type{TIME};
-   AircraftIntent m_target_aircraft_intent{};
-   AircraftIntent m_ownship_intent{};
+   FIMAircraftIntent m_target_aircraft_intent{};
+   FIMAircraftIntent m_ownship_intent{};
    Units::RadiansAngle m_final_approach_spacing_merge_angle_mean{0};
    Units::RadiansAngle m_final_approach_spacing_merge_angle_std{0};
    std::string m_achieve_by_point{};

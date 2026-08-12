@@ -26,7 +26,7 @@
 
 #include "gtest/gtest.h"
 
-using namespace aaesim::open_source;
+using namespace mitre::oss::simcore;
 using namespace interval_management::open_source;
 
 namespace aaesim {
@@ -41,7 +41,7 @@ class PredictedWindEvaluatorTest : public ::testing::Test {
         sensed_atmosphere(new USStandardAtmosphere1976()),
         weather_prediction(WeatherPrediction::CreateZeroWindPrediction(sensed_atmosphere)) {}
 
-   aaesim::open_source::AircraftState aircraft_state{};
+   mitre::oss::simcore::AircraftState aircraft_state{};
    Units::Speed reference_cas;
    Units::Length reference_altitude;
    std::shared_ptr<Atmosphere> sensed_atmosphere;

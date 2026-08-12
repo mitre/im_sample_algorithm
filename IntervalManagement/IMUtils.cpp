@@ -33,7 +33,7 @@
 #include "public/SimulationTime.h"
 
 using namespace std;
-using namespace aaesim::open_source;
+using namespace mitre::oss::simcore;
 
 log4cplus::Logger IMUtils::m_logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("IMUtils"));
 const int IMUtils::UNINITIALIZED_AIRCRAFT_ID = ScenarioUtils::AIRCRAFT_ID_NOT_IN_MAP;
@@ -1153,7 +1153,7 @@ Units::SignedAngle IMUtils::CalculateTrackAngle(const std::list<Units::Angle> &a
 }
 
 interval_management::open_source::AircraftState IMUtils::ConvertToIntervalManagementAircraftState(
-      const aaesim::open_source::AircraftState &aircraft_state) {
+      const mitre::oss::simcore::AircraftState &aircraft_state) {
    interval_management::open_source::AircraftState new_state;
    return new_state.Create(
          aircraft_state.GetUniqueId(), aircraft_state.GetTime(),
@@ -1165,9 +1165,9 @@ interval_management::open_source::AircraftState IMUtils::ConvertToIntervalManage
          aircraft_state.GetSensedTemperature(), aircraft_state.GetPsi());
 }
 
-aaesim::open_source::AircraftState IMUtils::ConvertToAaesimAircraftState(
+mitre::oss::simcore::AircraftState IMUtils::ConvertToAaesimAircraftState(
       const interval_management::open_source::AircraftState &im_state) {
-   return aaesim::open_source::AircraftState::Builder(im_state.GetId(), im_state.GetTimeStamp())
+   return mitre::oss::simcore::AircraftState::Builder(im_state.GetId(), im_state.GetTimeStamp())
          .Position(im_state.GetPositionX(), im_state.GetPositionY())
          ->AltitudeMsl(im_state.GetPositionZ())
          ->GroundSpeed(im_state.GetSpeedXd(), im_state.GetSpeedYd())

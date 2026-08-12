@@ -23,7 +23,7 @@
 #include <log4cplus/logger.h>
 #include <log4cplus/loggingmacros.h>
 
-#include "public/AircraftIntent.h"
+#include "imalgs/FIMAircraftIntent.h"
 
 namespace interval_management {
 namespace loaders {
@@ -35,23 +35,20 @@ class AircraftIntentLoader final : public LoggingLoadable {
 
    bool load(DecodedStream *input) override;
 
-   const AircraftIntent &BuildAircraftIntent() const;
-   AircraftIntent &GetAircraftIntent();
-   const AircraftIntent &GetAircraftIntent() const;
+   const open_source::FIMAircraftIntent &BuildAircraftIntent() const;
+   const open_source::FIMAircraftIntent &GetAircraftIntent() const;
    bool IsLoaded() const;
 
   private:
    static inline log4cplus::Logger logger_{log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("AircraftIntentLoader"))};
 
-   AircraftIntent aircraft_intent_{};
+   open_source::FIMAircraftIntent aircraft_intent_{};
    bool is_loaded_{false};
 };
 
-inline const AircraftIntent &AircraftIntentLoader::BuildAircraftIntent() const { return aircraft_intent_; }
+inline const open_source::FIMAircraftIntent &AircraftIntentLoader::BuildAircraftIntent() const { return aircraft_intent_; }
 
-inline AircraftIntent &AircraftIntentLoader::GetAircraftIntent() { return aircraft_intent_; }
-
-inline const AircraftIntent &AircraftIntentLoader::GetAircraftIntent() const { return aircraft_intent_; }
+inline const open_source::FIMAircraftIntent &AircraftIntentLoader::GetAircraftIntent() const { return aircraft_intent_; }
 
 inline bool AircraftIntentLoader::IsLoaded() const { return is_loaded_; }
 

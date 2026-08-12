@@ -27,6 +27,7 @@
 namespace interval_management {
 namespace open_source {
 
+
 class NMObserver final {
   public:
    NMObserver() = default;

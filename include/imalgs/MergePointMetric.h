@@ -19,6 +19,7 @@
 
 #pragma once
 
+#include <log4cplus/logger.h>
 #include <scalar/Length.h>
 
 #include <string>
@@ -27,6 +28,9 @@
 
 namespace interval_management {
 namespace open_source {
+
+using namespace mitre::oss::simcore;
+
 
 class MergePointMetric final {
   public:

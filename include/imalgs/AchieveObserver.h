@@ -26,6 +26,7 @@
 
 namespace interval_management {
 namespace open_source {
+
 class AchieveObserver final {
   public:
    AchieveObserver();

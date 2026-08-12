@@ -33,6 +33,7 @@
 #include "imalgs/FIMConfiguration.h"
 #include "imalgs/FIMSpeedLimiter.h"
 #include "imalgs/IMClearance.h"
+#include "imalgs/FIMAircraftIntent.h"
 #include "public/AircraftIntent.h"
 #include "public/BadaUtils.h"
 #include "public/Guidance.h"
@@ -42,6 +43,9 @@
 
 namespace interval_management {
 namespace open_source {
+
+using namespace mitre::oss::simcore;
+
 
 class IMAlgorithm {
   public:
@@ -56,10 +60,10 @@ class IMAlgorithm {
       double transition_mach{0};
       Units::Length transition_altitude{};
       Units::Length expected_cruise_altitude{};
-      aaesim::open_source::bada_utils::FlapSpeeds flap_speeds{};
-      aaesim::open_source::bada_utils::FlightEnvelope flight_envelope{};
-      aaesim::open_source::bada_utils::Mass mass_data{};
-      aaesim::open_source::bada_utils::Aerodynamics aerodynamics{};
+      mitre::oss::simcore::bada_utils::FlapSpeeds flap_speeds{};
+      mitre::oss::simcore::bada_utils::FlightEnvelope flight_envelope{};
+      mitre::oss::simcore::bada_utils::Mass mass_data{};
+      mitre::oss::simcore::bada_utils::Aerodynamics aerodynamics{};
    };
 
    IMAlgorithm();
@@ -72,15 +76,15 @@ class IMAlgorithm {
 
    virtual void Initialize(const OwnshipPredictionParameters &ownship_prediction_parameters,
                            const AircraftIntent &ownship_aircraft_intent,
-                           aaesim::open_source::WeatherPrediction &weather_prediction);
+                           mitre::oss::simcore::WeatherPrediction &weather_prediction);
 
    // Called during initialization whenever the clearance type is not CUSTOM.
    virtual void ResetDefaults();
 
    virtual void IterationReset();
 
-   virtual aaesim::open_source::Guidance Update(
-         const aaesim::open_source::Guidance &prevguidance, const aaesim::open_source::DynamicsState &dynamicsstate,
+   virtual mitre::oss::simcore::Guidance Update(
+         const mitre::oss::simcore::Guidance &prevguidance, const mitre::oss::simcore::DynamicsState &dynamicsstate,
          const interval_management::open_source::AircraftState &owntruthstate,
          const interval_management::open_source::AircraftState &targettruthstate,
          const std::vector<interval_management::open_source::AircraftState> &targethistory);
@@ -94,7 +98,7 @@ class IMAlgorithm {
    void UpdatePositionMetrics(const interval_management::open_source::AircraftState &ownship_aircraft_state,
                               const interval_management::open_source::AircraftState &target_aircraft_state);
 
-   void SetPilotDelay(aaesim::open_source::StatisticalPilotDelay &pilot_delay);
+   void SetPilotDelay(mitre::oss::simcore::StatisticalPilotDelay &pilot_delay);
 
    void DisablePilotDelayModel();
 
@@ -216,11 +220,11 @@ class IMAlgorithm {
 
    void SetActiveFilter(unsigned long flag);
 
-   AircraftIntent m_target_aircraft_intent;
+   FIMAircraftIntent m_target_aircraft_intent;
    FlightStage m_stage_of_im_operation;
    IMClearance m_im_clearance;
-   aaesim::open_source::StatisticalPilotDelay m_pilot_delay;
-   aaesim::open_source::WeatherPrediction m_weather_prediction;
+   mitre::oss::simcore::StatisticalPilotDelay m_pilot_delay;
+   mitre::oss::simcore::WeatherPrediction m_weather_prediction;
    interval_management::open_source::FIMSpeedLimiter m_speed_limiter;
 
    Units::Speed m_previous_reference_im_speed_command_tas;
@@ -282,7 +286,7 @@ class IMAlgorithm {
 
   private:
    void IterClearIMAlg();
-   void SetWeatherPrediction(const aaesim::open_source::WeatherPrediction &weather_prediction);
+   void SetWeatherPrediction(const mitre::oss::simcore::WeatherPrediction &weather_prediction);
 
    static log4cplus::Logger m_logger;
 };
@@ -358,7 +362,7 @@ inline const bool IMAlgorithm::IsLoaded() const { return m_loaded; }
 
 inline bool IMAlgorithm::IsBlendWind() const { return m_loaded_use_wind_blending; }
 
-inline void IMAlgorithm::SetWeatherPrediction(const aaesim::open_source::WeatherPrediction &weather_prediction) {
+inline void IMAlgorithm::SetWeatherPrediction(const mitre::oss::simcore::WeatherPrediction &weather_prediction) {
    m_weather_prediction = weather_prediction;
 }
 

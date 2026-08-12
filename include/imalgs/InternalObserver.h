@@ -38,6 +38,9 @@
 namespace interval_management {
 namespace open_source {
 
+using namespace mitre::oss::simcore;
+
+
 class InternalObserver final {
   public:
    static void FatalError(const char *str) {
@@ -55,11 +58,11 @@ class InternalObserver final {
    void outputMergePointMetric();
    void processMergePointMetric();
    void outputClosestPointMetric();
-   void addPredictedWind(int id, const aaesim::open_source::WeatherPrediction &weatherPrediction);
+   void addPredictedWind(int id, const mitre::oss::simcore::WeatherPrediction &weatherPrediction);
    std::string predWindsHeading(int lastIx);
-   std::string predWindsData(int id, int row, const std::string &field, const aaesim::open_source::WindStack &mat);
+   std::string predWindsData(int id, int row, const std::string &field, const mitre::oss::simcore::WindStack &mat);
    std::string predTempData(int id, const std::string &field,
-                            const aaesim::open_source::WeatherPrediction &weatherPrediction);
+                            const mitre::oss::simcore::WeatherPrediction &weatherPrediction);
    void addAchieveRcd(size_t aircraftId, double tm, double target_ttg_to_ach, double own_ttg_to_ach,
                       double curr_distance, double reference_distance);
    NMObserver &GetNMObserver(int id);

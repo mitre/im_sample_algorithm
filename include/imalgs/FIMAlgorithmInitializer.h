@@ -31,7 +31,10 @@
 
 namespace interval_management {
 namespace open_source {
-class FIMAlgorithmInitializer final : public aaesim::open_source::FlightDeckApplicationInitializer {
+
+using namespace mitre::oss::simcore;
+
+class FIMAlgorithmInitializer final : public mitre::oss::simcore::FlightDeckApplicationInitializer {
   public:
    FIMAlgorithmInitializer() = default;
 
@@ -39,30 +42,30 @@ class FIMAlgorithmInitializer final : public aaesim::open_source::FlightDeckAppl
 
    class Builder {
      private:
-      aaesim::open_source::OwnshipPerformanceParameters m_performance_parameters;
-      aaesim::open_source::OwnshipFmsPredictionParameters m_prediction_parameters;
-      std::shared_ptr<const aaesim::open_source::ASSAP> m_surveillance_processor;
+      mitre::oss::simcore::OwnshipPerformanceParameters m_performance_parameters;
+      mitre::oss::simcore::OwnshipFmsPredictionParameters m_prediction_parameters;
+      std::shared_ptr<const mitre::oss::simcore::ASSAP> m_surveillance_processor;
 
      public:
       Builder()
          : m_performance_parameters(),
            m_prediction_parameters(),
-           m_surveillance_processor(std::make_shared<aaesim::open_source::PassThroughAssap>()) {};
+           m_surveillance_processor(std::make_shared<mitre::oss::simcore::PassThroughAssap>()) {};
       ~Builder() = default;
       const interval_management::open_source::FIMAlgorithmInitializer Build() const;
       Builder *AddOwnshipPerformanceParameters(
-            const aaesim::open_source::OwnshipPerformanceParameters &performance_parameters);
+            const mitre::oss::simcore::OwnshipPerformanceParameters &performance_parameters);
       Builder *AddOwnshipFmsPredictionParameters(
-            const aaesim::open_source::OwnshipFmsPredictionParameters &prediction_parameters);
-      Builder *AddSurveillanceProcessor(std::shared_ptr<const aaesim::open_source::ASSAP> processor);
+            const mitre::oss::simcore::OwnshipFmsPredictionParameters &prediction_parameters);
+      Builder *AddSurveillanceProcessor(std::shared_ptr<const mitre::oss::simcore::ASSAP> processor);
 
-      const aaesim::open_source::OwnshipPerformanceParameters &GetPerformanceParameters() const {
+      const mitre::oss::simcore::OwnshipPerformanceParameters &GetPerformanceParameters() const {
          return m_performance_parameters;
       };
-      const aaesim::open_source::OwnshipFmsPredictionParameters &GetFmsPredictionParameters() const {
+      const mitre::oss::simcore::OwnshipFmsPredictionParameters &GetFmsPredictionParameters() const {
          return m_prediction_parameters;
       };
-      std::shared_ptr<const aaesim::open_source::ASSAP> GetSurveillanceProcessor() const {
+      std::shared_ptr<const mitre::oss::simcore::ASSAP> GetSurveillanceProcessor() const {
          return m_surveillance_processor;
       };
    };

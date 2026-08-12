@@ -66,8 +66,4 @@ This output can also be accessed via a simple getter exposed by [`IMAlgorithm`](
 
 We've noticed that the `Units::Speed` object sometimes truncates bits when converting from meters-per-second to knots. The result is that the above call to GetImSpeedCommandIas() can sometimes give a value very near to an integer IAS value, but not quite (e.g. 269.9999999 rather than 270.0). This can look odd on a human-interface display. There are multiple work-arounds to this problem, but ours has been to also provide an integer accessor for the IM Speed. It's in the [Guidance](https://github.com/mitre/FMACM/blob/d8156ca28e9f9073c933ea5776d9bde91f003b0c/include/public/Guidance.h#L38) object and looks like this:
 
-```c++
-int GetIasCommandIntegerKnots() const;
-```
-
 This call is implemented such that it is guaranteed to return a clean value appropriate for human-interface displays.

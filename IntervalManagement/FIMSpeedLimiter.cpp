@@ -31,10 +31,10 @@ log4cplus::Logger FIMSpeedLimiter::m_logger = log4cplus::Logger::getInstance(LOG
 const BoundedValue<double, 0, 100> FIMSpeedLimiter::DEFAULT_SPEED_DEVIATION_PERCENTAGE(10);
 
 FIMSpeedLimiter::FIMSpeedLimiter(bool use_speed_quantization, bool use_speed_limiting,
-                                 aaesim::open_source::bada_utils::FlapSpeeds flap_speeds,
-                                 aaesim::open_source::bada_utils::FlightEnvelope flight_envelope,
-                                 aaesim::open_source::bada_utils::Mass mass_data,
-                                 const aaesim::open_source::bada_utils::Aerodynamics &aerodynamics,
+                                 mitre::oss::simcore::bada_utils::FlapSpeeds flap_speeds,
+                                 mitre::oss::simcore::bada_utils::FlightEnvelope flight_envelope,
+                                 mitre::oss::simcore::bada_utils::Mass mass_data,
+                                 const mitre::oss::simcore::bada_utils::Aerodynamics &aerodynamics,
                                  const FIMSpeedQuantizer &speed_quantizer)
    : m_rf_leg_limits(),
      m_active_filter_flag(0L),
@@ -63,7 +63,7 @@ Units::Speed FIMSpeedLimiter::LimitSpeedCommand(
       const Units::Speed previous_ias_speed_command, const Units::Speed current_ias_speed_command,
       const Units::Speed nominal_reference_speed, const Units::Length distance_to_go_to_abp,
       const Units::Length distance_to_end_of_route, const Units::Length ownship_altitude,
-      const aaesim::open_source::bada_utils::FlapConfiguration flap_configuration) {
+      const mitre::oss::simcore::bada_utils::FlapConfiguration flap_configuration) {
    Units::Speed limitedspeed = current_ias_speed_command;
    Units::Speed llim = Units::ZERO_SPEED;
    Units::Speed hlim = Units::ZERO_SPEED;
@@ -153,16 +153,16 @@ Units::Speed FIMSpeedLimiter::LimitSpeedCommand(
       m_active_filter_flag |= 256;
    }
 
-   if (flap_configuration > aaesim::open_source::bada_utils::FlapConfiguration::CRUISE) {
-      if (flap_configuration == aaesim::open_source::bada_utils::FlapConfiguration::APPROACH &&
+   if (flap_configuration > mitre::oss::simcore::bada_utils::FlapConfiguration::CRUISE) {
+      if (flap_configuration == mitre::oss::simcore::bada_utils::FlapConfiguration::APPROACH &&
           limitedspeed > m_flap_speeds.cas_approach_maximum) {
          limitedspeed = m_flap_speeds.cas_approach_maximum;
          m_active_filter_flag |= 512;
-      } else if (flap_configuration == aaesim::open_source::bada_utils::FlapConfiguration::LANDING &&
+      } else if (flap_configuration == mitre::oss::simcore::bada_utils::FlapConfiguration::LANDING &&
                  limitedspeed > m_flap_speeds.cas_landing_maximum) {
          limitedspeed = m_flap_speeds.cas_landing_maximum;
          m_active_filter_flag |= 512;
-      } else if (flap_configuration == aaesim::open_source::bada_utils::FlapConfiguration::GEAR_DOWN &&
+      } else if (flap_configuration == mitre::oss::simcore::bada_utils::FlapConfiguration::GEAR_DOWN &&
                  limitedspeed > m_flap_speeds.cas_gear_out_maximum) {
          limitedspeed = m_flap_speeds.cas_gear_out_maximum;
          m_active_filter_flag |= 512;
@@ -184,7 +184,7 @@ BoundedValue<double, 0, 2> FIMSpeedLimiter::LimitMachCommand(
       const BoundedValue<double, 0, 2> &previous_reference_speed_command_mach,
       const BoundedValue<double, 0, 2> &current_mach_command, const BoundedValue<double, 0, 2> &nominal_mach,
       const Units::Mass &current_mass, const Units::Length &current_ownship_altitude,
-      const aaesim::open_source::WeatherPrediction &weather_prediction) {
+      const mitre::oss::simcore::WeatherPrediction &weather_prediction) {
    BoundedValue<double, 0, 2> limited_mach = current_mach_command;
    BoundedValue<double, 0, 2> maximum_mach(m_aircraft_flight_envelope.M_mo);
    m_active_filter_flag = 0L;

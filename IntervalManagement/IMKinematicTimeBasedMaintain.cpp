@@ -27,6 +27,7 @@
 #include "public/CoreUtils.h"
 #include "public/CustomMath.h"
 #include "public/SimulationTime.h"
+#include "public/VerticalPathUtils.h"
 
 using namespace interval_management::open_source;
 
@@ -37,16 +38,16 @@ IMKinematicTimeBasedMaintain::IMKinematicTimeBasedMaintain() { m_stage_of_im_ope
 
 IMKinematicTimeBasedMaintain::~IMKinematicTimeBasedMaintain() = default;
 
-aaesim::open_source::Guidance IMKinematicTimeBasedMaintain::Update(
-      const aaesim::open_source::DynamicsState &dynamics_state,
+mitre::oss::simcore::Guidance IMKinematicTimeBasedMaintain::Update(
+      const mitre::oss::simcore::DynamicsState &dynamics_state,
       const interval_management::open_source::AircraftState &ownship_aircraft_state,
       const interval_management::open_source::AircraftState &target_aircraft_state_projected_asg_adjusted,
-      const aaesim::open_source::KinematicTrajectoryPredictor &ownship_kinematic_trajectory_predictor,
-      const aaesim::open_source::Guidance &guidance_in,
+      const mitre::oss::simcore::KinematicTrajectoryPredictor &ownship_kinematic_trajectory_predictor,
+      const mitre::oss::simcore::Guidance &guidance_in,
       const std::vector<interval_management::open_source::AircraftState> &target_aircraft_state_history,
       const interval_management::open_source::AchievePointCalcs &ownship_achieve_point_calcs,
       const interval_management::open_source::AchievePointCalcs &traffic_reference_point_calcs,
-      aaesim::open_source::StatisticalPilotDelay &pilot_delay_model,
+      mitre::oss::simcore::StatisticalPilotDelay &pilot_delay_model,
       const Units::Length &target_kinematic_dtg_to_end_of_route) {
    /*
     * Developer's note: In this level of the algorithm, all uses of the /target state/
@@ -54,7 +55,7 @@ aaesim::open_source::Guidance IMKinematicTimeBasedMaintain::Update(
     * in the target_aircraft_state_history vector (they have not been projected). Some lower
     * level algorithms carry this load automatically
     */
-   aaesim::open_source::Guidance guidance_out = guidance_in;
+   mitre::oss::simcore::Guidance guidance_out = guidance_in;
    guidance_out.SetValid(true);
 
    Units::MetersLength tmpdist;
@@ -99,7 +100,7 @@ aaesim::open_source::Guidance IMKinematicTimeBasedMaintain::Update(
 
    if (m_ownship_reference_lookup_index == -1) {
       m_ownship_reference_lookup_index =
-            static_cast<int>(ownship_kinematic_trajectory_predictor.GetVerticalPathDistances().size() - 1);
+            static_cast<int>(mitre::oss::simcore::VerticalPathUtils::GetPathDataCount(ownship_kinematic_trajectory_predictor.GetVerticalPredictor()->GetVerticalPath()) - 1);
    }
 
    // if target distance is inside the range of the precalculated trajectory, use that to find the precalc index for the
@@ -107,15 +108,14 @@ aaesim::open_source::Guidance IMKinematicTimeBasedMaintain::Update(
    if (target_aircraft_state_projected_asg_adjusted.GetId() != IMUtils::UNINITIALIZED_AIRCRAFT_ID &&
        foundProjectedPos) {
       if (Units::abs(ownship_estimated_dtg) <=
-          Units::abs(Units::MetersLength(ownship_kinematic_trajectory_predictor.GetVerticalPathDistances().back()))) {
+          Units::abs(Units::MetersLength(mitre::oss::simcore::VerticalPathUtils::GetLastPathData(ownship_kinematic_trajectory_predictor.GetVerticalPredictor()->GetVerticalPath()).along_path_distance))) {
          m_ownship_reference_lookup_index =
-               CoreUtils::FindNearestIndex(Units::MetersLength(ownship_estimated_dtg).value(),
-                                           ownship_kinematic_trajectory_predictor.GetVerticalPathDistances());
+               mitre::oss::simcore::VerticalPathUtils::GetVerticalPathData(ownship_kinematic_trajectory_predictor.GetVerticalPredictor()->GetVerticalPath(), Units::MetersLength(Units::MetersLength(ownship_estimated_dtg).value())).resolved_index;
 
          if (m_ownship_reference_lookup_index >
-             ownship_kinematic_trajectory_predictor.GetVerticalPathDistances().size() - 1) {
+             mitre::oss::simcore::VerticalPathUtils::GetPathDataCount(ownship_kinematic_trajectory_predictor.GetVerticalPredictor()->GetVerticalPath()) - 1) {
             m_ownship_reference_lookup_index =
-                  static_cast<int>(ownship_kinematic_trajectory_predictor.GetVerticalPathDistances().size() - 1);
+                  static_cast<int>(mitre::oss::simcore::VerticalPathUtils::GetPathDataCount(ownship_kinematic_trajectory_predictor.GetVerticalPredictor()->GetVerticalPath()) - 1);
          }
       } else {
          guidance_out.SetValid(false);
@@ -136,16 +136,16 @@ aaesim::open_source::Guidance IMKinematicTimeBasedMaintain::Update(
          if (m_previous_reference_im_speed_command_tas == Units::zero()) {
             m_previous_reference_im_speed_command_tas = m_weather_prediction.getAtmosphere()->CAS2TAS(
                   Units::MetersPerSecondSpeed(
-                        ownship_kinematic_trajectory_predictor.GetVerticalPathVelocities().back()),
-                  Units::MetersLength(ownship_kinematic_trajectory_predictor.GetVerticalPathAltitudes().back()));
+                        mitre::oss::simcore::VerticalPathUtils::GetLastPathData(ownship_kinematic_trajectory_predictor.GetVerticalPredictor()->GetVerticalPath()).calibrated_airspeed),
+                  Units::MetersLength(mitre::oss::simcore::VerticalPathUtils::GetLastPathData(ownship_kinematic_trajectory_predictor.GetVerticalPredictor()->GetVerticalPath()).altitude_msl));
             m_previous_im_speed_command_ias = Units::MetersPerSecondSpeed(
-                  ownship_kinematic_trajectory_predictor.GetVerticalPathVelocities().back());
+                  mitre::oss::simcore::VerticalPathUtils::GetLastPathData(ownship_kinematic_trajectory_predictor.GetVerticalPredictor()->GetVerticalPath()).calibrated_airspeed);
             m_previous_reference_im_speed_command_mach =
                   Units::MetersPerSecondSpeed(m_previous_reference_im_speed_command_tas).value() /
                   sqrt(kGamma * R.value() *
                        m_weather_prediction.getAtmosphere()
                              ->GetTemperature(Units::MetersLength(
-                                   ownship_kinematic_trajectory_predictor.GetVerticalPathAltitudes().back()))
+                                   mitre::oss::simcore::VerticalPathUtils::GetLastPathData(ownship_kinematic_trajectory_predictor.GetVerticalPredictor()->GetVerticalPath()).altitude_msl))
                              .value());
          }
 
@@ -183,7 +183,7 @@ aaesim::open_source::Guidance IMKinematicTimeBasedMaintain::Update(
             m_weather_prediction.getAtmosphere()->TAS2CAS(tascommand, Units::FeetLength(ownship_aircraft_state.m_z));
       m_unmodified_im_speed_command_ias = m_im_speed_command_ias;
 
-      if (guidance_out.GetSelectedSpeed().GetSpeedType() == INDICATED_AIR_SPEED) {
+      if (guidance_out.GetSelectedSpeedType() == INDICATED_AIR_SPEED) {
          CalculateIas(Units::FeetLength(ownship_aircraft_state.m_z), dynamics_state,
                       ownship_kinematic_trajectory_predictor, pilot_delay_model);
       } else {
@@ -199,7 +199,7 @@ aaesim::open_source::Guidance IMKinematicTimeBasedMaintain::Update(
 
       if (pilot_delay_model.IsPilotDelayOn()) {
          guidance_out.m_ias_command = m_im_speed_command_with_pilot_delay;
-         if (guidance_out.GetSelectedSpeed().GetSpeedType() == MACH_SPEED) {
+         if (guidance_out.GetSelectedSpeedType() == MACH_SPEED) {
             const auto true_airspeed_equivalent =
                   m_weather_prediction.CAS2TAS(m_im_speed_command_ias, ownship_aircraft_state.GetPositionZ());
             const auto mach_equivalent =
@@ -208,7 +208,7 @@ aaesim::open_source::Guidance IMKinematicTimeBasedMaintain::Update(
          }
       } else {
          guidance_out.m_ias_command = m_im_speed_command_ias;
-         if (guidance_out.GetSelectedSpeed().GetSpeedType() == MACH_SPEED) {
+         if (guidance_out.GetSelectedSpeedType() == MACH_SPEED) {
             guidance_out.SetMachCommand(m_previous_reference_im_speed_command_mach);
          }
       }
@@ -225,12 +225,14 @@ aaesim::open_source::Guidance IMKinematicTimeBasedMaintain::Update(
              guidance_out.IsValid()) {
             --nm_observer.curr_NM;
 
-            double lval =
-                  m_speed_limiter.LowLimit(ownship_kinematic_trajectory_predictor.GetVerticalPathVelocityByIndex(
-                        m_ownship_reference_lookup_index));
-            double hval =
-                  m_speed_limiter.HighLimit(ownship_kinematic_trajectory_predictor.GetVerticalPathVelocityByIndex(
-                        m_ownship_reference_lookup_index));
+            double lval = Units::MetersPerSecondSpeed(m_speed_limiter.LowLimit(
+                  mitre::oss::simcore::VerticalPathUtils::GetPathDataAtIndex(
+                        ownship_kinematic_trajectory_predictor.GetVerticalPredictor()->GetVerticalPath(),
+                        m_ownship_reference_lookup_index).calibrated_airspeed)).value();
+            double hval = Units::MetersPerSecondSpeed(m_speed_limiter.HighLimit(
+                  mitre::oss::simcore::VerticalPathUtils::GetPathDataAtIndex(
+                        ownship_kinematic_trajectory_predictor.GetVerticalPredictor()->GetVerticalPath(),
+                        m_ownship_reference_lookup_index).calibrated_airspeed)).value();
 
             double ltas = Units::MetersPerSecondSpeed(
                                 m_weather_prediction.getAtmosphere()->CAS2TAS(
@@ -255,15 +257,16 @@ aaesim::open_source::Guidance IMKinematicTimeBasedMaintain::Update(
 }
 
 void IMKinematicTimeBasedMaintain::CalculateIas(
-      const Units::Length current_ownship_altitude, const aaesim::open_source::DynamicsState &dynamics_state,
-      const aaesim::open_source::KinematicTrajectoryPredictor &ownship_kinematic_trajectory_predictor,
-      aaesim::open_source::StatisticalPilotDelay &pilot_delay) {
+      const Units::Length current_ownship_altitude, const mitre::oss::simcore::DynamicsState &dynamics_state,
+      const mitre::oss::simcore::KinematicTrajectoryPredictor &ownship_kinematic_trajectory_predictor,
+      mitre::oss::simcore::StatisticalPilotDelay &pilot_delay) {
    m_im_speed_command_ias = m_speed_limiter.LimitSpeedCommand(
          m_previous_im_speed_command_ias, m_im_speed_command_ias,
-         ownship_kinematic_trajectory_predictor.GetVerticalPathCasByIndex(m_ownship_reference_lookup_index),
+         mitre::oss::simcore::VerticalPathUtils::GetPathDataAtIndex(ownship_kinematic_trajectory_predictor.GetVerticalPredictor()->GetVerticalPath(), m_ownship_reference_lookup_index).calibrated_airspeed,
          Units::ZERO_LENGTH,
-         Units::MetersLength(
-               ownship_kinematic_trajectory_predictor.GetVerticalPathDistanceByIndex(m_ownship_reference_lookup_index)),
+         mitre::oss::simcore::VerticalPathUtils::GetPathDataAtIndex(
+               ownship_kinematic_trajectory_predictor.GetVerticalPredictor()->GetVerticalPath(),
+               m_ownship_reference_lookup_index).along_path_distance,
          current_ownship_altitude, dynamics_state.flap_configuration);
 
    if (m_im_speed_command_ias != m_previous_im_speed_command_ias) {
@@ -279,11 +282,11 @@ void IMKinematicTimeBasedMaintain::CalculateIas(
 
 void IMKinematicTimeBasedMaintain::CalculateMach(
       const Units::Length current_ownship_altitude, const Units::Speed true_airspeed_command,
-      const aaesim::open_source::KinematicTrajectoryPredictor &ownship_kinematic_trajectory_predictor,
-      aaesim::open_source::StatisticalPilotDelay &pilot_delay, const Units::Mass current_mass) {
+      const mitre::oss::simcore::KinematicTrajectoryPredictor &ownship_kinematic_trajectory_predictor,
+      mitre::oss::simcore::StatisticalPilotDelay &pilot_delay, const Units::Mass current_mass) {
    // Make sure velocity is within nominal limits (AAES-694)
    Units::Speed nominal_profile_ias = Units::MetersPerSecondSpeed(
-         ownship_kinematic_trajectory_predictor.GetVerticalPathVelocityByIndex(m_ownship_reference_lookup_index));
+         mitre::oss::simcore::VerticalPathUtils::GetPathDataAtIndex(ownship_kinematic_trajectory_predictor.GetVerticalPredictor()->GetVerticalPath(), m_ownship_reference_lookup_index).calibrated_airspeed);
    Units::Speed nominal_profile_tas =
          m_weather_prediction.getAtmosphere()->CAS2TAS(nominal_profile_ias, current_ownship_altitude);
 

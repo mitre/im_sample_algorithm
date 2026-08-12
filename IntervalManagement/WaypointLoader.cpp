@@ -26,6 +26,8 @@
 namespace interval_management {
 namespace loaders {
 
+using namespace mitre::oss::simcore;
+
 bool WaypointLoader::load(DecodedStream *input) {
    set_stream(input);
 

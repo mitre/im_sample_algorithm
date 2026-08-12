@@ -30,12 +30,12 @@ log4cplus::Logger MOPSPredictedWindEvaluatorVersion2::m_logger =
 
 Units::KnotsSpeed MOPSPredictedWindEvaluatorVersion2::MAX_PERMITTED_GROUNDSPEED_ERROR(8);
 
-std::shared_ptr<aaesim::open_source::PredictedWindEvaluator> MOPSPredictedWindEvaluatorVersion2::mInstance;
+std::shared_ptr<mitre::oss::simcore::PredictedWindEvaluator> MOPSPredictedWindEvaluatorVersion2::mInstance;
 
-const std::shared_ptr<aaesim::open_source::PredictedWindEvaluator> &MOPSPredictedWindEvaluatorVersion2::GetInstance() {
+const std::shared_ptr<mitre::oss::simcore::PredictedWindEvaluator> &MOPSPredictedWindEvaluatorVersion2::GetInstance() {
    if (!mInstance) {
       mInstance =
-            std::shared_ptr<aaesim::open_source::PredictedWindEvaluator>(new MOPSPredictedWindEvaluatorVersion2());
+            std::shared_ptr<mitre::oss::simcore::PredictedWindEvaluator>(new MOPSPredictedWindEvaluatorVersion2());
    }
    return mInstance;
 }
@@ -45,7 +45,7 @@ MOPSPredictedWindEvaluatorVersion2::MOPSPredictedWindEvaluatorVersion2() = defau
 MOPSPredictedWindEvaluatorVersion2::~MOPSPredictedWindEvaluatorVersion2() = default;
 
 bool MOPSPredictedWindEvaluatorVersion2::ArePredictedWindsAccurate(
-      const aaesim::open_source::AircraftState &state, const aaesim::open_source::WeatherPrediction &weather_prediction,
+      const mitre::oss::simcore::AircraftState &state, const mitre::oss::simcore::WeatherPrediction &weather_prediction,
       const Units::Speed reference_cas, const Units::Length reference_altitude,
       const std::shared_ptr<Atmosphere> &sensed_atmosphere) const {
    Units::FeetLength true_altitude{state.GetAltitudeMsl()};
@@ -107,7 +107,7 @@ void MOPSPredictedWindEvaluatorVersion2::LogWindDisagreeMetaData(
       const Units::Length reference_altitude, const Units::FeetLength true_altitude, const Units::Speed reference_cas,
       const Units::KnotsSpeed tas1, const Units::KnotsSpeed tas2, const Units::KnotsSpeed gs1,
       const Units::KnotsSpeed gs2, const Units::Speed predicted_wind_x, const Units::Speed predicted_wind_y,
-      const aaesim::open_source::AircraftState &state) {
+      const mitre::oss::simcore::AircraftState &state) {
    LOG4CPLUS_TRACE(
          m_logger,
          "Winds inaccurate:" << std::endl

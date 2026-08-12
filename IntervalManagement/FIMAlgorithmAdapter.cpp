@@ -37,17 +37,21 @@ interval_management::open_source::FIMAlgorithmAdapter::FIMAlgorithmAdapter(std::
    : m_im_algorithm(im_algorithm), m_im_algorithm_type(algorithm_type) {}
 
 void interval_management::open_source::FIMAlgorithmAdapter::Initialize(
-      aaesim::open_source::FlightDeckApplicationInitializer &initializer_visitor) {
+      mitre::oss::simcore::FlightDeckApplicationInitializer &initializer_visitor) {
    auto ownship_intent_from_clearance = m_im_algorithm->GetClearance().GetOwnshipIntent();
    if (ownship_intent_from_clearance.has_value()) {
-      initializer_visitor.fms_prediction_parameters.fms_intent = ownship_intent_from_clearance.value();
+      initializer_visitor.fms_prediction_parameters.fms_intent =
+            std::make_shared<FIMAircraftIntent>(ownship_intent_from_clearance.value());
    }
-   m_im_algorithm->ValidateClearance(initializer_visitor.fms_prediction_parameters.fms_intent, m_im_algorithm_type);
+   m_im_algorithm->ValidateClearance(*initializer_visitor.fms_prediction_parameters.fms_intent, m_im_algorithm_type);
    initializer_visitor.fms_prediction_parameters.fms_intent =
-         AircraftIntent::CopyAndTrimAfterNamedWaypoint(initializer_visitor.fms_prediction_parameters.fms_intent,
-                                                       m_im_algorithm->GetClearance().GetPlannedTerminationPoint());
-   auto waypoints =
-         CoreUtils::ShortenLongLegs(initializer_visitor.fms_prediction_parameters.fms_intent.GetWaypointList());
+         std::make_shared<FIMAircraftIntent>(FIMAircraftIntent::Builder(
+               mitre::oss::simcore::AircraftIntentUtils::CopyAndTrimAfterNamedWaypoint(
+                     *initializer_visitor.fms_prediction_parameters.fms_intent,
+                     m_im_algorithm->GetClearance().GetPlannedTerminationPoint()))
+                                               .Build());
+   const auto &intent_waypoints = initializer_visitor.fms_prediction_parameters.fms_intent->GetWaypoints();
+   auto waypoints = CoreUtils::ShortenLongLegs(std::list<Waypoint>(intent_waypoints.begin(), intent_waypoints.end()));
    m_position_converter = std::make_unique<SingleTangentPlaneSequence>(waypoints);
    initializer_visitor.position_converter = m_position_converter;
 
@@ -64,23 +68,22 @@ void interval_management::open_source::FIMAlgorithmAdapter::Initialize(
    }
 }
 
-aaesim::open_source::Guidance interval_management::open_source::FIMAlgorithmAdapter::Update(
-      const aaesim::open_source::SimulationTime &simtime, const aaesim::open_source::Guidance &current_guidance,
-      const aaesim::open_source::DynamicsState &dynamics_state,
-      const aaesim::open_source::AircraftState &own_truth_state) {
-   aaesim::open_source::Guidance im_algorithm_guidance = current_guidance;
+mitre::oss::simcore::Guidance interval_management::open_source::FIMAlgorithmAdapter::Update(
+      const mitre::oss::simcore::SimulationTime &simtime, const mitre::oss::simcore::Guidance &current_guidance,
+      const mitre::oss::simcore::DynamicsState &dynamics_state,
+      const mitre::oss::simcore::AircraftState &own_truth_state) {
+   mitre::oss::simcore::Guidance im_algorithm_guidance = current_guidance;
    im_algorithm_guidance.SetValid(false);
-   if (current_guidance.m_active_guidance_phase != aaesim::open_source::GuidanceFlightPhase::CRUISE_DESCENT)
+   if (current_guidance.m_active_guidance_phase != mitre::oss::simcore::GuidanceFlightPhase::CRUISE_DESCENT)
       return im_algorithm_guidance;
    if (m_im_algorithm->IsImOperationComplete()) return im_algorithm_guidance;
 
    UpdateTargetHistory(simtime);
-   aaesim::open_source::AircraftState synced_target_state = m_assap->Update(
+   mitre::oss::simcore::AircraftState synced_target_state = m_assap->Update(
          own_truth_state, m_assap->GetAdsbReceiver()->GetCurrentADSBReport(GetImClearance().GetTargetId()));
 
-   if (im_algorithm_guidance.GetSelectedSpeed().GetSpeedType() == UNSPECIFIED_SPEED) {
-      im_algorithm_guidance.SetSelectedSpeed(
-            aaesim::open_source::AircraftSpeed::OfIndicatedAirspeed(Units::KnotsSpeed(60)));
+   if (im_algorithm_guidance.GetSelectedSpeedType() == UNSPECIFIED_SPEED) {
+      im_algorithm_guidance.SetSelectedSpeedType(INDICATED_AIR_SPEED);
    }
    auto ownship_im_state = ConvertAircraftState(own_truth_state);
    auto target_im_state = ConvertAircraftState(synced_target_state);
@@ -90,7 +93,7 @@ aaesim::open_source::Guidance interval_management::open_source::FIMAlgorithmAdap
 
 interval_management::open_source::AircraftState
       interval_management::open_source::FIMAlgorithmAdapter::ConvertAircraftState(
-            const aaesim::open_source::AircraftState &state) const {
+            const mitre::oss::simcore::AircraftState &state) const {
    if (state.GetTime().value() < 0 || state.GetUniqueId() == IMUtils::UNINITIALIZED_AIRCRAFT_ID)
       return IMUtils::ConvertToIntervalManagementAircraftState(state);
 
@@ -98,7 +101,7 @@ interval_management::open_source::AircraftState
    m_position_converter->ConvertGeodeticToLocal(
          EarthModel::GeodeticPosition::Of(state.GetLatitude(), state.GetLongitude()), enu_position);
    auto updated_state =
-         aaesim::open_source::AircraftState::Builder(state).Position(enu_position.x, enu_position.y)->Build();
+         mitre::oss::simcore::AircraftState::Builder(state).Position(enu_position.x, enu_position.y)->Build();
    LogAircraftState(updated_state);
    return IMUtils::ConvertToIntervalManagementAircraftState(updated_state);
 }
@@ -108,8 +111,8 @@ bool interval_management::open_source::FIMAlgorithmAdapter::IsActive() const {
 }
 
 void interval_management::open_source::FIMAlgorithmAdapter::UpdateTargetHistory(
-      const aaesim::open_source::SimulationTime &simtime) {
-   std::vector<aaesim::open_source::ADSBSVReport> recent_reports =
+      const mitre::oss::simcore::SimulationTime &simtime) {
+   std::vector<mitre::oss::simcore::ADSBSVReport> recent_reports =
          m_assap->GetAdsbReceiver()->GetReportsReceivedByTime(simtime);
    if (recent_reports.empty()) {
       return;
@@ -118,8 +121,8 @@ void interval_management::open_source::FIMAlgorithmAdapter::UpdateTargetHistory(
    for (const auto &adsb_sv_report : recent_reports) {
       if (adsb_sv_report.GetId() == GetImClearance().GetTargetId()) {
          if (adsb_sv_report.GetTime() >= Units::zero()) {
-            const aaesim::open_source::AircraftState ads_b_state =
-                  aaesim::open_source::AircraftState::FromAdsbReport(adsb_sv_report);
+            const mitre::oss::simcore::AircraftState ads_b_state =
+                  mitre::oss::simcore::AircraftState::FromAdsbReport(adsb_sv_report);
             interval_management::open_source::AircraftState imstate = ConvertAircraftState(ads_b_state);
             imstate.m_distance_to_go_meters = Units::MetersLength(m_im_algorithm->GetTargetDtgToLastWaypoint()).value();
             m_target_history.push_back(imstate);
@@ -128,7 +131,7 @@ void interval_management::open_source::FIMAlgorithmAdapter::UpdateTargetHistory(
    }
 }
 
-void FIMAlgorithmAdapter::LogAircraftState(const aaesim::open_source::AircraftState &state) {
+void FIMAlgorithmAdapter::LogAircraftState(const mitre::oss::simcore::AircraftState &state) {
    if (m_logger.getLogLevel() == log4cplus::TRACE_LOG_LEVEL) {
       json j;
       j["acid"] = state.GetUniqueId();
