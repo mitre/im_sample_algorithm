@@ -32,7 +32,7 @@ namespace open_source {
 
 using namespace mitre::oss::simcore;
 
-class IMDistBasedAchieve final : public IMKinematicAchieve {
+class IMDistBasedAchieve : public IMKinematicAchieve {
   public:
    static const Units::Length DEFAULT_DISTANCE_BASED_ASSIGNED_SPACING_GOAL;
 
