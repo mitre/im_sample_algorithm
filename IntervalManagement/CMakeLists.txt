@@ -64,7 +64,7 @@ set_target_properties(imalgs PROPERTIES
         CXX_EXTENSIONS ON
         EXPORT_NAME fim_sample_algorithm
         POSITION_INDEPENDENT_CODE ON)
-target_compile_features(imalgs PUBLIC cxx_std_20)
+target_compile_features(imalgs PUBLIC cxx_std_17)
 target_compile_options(imalgs
         PRIVATE
         -fno-strict-aliasing
