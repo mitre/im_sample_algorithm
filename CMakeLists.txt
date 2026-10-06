@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.26...4.2)
-project(im_sample_algorithm VERSION 6.0.1 LANGUAGES CXX)
+project(im_sample_algorithm VERSION 6.0.2 LANGUAGES CXX)
 
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS ON)
 
@@ -34,7 +34,7 @@ message(STATUS "${PROJECT_NAME}: Generating build version ${msg_VERSION}")
 # Begin project dependencies ------------------------------------------------------
 set(
     IM_SAMPLE_ALGORITHM_AIRCRAFT_SIMULATION_CORE_TAG
-    "2.0.0"
+    "2.1.0"
     CACHE STRING "aircraft_simulation_core tag used for im_sample_algorithm builds"
 )
 set(IM_SAMPLE_ALGORITHM_FSLOADER_TAG "1.1.0" CACHE STRING "fsloader tag used for im_sample_algorithm builds")
@@ -46,6 +46,7 @@ if(NOT TARGET nlohmann_json::nlohmann_json)
         NAME nlohmann_json
         GITHUB_REPOSITORY nlohmann/json
         VERSION ${IM_SAMPLE_ALGORITHM_NLOHMANN_JSON_VERSION}
+        OPTIONS "JSON_Install ON"
     )
 endif()
 
