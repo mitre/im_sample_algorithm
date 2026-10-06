@@ -46,6 +46,7 @@ if(NOT TARGET nlohmann_json::nlohmann_json)
         NAME nlohmann_json
         GITHUB_REPOSITORY nlohmann/json
         VERSION ${IM_SAMPLE_ALGORITHM_NLOHMANN_JSON_VERSION}
+        OPTIONS "JSON_Install ON"
     )
 endif()
 

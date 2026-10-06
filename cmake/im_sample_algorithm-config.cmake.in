@@ -2,10 +2,15 @@
 
 include(CMakeFindDependencyMacro)
 
+find_dependency(log4cplus REQUIRED)
+# fsloader's installed target uses the legacy name even for static log4cplus.
+if(NOT TARGET log4cplus::log4cplus AND TARGET log4cplus::log4cplusS)
+    add_library(log4cplus::log4cplus ALIAS log4cplus::log4cplusS)
+endif()
+
 find_dependency(aircraft_simulation_core REQUIRED)
 find_dependency(fsloader REQUIRED)
 find_dependency(nlohmann_json REQUIRED)
-find_dependency(log4cplus REQUIRED)
 
 include("${CMAKE_CURRENT_LIST_DIR}/im_sample_algorithm-targets.cmake")
 

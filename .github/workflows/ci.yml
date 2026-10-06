@@ -5,84 +5,41 @@ on:
     branches: [main, master]
   pull_request:
     branches: [main, master]
+  merge_group:
 
 permissions:
   contents: read
 
-env:
-  CMAKE_BUILD_TYPE: Release
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 jobs:
-  build_macos:
-    name: Build (macOS)
-    runs-on: macos-latest
+  release-policy:
+    name: Release policy
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v7
-
-      - name: Install dependencies
-        run: |
-          if ! command -v cmake >/dev/null 2>&1; then
-            brew install cmake
-          fi
-          cmake --version
-          c++ --version
-
-      - name: Configure
-        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DBUILD_TESTING=OFF
-
-      - name: Build imalgs
-        run: cmake --build build --target imalgs --parallel
-
-  build_rocky:
-    name: Build (Rocky Linux 9)
-    runs-on: ubuntu-latest
-    container:
-      image: rockylinux:9
-    steps:
-      - name: Install dependencies
-        run: |
-          dnf -y install gcc gcc-c++ make git tar gzip python3-pip
-          python3 -m pip install --upgrade "cmake>=3.26,<4.3"
-          cmake --version
-          c++ --version
-
-      - uses: actions/checkout@v7
-
-      - name: Configure
-        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DBUILD_TESTING=OFF
-
-      - name: Build imalgs
-        run: cmake --build build --target imalgs --parallel
-
-  run_all_tests:
-    name: Test (Rocky Linux 9)
-    runs-on: ubuntu-latest
-    container:
-      image: rockylinux:9
-    steps:
-      - name: Install dependencies
-        run: |
-          dnf -y install gcc gcc-c++ make git tar gzip python3-pip
-          python3 -m pip install --upgrade "cmake>=3.26,<4.3"
-          cmake --version
-          c++ --version
-
-      - name: Checkout repository
-        uses: actions/checkout@v7
-
-      - name: Configure
-        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DIM_SAMPLE_ALGORITHM_BUILD_TESTING=ON
-
-      - name: Build
-        run: cmake --build build --parallel
-
-      - name: Run CTest
-        run: ctest --test-dir build --output-on-failure
-
-      - name: Upload test results
-        uses: actions/upload-artifact@v7
-        if: always()
         with:
-          name: imalgs-test-results
-          path: build/unittest/*results.xml
-          if-no-files-found: error
+          persist-credentials: false
+      - name: Test release tooling
+        run: python3 -m unittest discover -s .scripts/tests -v
+      - name: Validate CMake version
+        run: python3 .scripts/release_policy.py
+
+  build-and-test:
+    uses: ./.github/workflows/build.yml
+
+  required:
+    name: CI required
+    runs-on: ubuntu-24.04
+    if: always()
+    needs: [release-policy, build-and-test]
+    steps:
+      - name: Require every validation job to pass
+        env:
+          POLICY_RESULT: ${{ needs.release-policy.result }}
+          BUILD_RESULT: ${{ needs.build-and-test.result }}
+        run: |
+          test "$POLICY_RESULT" = success
+          test "$BUILD_RESULT" = success

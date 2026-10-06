@@ -1,0 +1,133 @@
+name: Build and package validation
+
+on:
+  workflow_call:
+    inputs:
+      release-tag:
+        type: string
+        default: ''
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: ${{ matrix.target }}
+    runs-on: ${{ matrix.runner }}
+    container: ${{ matrix.container }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: rhel8-gcc8.5
+            platform: rockylinux8
+            runner: ubuntu-24.04
+            container: rockylinux:8
+            gcc-version: '8.5.0'
+          - target: rocky9
+            platform: rockylinux9
+            runner: ubuntu-24.04
+            container: rockylinux:9
+            gcc-version: ''
+          - target: ubuntu22.04-gcc11.4
+            platform: ubuntu22.04
+            runner: ubuntu-24.04
+            container: ubuntu:22.04
+            gcc-version: '11.4.0'
+          - target: macos
+            platform: macos15
+            runner: macos-15
+            container: ''
+            gcc-version: ''
+    defaults:
+      run:
+        shell: bash
+    env:
+      RELEASE_TAG: ${{ inputs.release-tag }}
+      CPM_SOURCE_CACHE: ${{ github.workspace }}/.cpm-cache
+    steps:
+      # Install git before checkout so containers use a real Git checkout.
+      - name: Install Linux toolchain
+        if: runner.os == 'Linux'
+        run: |
+          if command -v dnf >/dev/null; then
+            dnf install -y gcc gcc-c++ make git python3.11 python3.11-pip tar gzip
+            python3.11 -m pip install cmake==3.31.10
+            ln -s /usr/bin/python3.11 /usr/local/bin/python3
+          else
+            apt-get update
+            DEBIAN_FRONTEND=noninteractive apt-get install -y gcc-11 g++-11 make git python3-pip tar gzip
+            python3 -m pip install cmake==3.31.10
+            ln -s /usr/bin/gcc-11 /usr/local/bin/cc
+            ln -s /usr/bin/g++-11 /usr/local/bin/c++
+          fi
+      - name: Install macOS toolchain
+        if: runner.os == 'macOS'
+        run: |
+          if ! command -v cmake >/dev/null 2>&1; then
+            brew install cmake
+          fi
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: Trust checkout for subsequent Git commands
+        run: |
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          git rev-parse HEAD
+      - name: Verify compiler
+        env:
+          EXPECTED_GCC: ${{ matrix.gcc-version }}
+        run: |
+          cmake --version
+          c++ --version
+          if [ -n "$EXPECTED_GCC" ]; then
+            test "$(c++ -dumpfullversion)" = "$EXPECTED_GCC"
+          fi
+      - name: Cache dependency sources
+        uses: actions/cache@v5
+        with:
+          path: .cpm-cache
+          key: cpm-${{ matrix.target }}-${{ hashFiles('CMakeLists.txt', 'unittest/CMakeLists.txt', '.cmake/get_cpm.cmake') }}
+          restore-keys: cpm-${{ matrix.target }}-
+      - name: Configure
+        run: |
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release \
+            -DBUILD_TESTING=ON -DIM_SAMPLE_ALGORITHM_BUILD_TESTING=ON
+      - name: Build and test
+        run: |
+          cmake --build build --parallel 2
+          ctest --test-dir build --output-on-failure --no-tests=error
+      - name: Upload test results
+        if: always() && hashFiles('build/unittest/*results.xml') != ''
+        uses: actions/upload-artifact@v7
+        with:
+          name: imalgs-test-results-${{ matrix.target }}
+          path: build/unittest/*results.xml
+          if-no-files-found: error
+      - name: Install and relocate package
+        run: |
+          cmake --install build --prefix "$PWD/stage"
+          mv stage relocated-install
+          cp LICENSE relocated-install/
+      - name: Build and run an external C++17 consumer
+        run: |
+          cmake -S tests/package-consumer -B consumer-build \
+            -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH="$PWD/relocated-install"
+          cmake --build consumer-build --parallel 2
+          ctest --test-dir consumer-build --output-on-failure --no-tests=error
+      - name: Package installation
+        if: inputs.release-tag != ''
+        env:
+          PACKAGE_PLATFORM: ${{ matrix.platform }}
+        run: |
+          python3 .scripts/package_release.py --prefix relocated-install \
+            --tag "$RELEASE_TAG" --platform "$PACKAGE_PLATFORM"
+      - name: Upload release package
+        if: inputs.release-tag != ''
+        uses: actions/upload-artifact@v7
+        with:
+          name: release-${{ matrix.target }}
+          path: dist/*.tar.gz
+          if-no-files-found: error
+          retention-days: 7
